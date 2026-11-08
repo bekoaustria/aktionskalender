@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2311286F'/%3E%3Crect x='12' y='24' width='40' height='30' rx='3' fill='%23C8102E'/%3E%3Crect x='29' y='24' width='6' height='30' fill='%23D6A13C'/%3E%3Crect x='9' y='18' width='46' height='9' rx='2' fill='%23E0283F'/%3E%3Cpath d='M32 18c-6-10-16-6-10 0zM32 18c6-10 16-6 10 0z' fill='%23D6A13C'/%3E%3C/svg%3E">
 <style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Adventkalender Fachhandel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -146,7 +145,7 @@ main{padding-block:22px 60px}
 .section-head h3{margin:0;font-family:var(--f-display);font-size:20px}
 .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);min-width:0}
-input[type=text],input[type=number],input[type=email],input[type=date],select{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:8px 10px;width:100%;min-width:0;font-size:14px}
+input[type=text],input[type=number],input[type=email],input[type=date],input[type=tel],input[type=password],select{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:8px 10px;width:100%;min-width:0;font-size:14px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .seg button{border:0;background:var(--surface-2);padding:8px 14px;font-weight:600}
 .seg button[aria-pressed="true"]{background:var(--door);color:var(--door-ink)}
@@ -325,6 +324,63 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
 }
 @media (max-width:820px){.grid.cols-5{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:420px){.grid.cols-6,.grid:not([class*='cols-']):not(.month){grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Bestellung */
+.orderbox{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:6px}
+.qtyf{flex:0 0 auto}
+.stepper{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+.stepper button{border:0;background:transparent;width:38px;font-size:18px;font-weight:700;color:var(--ink)}
+.stepper button:disabled{opacity:.35}
+.stepper input{width:58px;text-align:center;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;background:var(--surface);font-weight:700;font-size:16px;padding:8px 4px;-moz-appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.stepper.sm button{width:30px;height:30px;font-size:16px}
+.stepper.sm span{min-width:30px;display:grid;place-items:center;font-weight:700}
+.cartfab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;border:0;border-radius:999px;padding:12px 18px;font-weight:800;font-size:15px;background:var(--accent);color:var(--accent-ink);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.cartfab b{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:999px;background:var(--accent-ink);color:var(--accent);margin-left:6px;font-size:13px;padding:0 6px}
+body.black .cartfab{background:var(--gold);color:#000}body.black .cartfab b{background:#000;color:var(--gold)}
+.cartdlg{max-width:760px}
+.cartin{padding:22px}
+.cartin h2{font-family:var(--f-display)}
+body.xmas .cartin h2{font-family:var(--f-serif);font-weight:400}
+body.black .cartin h2{font-family:var(--f-cond);font-weight:400;text-transform:uppercase}
+.legal a{color:inherit}
+@media (max-width:560px){.cartdlg .hidecell{display:none}.cartin{padding:18px 14px}.cartdlg .aptbl th:nth-child(3),.cartdlg .aptbl tbody td:nth-child(3){display:none}.cartdlg .aptbl tfoot td:first-child{white-space:normal}}
+
+/* Freigabe */
+.apbanner{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:color-mix(in srgb,var(--warn) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));border-radius:10px;padding:8px 12px;font-weight:600;font-size:14px;margin:0 0 14px}
+.apbanner.done{background:color-mix(in srgb,var(--ok) 12%,var(--surface));border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer;font-size:14px}
+.apb{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;letter-spacing:.02em}
+.apb.ok{background:var(--ok);color:#fff}.apb.rej{background:var(--accent);color:var(--accent-ink)}.apb.open{background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+.apb.stale{background:var(--warn);color:#fff}.apb.wait{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.aph{margin:16px 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.prow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;padding:10px;border-radius:10px;background:var(--surface-2);margin-bottom:6px}
+.prow.inplan{box-shadow:inset 3px 0 0 var(--gold)}
+.prow-l{font-weight:700;font-size:14px}
+.prow-p{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+.prow-a{grid-column:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.prow-a input{max-width:200px}
+.psug{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px}
+.pchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 4px 3px 10px;font-size:13px;font-weight:600;max-width:100%}
+.pchip small{color:var(--muted);font-weight:500}
+.pc-b{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:1px 8px;font-size:12px;font-weight:700;color:var(--ink);text-decoration:none}
+.pc-x{border:0;background:transparent;font-size:16px;line-height:1;color:var(--muted);padding:0 6px}
+.apsteps{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:4px 0 0}
+.apsteps li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 5px;font-weight:600;font-size:14px;background:var(--surface-2)}
+.apsteps li span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--line);font-weight:800;font-size:12px}
+.apsteps li.ok span{background:var(--ok);color:#fff}.apsteps li.rej span{background:var(--accent);color:#fff}.apsteps li.cur{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}.apsteps li.cur span{background:var(--gold);color:#000}
+.aplist{display:flex;flex-direction:column;gap:6px}
+.apitem{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:var(--surface-2)}
+.api-l{min-width:0;line-height:1.7}
+.appanel{border:1px solid var(--gold);border-radius:12px;padding:14px;background:var(--surface)}
+.tblwrap{overflow-x:auto;max-width:100%}
+.aptbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.aptbl th{text-align:left;font-size:12px;color:var(--muted);font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.aptbl td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.aptbl td.num,.aptbl.deals th:nth-child(n+3){text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.aptbl tfoot td{font-weight:700;border-bottom:0}
+@media (max-width:640px){.prow{grid-template-columns:1fr}.prow-a{grid-column:1}.prow-a input{max-width:none;flex:1 1 140px}}
 </style>
 </head>
 <body>
@@ -340,6 +396,9 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
       <div class="tabs" id="tabs" hidden>
         <button type="button" id="tab-kal" aria-pressed="true">Kalender</button>
         <button type="button" id="tab-adm" aria-pressed="false">Verwaltung</button>
+        <button type="button" id="tab-fly" aria-pressed="false">Flyer</button>
+        <button type="button" id="tab-apv" aria-pressed="false">Freigabe</button>
+        <button type="button" id="tab-ord" aria-pressed="false">Bestellungen</button>
       </div>
     </div>
     <h1 id="h-title">Adventkalender</h1>
@@ -414,8 +473,10 @@ const PRESETS = {
   bmonth:  { label:'Black Month (November)', make(){ const y = presetYear(11); return { start:iso(y,11,1), count:30, theme:'black', title:'Black Month' }; } },
   month:   { label:'Ganzer Monat', make(c){ const t = realToday(); const y = +t.slice(0,4), m = +t.slice(5,7); const n = new Date(Date.UTC(y,m,0)).getUTCDate(); return { start:iso(y,m,1), count:n, theme:'classic', title:'Aktionskalender ' + MONTHS[m-1] }; } }
 };
+const DEF_PHONE = '+43 1 615 39 00';
+const DEF_IMPRESSUM = 'Beko Austria AG · Pfarrgasse 77, 1230 Wien · FN 36236 p';
 function defaultConfig(){
-  return Object.assign({ subtitle:'', pool:{}, days:{}, orderEmail:'order.austria@beko.com', example:false }, PRESETS.advent.make());
+  return Object.assign({ subtitle:'', pool:{}, days:{}, orderEmail:'order.austria@beko.com', orderPhone:DEF_PHONE, impressum:DEF_IMPRESSUM, shopUrl:'', example:false }, PRESETS.advent.make());
 }
 function normalize(c){
   if (!c.start){
@@ -427,7 +488,15 @@ function normalize(c){
   if (!THEMES[c.theme]) c.theme = 'classic';
   delete c.mode; delete c.year; delete c.month;
   c.pool = c.pool || {}; c.days = c.days || {};
+  if (c.orderPhone == null) c.orderPhone = DEF_PHONE;
+  if (c.impressum == null) c.impressum = DEF_IMPRESSUM;
+  if (c.shopUrl == null) c.shopUrl = '';
   return c;
+}
+const telHref = t => 'tel:' + String(t || '').replace(/[^+\d]/g, '');
+function legalLine(c){
+  const mail = c.orderEmail || 'order.austria@beko.com';
+  return 'Impressum: ' + esc(c.impressum || DEF_IMPRESSUM) + ' · Tel. <a href="' + telHref(c.orderPhone) + '">' + esc(c.orderPhone || DEF_PHONE) + '</a> · <a href="mailto:' + esc(mail) + '">' + esc(mail) + '</a>';
 }
 function periodDays(c){ const out = []; for (let i=0; i<c.count; i++) out.push(addDays(c.start, i)); return out; }
 const isAdvent = c => c.theme === 'xmas' && c.count === 24 && c.start.slice(5) === '12-01';
@@ -446,6 +515,7 @@ function dealFor(c, day){
   const pool = c.pool[d.k] || {};
   return { day, p, hek: d.hek != null ? d.hek : (pool.hek ?? null), price: d.price ?? null, qty: d.qty ?? null, uvp: pool.uvp ?? p.u, note: d.note || '' };
 }
+function remainingFor(deal){ if (!deal || deal.qty == null) return null; return Math.max(0, deal.qty - ((S.sold && S.sold[deal.day]) || 0)); }
 const status = day => day < today() ? 'past' : day === today() ? 'today' : 'future';
 const imgTag = (p, cls) => p.i ? '<img src="' + p.i + '" alt="' + esc(p.b + ' ' + p.m) + '"' + (cls ? ' class="'+cls+'"' : '') + ' loading="lazy">' : '<div class="noimg"></div>';
 function stockText(q){
@@ -481,9 +551,12 @@ function heroHTML(c, deal, opts){
   const body = encodeURIComponent('Bestellung aus dem ' + (c.title || 'Adventkalender') + '\n\nAktionstag: ' + fmtLong(deal.day) + '\nGerät: ' + p.b + ' ' + p.m + ' (' + p.t + ')\nAktions-HEK: ' + eur(deal.price) + '\nMenge: \n\nHändler / Kundennummer: \n');
   const mail = c.orderEmail || 'order.austria@beko.com';
   let act = '';
-  if (st === 'today' && !(deal.qty != null && deal.qty <= 0)){
-    act = '<div class="actions"><a class="btn primary" href="mailto:' + esc(mail) + '?subject=' + subject + '&body=' + body + '">Jetzt bestellen</a>' +
-      '<button type="button" class="btn" data-copy="' + esc(mail) + '">E-Mail kopieren</button><span class="small">' + esc(mail) + '</span></div>';
+  const rem = remainingFor(deal);
+  if (st === 'today' && !(rem != null && rem <= 0) && deal.price != null){
+    const inCart = (S.cart || []).find(x => x.day === deal.day && x.k === p.k);
+    act = '<div class="orderbox"><label class="f qtyf">Menge<span class="stepper"><button type="button" data-qstep="-1" aria-label="Weniger">−</button><input type="number" id="ord-qty" min="1"' + (rem != null ? ' max="' + rem + '"' : '') + ' value="' + (inCart ? inCart.qty : 1) + '" inputmode="numeric"><button type="button" data-qstep="1" aria-label="Mehr">+</button></span></label>' +
+      '<button type="button" class="btn primary" data-addcart="' + deal.day + '">' + (inCart ? 'Menge im Warenkorb ändern' : 'In den Warenkorb') + '</button></div>' +
+      '<p class="small" style="margin:0">Oder bestellen per E-Mail <a href="mailto:' + esc(mail) + '?subject=' + subject + '&body=' + body + '">' + esc(mail) + '</a> bzw. Tel. <a href="' + telHref(c.orderPhone) + '">' + esc(c.orderPhone || DEF_PHONE) + '</a></p>';
   }
   return (expired ? '<div class="expired-banner">Aktion abgelaufen</div>' : '') +
     '<section class="hero"' + (expired ? ' style="filter:grayscale(.9)"' : '') + '><div class="pic">' + imgTag(p) + '</div><div class="info">' +
@@ -494,7 +567,7 @@ function heroHTML(c, deal, opts){
     (deal.hek ? '<div><span class="plabel">statt HEK</span><span class="was num">' + eur(deal.hek) + '</span></div>' : '') + savePct(deal.hek, deal.price) +
     (deal.uvp ? '<div><span class="plabel">UVP</span><span class="num">' + eur(deal.uvp) + '</span></div>' : '') + '</div>' +
     (deal.note ? '<p class="small" style="margin:0">' + esc(deal.note) + '</p>' : '') +
-    (expired ? '<span class="stock out">Aktion abgelaufen</span>' : stockText(deal.qty)) +
+    (expired ? '<span class="stock out">Aktion abgelaufen</span>' : stockText(rem)) +
     (st === 'today' ? '<div class="clock">Bestellbar heute bis 23:59 Uhr · noch <b class="num" data-countdown>' + fmtLeft(secondsLeft()) + '</b></div>' : '') +
     act + '</div></section>';
 }
@@ -508,7 +581,7 @@ function doorHTML(c, day, idx){
   else if (!deal) inside = '<div class="face inside"><span class="dno">' + d + '</span>Keine Aktion</div>';
   else inside = '<div class="face inside"><span class="dno">' + d + '</span>' + imgTag(deal.p) +
     '<div class="m">' + esc(deal.p.m) + '</div><div class="p num">' + eur(deal.price) + '</div>' +
-    (st === 'today' ? '<div class="q">' + (deal.qty != null ? (deal.qty <= 0 ? 'Ausverkauft' : 'Nur mehr ' + deal.qty + ' Stk.') : '') + '</div>' : '') +
+    (st === 'today' ? '<div class="q">' + (deal.qty != null ? (remainingFor(deal) <= 0 ? 'Ausverkauft' : 'Nur mehr ' + remainingFor(deal) + ' Stk.') : '') + '</div>' : '') +
     (st === 'past' ? '<div class="stamp">Aktion<br>abgelaufen</div>' : '') + '</div>';
   const cls = ['door', 'c' + ((d * 7 + 1) % 3), st, opened ? 'open' : '', (st !== 'future' && !deal) ? 'noact' : ''].join(' ');
   const label = 'Türchen ' + d + ', ' + fmtLong(day) + (st === 'future' ? ', noch geschlossen' : st === 'past' ? ', Aktion abgelaufen' : ', heute');
@@ -545,7 +618,8 @@ function renderDealer(){
   $('app').innerHTML = hero +
     '<div class="cal-head"><h3>' + esc(periodName) + '</h3><div class="legend"><span><i class="l-closed" style="background:var(--door)"></i>noch geschlossen</span><span><i style="background:var(--accent)"></i>heute</span><span><i style="background:var(--past)"></i>Aktion abgelaufen</span></div></div>' +
     '<div class="grid' + (isMonth ? ' month' : colsClass(c)) + '" id="doors">' + grid + '</div>' +
-    '<p class="small" style="margin-top:18px">Alle Preise als Händlereinkaufspreise (HEK) exkl. MwSt., solange der Vorrat reicht. Jede Aktion gilt ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar.</p>' +
+    '<p class="small" style="margin-top:18px">Alle Preise als Händlereinkaufspreise (HEK) exkl. MwSt., solange der Vorrat reicht. Jede Aktion gilt ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar. Druck- und Satzfehler vorbehalten.</p>' +
+    '<p class="small legal">' + legalLine(c) + '</p>' +
     (c.theme !== 'xmas' ? '' : '<p class="xmas-foot">Frohe Weihnachten und gute Geschäfte<small>Ihr Beko Austria Team · elektrabregenz · Beko · Indesit</small></p>');
 }
 
@@ -632,6 +706,7 @@ function renderAdmin(){
   if (S.f.cat !== 'alle' && !cats.includes(S.f.cat)) S.f.cat = 'alle';
   $('app').innerHTML = '<div class="admin">' +
     (S.demo ? '<p class="warnline" style="margin-top:0">Vorschau ohne Datenspeicher: Änderungen bleiben nur in diesem Fenster.</p>' : '') +
+    (S.dirty ? '' : apBannerHTML(S.config)) +
     (c.example ? '<p class="warnline" style="margin-top:0">Beispielbelegung mit geschätzten HEK-Werten (62 % der UVP). Bitte HEK, Aktionspreise und Mengen prüfen und speichern.</p>' : '') +
 
     '<section class="section"><div class="section-head"><h3>Einstellungen</h3></div><div class="fields">' +
@@ -642,10 +717,14 @@ function renderAdmin(){
     '<label class="f">Anzahl Tage (1–' + MAXDAYS + ')<input type="number" id="cfg-count" min="1" max="' + MAXDAYS + '" step="1" value="' + c.count + '"></label>' +
     '<label class="f">Zeitraum<input type="text" id="cfg-range" readonly value="' + esc(c.count === 1 ? fmtLong(c.start) : fmtShort(c.start) + ' – ' + fmtShort(periodDays(c)[c.count-1]) + periodDays(c)[c.count-1].slice(0,4)) + '"></label>' +
     '<label class="f">Titel<input type="text" id="cfg-title" value="' + esc(c.title) + '" placeholder="Adventkalender"></label>' +
-    '<label class="f">Bestell-E-Mail<input type="email" id="cfg-mail" value="' + esc(c.orderEmail) + '"></label>' +
+    '<label class="f">Bestell-E-Mail (Empfänger der Bestellungen)<input type="email" id="cfg-mail" value="' + esc(c.orderEmail) + '"></label>' +
+    '<label class="f">Bestell-Telefon<input type="text" id="cfg-phone" value="' + esc(c.orderPhone) + '" placeholder="+43 1 615 39 00"></label>' +
+    '<label class="f">Bestell-Webseite (für Flyer, optional)<input type="text" id="cfg-web" value="' + esc(c.shopUrl) + '" placeholder="z. B. aktionen.bekoaustria.com"></label>' +
+    '<label class="f" style="grid-column:1/-1">Impressum (Flyer und Kalender)<input type="text" id="cfg-imp" value="' + esc(c.impressum) + '"></label>' +
     '<label class="f">Ansicht testen am (nur für dich)<input type="date" id="cfg-sim" value="' + (S.sim || '') + '"></label>' +
     '</div><p class="small" style="margin-bottom:0">Eine Vorlage setzt Zeitraum, Design und Titel – alles bleibt danach frei änderbar. Bereits geplante Tage bleiben erhalten. Die Aktion eines Tages ist von 0:00 bis 23:59 Uhr (Wien) aktiv. Danach zeigt das Türchen das Gerät vergraut mit „Aktion abgelaufen“. Das Testdatum verändert nur deine eigene Ansicht.</p></section>' +
 
+    approvalPeopleHTML(c) +
     '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen, HEK und UVP direkt anpassen.</span></div><span class="small" id="pcount"></span></div>' +
     '<div class="filters">' + ['alle'].concat(BRANDS).map(b => '<button type="button" class="chip" data-brand="' + b + '" aria-pressed="' + (S.f.brand === b) + '">' + (b === 'alle' ? 'Alle Marken' : b) + '</button>').join('') +
     '<select id="f-cat" aria-label="Kategorie"><option value="alle">Alle Kategorien</option>' + cats.map(x => '<option' + (S.f.cat === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
@@ -706,9 +785,9 @@ document.addEventListener('click', e => {
   const copy = t.closest('[data-copy]');
   if (copy){ const v = copy.dataset.copy; (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(() => toast('E-Mail-Adresse kopiert'), () => toast(v)); return; }
   if (t.id === 'ov' || t.id === 'ov-x'){ $('overlay-slot').innerHTML = ''; return; }
-  if (t.id === 'tab-kal' || t.id === 'tab-adm'){
-    if (t.id === 'tab-kal' && S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; }
-    S.view = t.id === 'tab-adm' ? 'admin' : 'kalender';
+  if (t.id === 'tab-kal' || t.id === 'tab-adm' || t.id === 'tab-fly' || t.id === 'tab-apv' || t.id === 'tab-ord'){
+    if (t.id !== 'tab-adm' && S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; }
+    S.view = t.id === 'tab-adm' ? 'admin' : t.id === 'tab-fly' ? 'flyer' : t.id === 'tab-apv' ? 'approval' : t.id === 'tab-ord' ? 'orders' : 'kalender';
     if (S.view === 'admin' && !S.dirty) S.draft = clone(S.config);
     render(); return;
   }
@@ -741,8 +820,8 @@ const ssSet = (k,v) => { try { v == null ? sessionStorage.removeItem(k) : sessio
 const wantsAdmin = () => /^\/admin\/?$/.test(location.pathname) || location.hash === '#admin';
 async function apiLoad(){
   if (!/^https?:$/.test(location.protocol)) return undefined;
-  try { const r = await fetch('/api/config', { cache:'no-store' }); if (!r.ok) return undefined;
-    const j = await r.json(); return j && 'config' in j ? j.config : undefined; } catch(e) { return undefined; }
+  try { const r = await fetch('/api/config', { cache:'no-store', headers: S.pw ? { authorization:'Bearer ' + S.pw } : {} }); if (!r.ok) return undefined;
+    const j = await r.json(); if (j && j.sold) S.sold = j.sold; return j && 'config' in j ? j.config : undefined; } catch(e) { return undefined; }
 }
 async function apiAuth(pw){
   try { const r = await fetch('/api/auth', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ password: pw }) }); return r.ok; } catch(e) { return false; }
@@ -750,9 +829,13 @@ async function apiAuth(pw){
 function cfgFrom(raw){ return raw ? normalize(Object.assign({ orderEmail:'order.austria@beko.com', title:'' }, raw)) : defaultConfig(); }
 async function poll(){
   if (!S.api || S.dirty || document.hidden) return;
+  const sb = JSON.stringify(S.sold || {});
   const raw = await apiLoad(); if (raw === undefined) return;
+  if (sb !== JSON.stringify(S.sold || {}) && S.view === 'kalender' && !$('ov')) renderDealer();
   const n = cfgFrom(raw);
-  if (JSON.stringify(n) !== JSON.stringify(S.config)){ S.config = n; if (!S.dirty) S.draft = clone(n); if (S.view === 'kalender') render(); }
+  const before = JSON.stringify(S.ap.docs); await apLoadApprovals();
+  const changed = JSON.stringify(n) !== JSON.stringify(S.config); if (changed){ S.config = n; if (!S.dirty) S.draft = clone(n); }
+  if ((changed && S.view === 'kalender') || (S.view === 'approval' && !S.ap.sel && (changed || before !== JSON.stringify(S.ap.docs)))) render();
 }
 function renderLogin(){
   $('app').innerHTML = '<section class="section" style="max-width:420px;margin:10px auto"><h3 style="font-family:var(--f-display);margin:0 0 6px">Verwaltung</h3>' +
@@ -766,7 +849,7 @@ document.addEventListener('submit', async e => {
   if (e.target.id !== 'login') return;
   e.preventDefault();
   const pw = $('pw').value, btn = $('login-btn'); btn.disabled = true; btn.textContent = 'Prüfe …';
-  if (await apiAuth(pw)){ S.pw = pw; ssSet('kal-admin', pw); S.canEdit = true; S.view = 'admin'; S.draft = clone(S.config); render(); toast('Angemeldet'); }
+  if (await apiAuth(pw)){ S.pw = pw; ssSet('kal-admin', pw); S.canEdit = true; S.view = 'admin'; const full = await apiLoad(); if (full !== undefined) S.config = cfgFrom(full); S.draft = clone(S.config); render(); toast('Angemeldet'); }
   else { btn.disabled = false; btn.textContent = 'Anmelden'; $('login-err').hidden = false; }
 });
 
@@ -784,6 +867,9 @@ document.addEventListener('input', e => {
   }
   if (t.id === 'cfg-title'){ S.draft.title = t.value; markDirty(); return; }
   if (t.id === 'cfg-mail'){ S.draft.orderEmail = t.value.trim(); markDirty(); return; }
+  if (t.id === 'cfg-phone'){ S.draft.orderPhone = t.value.trim(); markDirty(); return; }
+  if (t.id === 'cfg-web'){ S.draft.shopUrl = t.value.trim(); markDirty(); return; }
+  if (t.id === 'cfg-imp'){ S.draft.impressum = t.value.trim(); markDirty(); return; }
 });
 document.addEventListener('change', e => {
   if (S.view !== 'admin') return;
@@ -805,6 +891,678 @@ document.addEventListener('change', e => {
   }
 });
 
+/* ---------- Flyer (Menüpunkt „Flyer“) ---------- */
+S.fo = { theme:'auto', hek:true, uvp:true, qty:true, draft:null, intro:'' };
+const FLY_TH = { auto:'Wie Kalender-Design', xmas:'Weihnachten', black:'Black Deals', classic:'Klassisch' };
+const FLY_CSS = `
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#8A8F99}
+body{font-family:Figtree,Arial,sans-serif;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body.xmas{--bg:#FBF7EE;--band:radial-gradient(120% 160% at 90% -20%,#1D5A43,#123F2F 65%);--bandink:#F7E6BC;--hi:#D6A13C;--tile:#fff;--ink:#14231C;--mut:#5F6B64;--line:#E6DCC6;--price:#B01E36;--b0:#123F2F;--b1:#B01E36;--b2:#16285E;--badgeink:#F7E6BC;--svbg:#D6A13C;--svink:#123F2F;--qty:#B4610B;--foot:#123F2F;--fd:"DM Serif Display",Georgia,serif;--fdw:400}
+body.classic{--bg:#EEF1F8;--band:linear-gradient(155deg,#1B3A94,#11286F);--bandink:#F4E3B5;--hi:#D6A13C;--tile:#fff;--ink:#0B1638;--mut:#5A6688;--line:#D9DFEC;--price:#C8102E;--b0:#11286F;--b1:#1B3A94;--b2:#C8102E;--badgeink:#fff;--svbg:#C8102E;--svink:#fff;--qty:#B4610B;--foot:#11286F;--fd:"Bricolage Grotesque","Segoe UI",sans-serif;--fdw:800}
+body.black{--bg:#0B0B0D;--band:#000;--bandink:#fff;--hi:#FFD400;--tile:#17171B;--ink:#F5F5F6;--mut:#A3A3AE;--line:#2E2E36;--price:#FFD400;--b0:#000;--b1:#000;--b2:#000;--badgeink:#fff;--svbg:#FF2E4D;--svink:#fff;--qty:#FFD400;--foot:#000;--fd:Anton,Impact,sans-serif;--fdw:400}
+.page{width:210mm;height:297mm;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;position:relative;break-after:page;page-break-after:always}
+.page:last-child{break-after:auto;page-break-after:auto}
+@media screen{body{padding:24px 0}.page{margin:0 auto 24px;box-shadow:0 6px 24px rgba(0,0,0,.35)}}
+@media print{html{background:none}}
+.band{background:var(--band);color:var(--bandink);padding:9mm 11mm 7mm;position:relative}
+.band.sm{padding:6mm 11mm;display:flex;align-items:center;justify-content:space-between;gap:8mm}
+.logos{display:flex;align-items:center}
+.logos img{display:block;width:auto}
+.logos img+img{margin-left:5mm;padding-left:5mm;border-left:.3mm solid rgba(255,255,255,.35);box-sizing:content-box}
+.logos .eb{height:3.6mm}.logos .bk{height:5mm}.logos .in{height:4mm}
+.kick{margin-top:6mm;font-size:8.5pt;letter-spacing:.16em;text-transform:uppercase;color:var(--hi);font-weight:700}
+h1{font-family:var(--fd);font-weight:var(--fdw);font-size:40pt;line-height:1;margin:2mm 0 3mm;color:#fff;max-width:140mm}
+body.xmas h1::after{content:" ✦";color:var(--hi);font-size:.45em;vertical-align:.9em}
+body.black h1{text-transform:uppercase;font-size:60pt;line-height:.92;letter-spacing:.01em}
+body.black h1::first-letter{color:var(--hi)}
+h2{font-family:var(--fd);font-weight:var(--fdw);font-size:15pt;color:#fff;text-align:right}
+body.black h2{text-transform:uppercase;letter-spacing:.03em}
+.per{position:absolute;right:11mm;top:8mm;font-family:var(--fd);font-weight:var(--fdw);font-size:14pt;background:var(--hi);color:#000;padding:1.5mm 4mm;transform:rotate(-3deg);max-width:70mm;text-align:center}
+body.xmas .per{color:#123F2F}
+.band p{font-size:9.5pt;line-height:1.4;max-width:150mm;opacity:.92}
+.ticker{display:none}
+body.black .ticker{display:block;background:var(--hi);color:#000;white-space:nowrap;overflow:hidden;height:8mm;line-height:8mm;font-family:Anton,Impact,sans-serif;font-size:12pt;text-transform:uppercase;letter-spacing:.06em}
+.ticker span{padding:0 3mm}.ticker b{font-size:8pt}
+.draftmark{position:absolute;top:2mm;left:11mm;font-size:7.5pt;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:#C8102E;color:#fff;padding:1mm 2.5mm;border-radius:1mm}
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3mm;padding:5mm 9mm 4mm}
+.t{background:var(--tile);border:.3mm solid var(--line);border-radius:3mm;position:relative;padding:2.5mm 3mm;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.day{position:absolute;top:0;left:0;background:var(--b0);color:var(--badgeink);padding:1.3mm 3mm 1.3mm 2.6mm;border-radius:3mm 0 3mm 0;display:flex;align-items:center;gap:2mm;z-index:2}
+.t.c1 .day{background:var(--b1)}.t.c2 .day{background:var(--b2)}
+body.black .day{border-right:.3mm solid var(--line);border-bottom:.3mm solid var(--line);align-items:baseline;gap:1.5mm}
+.day .n{font-family:var(--fd);font-weight:var(--fdw);font-size:17pt;line-height:1}
+body.black .day .n{color:var(--hi);font-size:15pt}
+.day .dd{font-size:6.5pt;line-height:1.15;font-weight:700;letter-spacing:.04em;opacity:.95}
+.day .tag{font-family:Anton,Impact,sans-serif;font-size:9pt;background:#FF2E4D;color:#fff;padding:.3mm 1.5mm;letter-spacing:.04em}
+.sv{position:absolute;top:2.4mm;right:2.4mm;background:var(--svbg);color:var(--svink);font-weight:800;font-size:8pt;padding:.6mm 1.8mm;border-radius:1.2mm;z-index:2}
+body.black .sv{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:11pt;border-radius:0;transform:rotate(-4deg)}
+.img{flex:1;min-height:0;position:relative;margin:10mm 0 2mm}
+body.black .img{background:#fff;border-radius:2mm}
+.img img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+body.black .img img{inset:1.5mm;width:calc(100% - 3mm);height:calc(100% - 3mm);mix-blend-mode:normal}
+.itag{position:absolute;left:1.5mm;bottom:1.5mm;font-family:Anton,Impact,sans-serif;font-size:9pt;background:#FF2E4D;color:#fff;padding:.3mm 1.8mm;letter-spacing:.04em}
+.br{font-size:6.5pt;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+body:not(.black) .br.eb{color:#1D5A43}body:not(.black) .br.bk{color:#0B4DA2}
+.m{font-weight:800;font-size:8.6pt;line-height:1.15;overflow-wrap:anywhere}
+.ty{font-size:7pt;color:var(--mut);line-height:1.2;height:2.4em;overflow:hidden}
+.lab{margin-top:1mm;border-top:.3mm dashed var(--line);padding-top:1mm;font-size:6.5pt;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.p{font-family:var(--fd);font-weight:var(--fdw);font-size:18pt;color:var(--price);line-height:1.05}
+body.black .p{font-size:20pt}
+.ft{display:flex;justify-content:space-between;gap:2mm;font-size:7pt;color:var(--mut)}
+.q{margin-top:.6mm;font-size:7pt;font-weight:700;color:var(--qty)}
+.t.hero{grid-column:1/-1;flex-direction:row;gap:6mm;padding:3mm 5mm}
+.t.hero .img{flex:0 0 72mm;margin:10mm 0 0;min-height:36mm}
+.t.hero .tx{flex:1;display:flex;flex-direction:column;justify-content:center;padding-right:24mm}
+.t.hero .day .tag{font-size:13pt}
+.t.hero .sv{font-size:16pt;padding:.5mm 3mm;top:4mm;right:5mm}
+.t.hero .m{font-size:14pt}.t.hero .ty{font-size:9.5pt;height:auto}.t.hero .lab{font-size:8pt;margin-top:2mm}
+.t.hero .p{font-size:38pt}.t.hero .ft{font-size:9pt;justify-content:flex-start;gap:6mm}.t.hero .q{font-size:9pt}
+body.black .t.hero{background:var(--hi);border-color:var(--hi);color:#000}
+body.black .t.hero .sv{background:#000;color:var(--hi)}
+body.black .t.hero .br,body.black .t.hero .ty,body.black .t.hero .lab,body.black .t.hero .ft{color:#333}
+body.black .t.hero .lab{border-color:rgba(0,0,0,.3)}
+body.black .t.hero .p{color:#000}body.black .t.hero .q{color:#C8102E}
+.t.single{grid-column:1/-1;grid-row:1/-1;padding:5mm 7mm}
+.t.single .img{margin:14mm 0 4mm}
+.t.single .m{font-size:20pt}.t.single .ty{font-size:11pt;height:auto}.t.single .p{font-size:54pt}
+.t.single .lab{font-size:9pt}.t.single .ft{font-size:10pt;justify-content:flex-start;gap:8mm}.t.single .q{font-size:10pt}
+.t.single .sv{font-size:16pt;padding:1mm 3mm}.t.single .day .n{font-size:24pt}
+.t.order{background:var(--foot);border:.6mm solid var(--hi);justify-content:center;gap:1.5mm;padding:4mm;color:#fff}
+.order .ob{font-family:var(--fd);font-weight:var(--fdw);font-size:15pt;color:var(--hi);line-height:1.05}
+body.black .order .ob{text-transform:uppercase;font-size:17pt}
+.order p{font-size:7.4pt;opacity:.85;line-height:1.3;margin-top:.8mm}
+.order a,.obar a{color:#fff;font-weight:800;font-size:8.2pt;text-decoration:underline;text-decoration-color:var(--hi);white-space:nowrap}
+.obar{background:var(--foot);color:#F7E6BC;padding:5mm 11mm 6mm;display:grid;grid-template-columns:1.1fr 1fr;gap:8mm;font-size:8.5pt;line-height:1.4}
+body.black .obar{border-top:.6mm solid var(--hi)}
+.obar b{display:block;font-family:var(--fd);font-weight:var(--fdw);font-size:13pt;color:#fff;margin-bottom:1mm}
+.obar a{color:var(--hi)}
+.obar .fine{font-size:6.8pt;opacity:.8;align-self:end}
+.fine2{font-size:6.6pt;color:var(--mut);padding:0 11mm 5mm;line-height:1.4}
+.pf{text-align:center;font-size:8pt;color:var(--mut);padding:0 0 5mm}
+`;
+/* Druckerei-Variante: Seite 216 × 303 mm (3 mm Beschnitt rundum), Inhalte um 3 mm nach innen versetzt */
+const FLY_BLEED = `
+.page{width:216mm;height:303mm}
+.band{padding:12mm 14mm 7mm}
+.band.sm{padding:9mm 14mm 6mm}
+.per{right:14mm;top:11mm}
+.draftmark{top:5mm;left:14mm}
+.grid{padding:5mm 12mm 4mm}
+.obar{padding:5mm 14mm 9mm}
+.fine2{padding:0 14mm 8mm}
+.pf{padding:0 0 8mm}
+@page{size:216mm 303mm;margin:0}
+`;
+function flyTheme(c){ return S.fo.theme === 'auto' ? c.theme : S.fo.theme; }
+function flyDraftMark(c){ return S.fo.draft == null ? (!!c.example || !apStatus(c).done) : S.fo.draft; }
+function flyIntro(c){
+  if (S.fo.intro) return S.fo.intro;
+  return c.count === 1 ? 'Ein Top-Gerät zum Sonder-HEK – nur am ' + fmtLong(c.start) + ' von 0:00 bis 23:59 Uhr bestellbar, solange das Kontingent reicht.'
+    : c.count + ' Tage – jeden Tag ein neues Aktionsgerät zum Sonder-HEK. Jede Aktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr, solange das Kontingent reicht.';
+}
+function flyEur(n){ return n == null || isNaN(n) ? '' : Number(n).toLocaleString('de-AT',{maximumFractionDigits:2, minimumFractionDigits: Number(n)%1 ? 2 : 0}) + ' €'; }
+function flyLogos(){
+  const imgs = document.querySelectorAll('.brandrow img'), cls = ['eb','bk','in'];
+  return [...imgs].map((im,i) => '<img class="' + cls[i] + '" src="' + im.getAttribute('src') + '" alt="' + esc(im.alt) + '">').join('');
+}
+function flyTile(c, d, i, extra){
+  const th = flyTheme(c), p = d.p, isBF = d.day === blackFriday(+d.day.slice(0,4)), isCM = d.day === addDays(blackFriday(+d.day.slice(0,4)), 3);
+  const tag = th === 'black' && c.count > 1 ? (isBF ? 'BLACK FRIDAY' : isCM ? 'CYBER MONDAY' : '') : '';
+  const big = /hero|single/.test(extra || '');
+  const badge = th === 'black' ? '<span class="n">' + WD[dowOf(d.day)] + '</span><span class="dd">' + fmtShort(d.day) + '</span>'
+    : '<span class="n">' + doorNo(c, d.day) + '</span><span class="dd">' + WD[dowOf(d.day)] + '<br>' + fmtShort(d.day) + '</span>';
+  const sv = d.hek && d.price != null && d.price < d.hek ? '<div class="sv">−' + Math.round((1 - d.price/d.hek)*100) + ' %</div>' : '';
+  const brCls = {elektrabregenz:'eb', Beko:'bk', Indesit:'in'}[p.b] || '';
+  const foot = [S.fo.hek && d.hek && d.price != null && d.price < d.hek ? '<span>statt <s>' + flyEur(d.hek) + '</s></span>' : '', S.fo.uvp && d.uvp ? '<span>UVP ' + flyEur(d.uvp) + '</span>' : ''].join('');
+  return '<div class="t c' + (i % 3) + ' ' + (extra || '') + '"><div class="day">' + badge + (tag && big ? '<span class="tag">' + tag + '</span>' : '') + '</div>' + sv +
+    '<div class="img">' + (p.i ? '<img src="' + p.i + '" alt="">' : '') + (tag && !big ? '<span class="itag">' + tag + '</span>' : '') + '</div>' +
+    '<div class="tx"><div class="br ' + brCls + '">' + esc(p.b) + '</div><div class="m">' + esc(p.m) + '</div><div class="ty">' + esc(p.t || '') + '</div>' +
+    '<div class="lab">Aktions-HEK</div><div class="p">' + (d.price != null ? flyEur(d.price) : 'auf Anfrage') + '</div>' +
+    (foot ? '<div class="ft">' + foot + '</div>' : '') +
+    (S.fo.qty && d.qty != null ? '<div class="q">' + (d.qty > 0 ? 'Kontingent: ' + d.qty + ' Stk.' : 'Ausverkauft') + '</div>' : '') + '</div></div>';
+}
+function flyerDoc(c, opt){
+  opt = opt || {};
+  const th = flyTheme(c), mail = c.orderEmail || 'order.austria@beko.com';
+  const deals = periodDays(c).map(day => dealFor(c, day)).filter(Boolean);
+  const logos = flyLogos(), title = c.title || 'Aktionskalender', per = periodLabel(c);
+  const mailA = '<a href="mailto:' + esc(mail) + '">' + esc(mail) + '</a>';
+  const fineOld = 'Alle Preise in Euro exkl. MwSt. Aktions-HEK nur am angegebenen Tag (0:00–23:59 Uhr) und nur solange das Tageskontingent reicht. UVP = unverbindliche Verkaufsempfehlung inkl. MwSt. Irrtümer und Änderungen vorbehalten. Beko Austria AG, Wien.';
+  const phone = c.orderPhone || DEF_PHONE, telA = '<a href="' + telHref(phone) + '">' + esc(phone) + '</a>';
+  const web = (c.shopUrl || (S.api ? location.host : '')).replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const webA = web ? '<a href="https://' + esc(web) + '">' + esc(web) + '</a>' : '';
+  const fine = 'Alle Preise in Euro exkl. MwSt. Aktions-HEK nur am angegebenen Tag (0:00–23:59 Uhr), solange der Vorrat reicht. UVP = unverbindliche Verkaufsempfehlung inkl. MwSt. Druck- und Satzfehler vorbehalten.';
+  const imp = 'Impressum: ' + esc(c.impressum || DEF_IMPRESSUM) + ' · Tel. ' + esc(phone) + ' · ' + esc(mail);
+  const orderTile = '<div class="t order"><div class="ob">So bestellen Sie</div>' + (web ? '<p>Online im Aktionskalender</p>' + webA : '') + '<p>per E-Mail</p>' + mailA + '<p>oder telefonisch</p>' + telA + '<p>Solange der Vorrat reicht.</p></div>';
+  const orderBar = '<footer class="obar"><div><b>So bestellen Sie</b>' + (web ? 'Online: ' + webA + '<br>' : '') + 'E-Mail: ' + mailA + '<br>Telefon: ' + telA + '<br>Am Aktionstag Modell und Stückzahl angeben – Zuteilung nach Eingang, solange der Vorrat reicht.</div><div class="fine">' + fine + '<br><br>' + imp + '</div></footer>';
+  const unit = '<span>' + esc(title.toUpperCase()) + '</span><b>✦</b><span>' + (c.count === 1 ? 'Nur 1 Tag' : deals.length + ' Tage · ' + deals.length + ' Deals') + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b>';
+  const mark = flyDraftMark(c) ? '<span class="draftmark">Entwurf – Preise nicht freigegeben</span>' : '';
+  const bigHead = '<header class="band"><div class="logos">' + logos + '</div>' + mark + '<div class="kick">Exklusiv für den österreichischen Fachhandel</div><h1>' + esc(title) + '</h1>' +
+    '<div class="per">' + esc(per) + '</div><p>' + esc(flyIntro(c)) + '</p></header><div class="ticker">' + unit.repeat(4) + '</div>';
+  const smallHead = '<header class="band sm"><div class="logos">' + logos + '</div><h2>' + esc(title) + ' · Fortsetzung</h2></header>';
+  /* Zeilen bilden: 4 Kacheln pro Zeile, Black-Friday-Deal (Design Black, max. 11 Deals) als eigene Zeile */
+  const pages = [];
+  if (!deals.length){
+    pages.push(bigHead + '<div class="grid" style="grid-template-rows:1fr"><div class="t" style="grid-column:1/-1;justify-content:center;align-items:center;text-align:center"><div class="m">Noch keine Aktionen geplant</div><div class="ty" style="height:auto">In der Verwaltung Geräte den Aktionstagen zuordnen.</div></div></div>' + orderBar);
+  } else if (deals.length === 1){
+    pages.push(bigHead + '<div class="grid" style="grid-template-rows:1fr;grid-template-columns:1fr">' + flyTile(c, deals[0], 0, 'single') + '</div>' + orderBar);
+  } else {
+    const rows = []; let cur = [];
+    deals.forEach((d, i) => {
+      const hero = th === 'black' && deals.length <= 11 && d.day === blackFriday(+d.day.slice(0,4));
+      if (hero){ if (cur.length) rows.push(cur); rows.push([{ hero:true, html: flyTile(c, d, i, 'hero') }]); cur = []; return; }
+      cur.push({ html: flyTile(c, d, i) }); if (cur.length === 4){ rows.push(cur); cur = []; }
+    });
+    if (cur.length) rows.push(cur);
+    const last = rows[rows.length-1];
+    const tileOrder = !last[0].hero && last.length < 4;
+    if (tileOrder) last.push({ html: orderTile });
+    const PER = 3;
+    for (let r = 0; r < rows.length; r += PER){
+      const chunk = rows.slice(r, r + PER), first = r === 0, isLast = r + PER >= rows.length;
+      const tpl = chunk.map(row => row[0].hero ? 'auto' : 'minmax(0,1fr)').concat(Array(PER - chunk.length).fill('minmax(0,1fr)')).join(' ');
+      pages.push((first ? bigHead : smallHead) + '<div class="grid" style="grid-template-rows:' + tpl + '">' + chunk.map(row => row.map(x => x.html).join('')).join('') + '</div>' +
+        (isLast ? (tileOrder ? '<footer class="fine2">' + fine + '<br>' + imp + '</footer>' : orderBar) : '<div class="pf">Fortsetzung auf der nächsten Seite</div>'));
+    }
+  }
+  return '<!doctype html><html lang="de"><head><meta charset="utf-8"><title>' + esc(title) + ' – Flyer</title>' +
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Anton&family=DM+Serif+Display&family=Figtree:wght@400;600;700;800&display=swap">' +
+    '<style>' + FLY_CSS + (opt.bleed ? FLY_BLEED : '') + '</style></head><body class="' + th + '">' + pages.map(p => '<section class="page">' + p + '</section>').join('') + '</body></html>';
+}
+function flyFileName(c){ return (c.title || 'Aktionskalender').replace(/[^\wäöüÄÖÜß -]/g,'').trim().replace(/\s+/g,'_') + '_Flyer_' + c.start.slice(0,4) + '.html'; }
+function fitFlyer(){
+  const box = $('fly-box'), fr = $('fly-frame'); if (!box || !fr) return;
+  const doc = fr.contentDocument; const h = doc && doc.body ? doc.documentElement.scrollHeight : 1200;
+  const s = Math.min(1, box.clientWidth / 860);
+  fr.style.height = h + 'px'; fr.style.transform = s < 1 ? 'scale(' + s + ')' : 'none'; fr.style.margin = s < 1 ? '0' : '0 auto'; box.style.height = Math.ceil(h * s) + 'px';
+}
+function renderFlyer(){
+  const c = S.config, deals = periodDays(c).filter(d => dealFor(c, d)).length;
+  const opt = (k, label) => '<label class="chip" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" data-fo="' + k + '"' + (S.fo[k] ? ' checked' : '') + '>' + label + '</label>';
+  $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Flyer</h2><span class="small">Druckfertiger A4-Flyer für den Fachhandel aus der gespeicherten Planung: ' + esc(periodLabel(c)) + ' · ' + deals + ' Aktionen</span></div>' +
+    '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="fly-pdf">PDF herunterladen</button><button type="button" class="btn" id="fly-pdf-print">Druckerei-PDF (3 mm Beschnitt)</button><button type="button" class="btn" id="fly-dl">HTML-Datei</button></span></div>' +
+    (c.example ? '<p class="warnline" style="margin-top:0">Die Planung enthält Beispielpreise. Der Flyer trägt deshalb den Hinweis „Entwurf“, bis die Preise in der Verwaltung freigegeben und gespeichert sind.</p>' : '') +
+    apBannerHTML(c) + '<div class="fields"><label class="f">Design<select id="fo-theme">' + Object.entries(FLY_TH).map(([k,v]) => '<option value="' + k + '"' + (S.fo.theme === k ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label>' +
+    '<label class="f" style="grid-column:span 2">Einleitungstext<input type="text" id="fo-intro" value="' + esc(S.fo.intro) + '" placeholder="' + esc(flyIntro(Object.assign({}, c))) + '"></label></div>' +
+    '<div class="filters" style="margin:12px 0 0">' + opt('hek','statt-HEK zeigen') + opt('uvp','UVP zeigen') + opt('qty','Kontingent zeigen') +
+    '<label class="chip" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="fo-draft"' + (flyDraftMark(c) ? ' checked' : '') + '>Entwurf-Hinweis</label></div>' +
+    '<div class="tblwrap"><table class="aptbl" style="margin-top:12px"><thead><tr><th>Datei</th><th>Format</th><th>Wofür</th></tr></thead><tbody>' +
+    '<tr><td><b>PDF herunterladen</b></td><td>A4 (210 × 297 mm), 300 dpi</td><td>Per E-Mail an Händler, Druck im Büro</td></tr>' +
+    '<tr><td><b>Druckerei-PDF</b></td><td>216 × 303 mm inkl. 3 mm Beschnitt rundum, 300 dpi</td><td>Offsetdruck / Online-Druckerei (Endformat A4)</td></tr>' +
+    '<tr><td><b>HTML-Datei</b></td><td>bearbeitbar im Browser</td><td>Druck direkt aus dem Browser</td></tr></tbody></table></div>' +
+    '<p class="small" style="margin-bottom:0">Das PDF wird aus der Vorschau unten erzeugt – Design, Texte und Optionen also vorher einstellen. Mehrseitige Flyer (ab 12 Aktionen) werden zu einem PDF mit mehreren Seiten zusammengefasst.</p></section>' +
+    '<div id="fly-box" style="position:relative;overflow:hidden;border-radius:var(--r);background:#8A8F99"><iframe id="fly-frame" title="Flyer-Vorschau" style="border:0;width:860px;transform-origin:0 0;display:block;margin:0 auto;background:#8A8F99"></iframe></div></div>';
+  const fr = $('fly-frame'); fr.onload = () => { fitFlyer(); setTimeout(fitFlyer, 600); setTimeout(fitFlyer, 2000); };
+  fr.srcdoc = flyerDoc(c);
+  renderSavebar();
+}
+function refreshFlyer(){ const fr = $('fly-frame'); if (fr) fr.srcdoc = flyerDoc(S.config); }
+window.addEventListener('resize', () => { if (S.view === 'flyer') fitFlyer(); });
+async function flyDownload(){
+  const c = S.config, html = flyerDoc(c), name = flyFileName(c);
+  let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch(e) {}
+  if (dl){
+    try { await dl.save({ filename: name, data: html }); toast('Flyer gespeichert – im Browser öffnen und als PDF drucken'); }
+    catch(err){ if (err && err.code === 'declined') return; if (err && err.code === 'rate_limited'){ toast('Bitte kurz warten und erneut versuchen'); return; } toast('Download hier nicht verfügbar'); }
+    return;
+  }
+  try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], {type:'text/html'})); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+  catch(e){ toast('Download hier nicht verfügbar'); }
+}
+function loadLib(src, globalName){
+  if (window[globalName]) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = src; sc.onload = () => res(); sc.onerror = () => rej(new Error('lib')); document.head.appendChild(sc); });
+}
+async function saveFile(name, blob){
+  let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch(e) {}
+  if (dl){
+    try { await dl.save({ filename: name, data: blob }); return 'saved'; }
+    catch(err){ if (err && err.code === 'declined') return 'declined'; if (err && err.code === 'rate_limited'){ toast('Bitte kurz warten und erneut versuchen'); return 'busy'; } }
+  }
+  try { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); return 'saved'; }
+  catch(e){ return 'failed'; }
+}
+function flyRenderFrame(html){
+  return new Promise(res => {
+    const fr = document.createElement('iframe');
+    fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+    fr.style.cssText = 'position:fixed;left:-12000px;top:0;width:920px;height:1300px;border:0;visibility:hidden';
+    fr.onload = async () => {
+      const d = fr.contentDocument;
+      try { if (d.fonts && d.fonts.ready) await Promise.race([d.fonts.ready, new Promise(r => setTimeout(r, 4000))]); } catch(e) {}
+      await Promise.all([...d.images].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+      setTimeout(() => res(fr), 250);
+    };
+    document.body.appendChild(fr); fr.srcdoc = html;
+  });
+}
+async function flyPdf(bleed){
+  const btn = $(bleed ? 'fly-pdf-print' : 'fly-pdf'); if (!btn || btn.disabled) return;
+  const label = btn.textContent; btn.disabled = true; btn.textContent = 'PDF wird erstellt …';
+  let fr = null;
+  try {
+    await loadLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas');
+    await loadLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf');
+    const c = S.config;
+    fr = await flyRenderFrame(flyerDoc(c, { bleed }));
+    const pages = [...fr.contentDocument.querySelectorAll('.page')];
+    const W = bleed ? 216 : 210, H = bleed ? 303 : 297;
+    const pdf = new window.jspdf.jsPDF({ unit:'mm', format:[W, H], orientation:'portrait', compress:true });
+    for (let i = 0; i < pages.length; i++){
+      btn.textContent = 'Seite ' + (i+1) + ' von ' + pages.length + ' …';
+      const pg = pages[i]; pg.style.boxShadow = 'none'; pg.style.margin = '0';
+      const canvas = await window.html2canvas(pg, { scale: 300 / 96, useCORS: true, backgroundColor: null, logging: false });
+      if (i) pdf.addPage([W, H], 'portrait');
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, W, H, undefined, 'FAST');
+    }
+    const title = c.title || 'Aktionskalender';
+    pdf.setProperties({ title: title + ' – Flyer', subject: 'Aktionsflyer Fachhandel ' + periodLabel(c), author: 'Beko Austria AG', creator: 'Aktionskalender Fachhandel' });
+    const name = flyFileName(c).replace(/\.html$/, bleed ? '_Druck_3mm-Beschnitt.pdf' : '.pdf');
+    const r = await saveFile(name, pdf.output('blob'));
+    if (r === 'saved') toast(bleed ? 'Druckerei-PDF gespeichert (216 × 303 mm)' : 'PDF gespeichert');
+    else if (r === 'failed') toast('Download hier nicht verfügbar');
+  } catch(e){
+    toast(e && e.message === 'lib' ? 'PDF-Werkzeug konnte nicht geladen werden – Internetverbindung prüfen' : 'PDF konnte nicht erstellt werden – bitte erneut versuchen');
+  } finally {
+    if (fr) fr.remove();
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+function flyPrint(){
+  const fr = $('fly-frame');
+  try { fr.contentWindow.focus(); fr.contentWindow.print(); }
+  catch(e){ toast('Drucken ist hier nicht möglich – bitte „Flyer herunterladen“ verwenden'); }
+}
+document.addEventListener('click', e => {
+  if (S.view !== 'flyer') return;
+  if (e.target.id === 'fly-print'){ flyPrint(); return; }
+  if (e.target.id === 'fly-pdf'){ flyPdf(false); return; }
+  if (e.target.id === 'fly-pdf-print'){ flyPdf(true); return; }
+  if (e.target.id === 'fly-dl'){ flyDownload(); return; }
+});
+document.addEventListener('change', e => {
+  if (S.view !== 'flyer') return;
+  const t = e.target;
+  if (t.id === 'fo-theme'){ S.fo.theme = t.value; refreshFlyer(); return; }
+  if (t.id === 'fo-draft'){ S.fo.draft = t.checked; refreshFlyer(); return; }
+  if (t.dataset && t.dataset.fo){ S.fo[t.dataset.fo] = t.checked; refreshFlyer(); return; }
+});
+document.addEventListener('input', e => {
+  if (S.view !== 'flyer' || e.target.id !== 'fo-intro') return;
+  S.fo.intro = e.target.value; clearTimeout(refreshFlyer._t); refreshFlyer._t = setTimeout(refreshFlyer, 400);
+});
+
+/* ---------- Freigabeprozess (Produktmanagement je Kategorie → Finance → Marketing → Sales Director) ---------- */
+const STAGES = [ {id:'pm', label:'Produktmanagement'}, {id:'finance', label:'Finance'}, {id:'marketing', label:'Marketing'}, {id:'sd', label:'Sales Director'} ];
+const CAT_NORM = { 'Gefrierschränke':'Gefrieren', 'Mikrowellengeräte':'Mikrowellen' };
+const catOf = p => CAT_NORM[p.c] || p.c || 'Sonstige';
+const PM_ORDER = ['Backöfen','Koch/Back Sets','Kochfelder','Dunstabzug','Mikrowellen','Kühlen','Gefrieren','Waschen','Trocknen','Spülen'];
+const PM_CATS = [...new Set(CAT.map(catOf))].sort((a,b) => (PM_ORDER.indexOf(a)+1 || 99) - (PM_ORDER.indexOf(b)+1 || 99) || a.localeCompare(b));
+S.ap = { docs:{}, uid:null, pid:null, token:null, loaded:false, sel:null, busy:false, userApi:null };
+const keyLabel = k => k.startsWith('pm:') ? 'Produktmanagement · ' + k.slice(3) : (STAGES.find(s => s.id === k) || {}).label || k;
+function apPeople(c, key){
+  const a = (c.approval && c.approval.people) || {};
+  if (key.startsWith('pm:')) return ((a.pm || {})[key.slice(3)] || []);
+  return a[key] || [];
+}
+function ensureApproval(c){
+  c.approval = c.approval || {}; const p = c.approval.people = c.approval.people || {};
+  p.pm = p.pm || {}; ['finance','marketing','sd'].forEach(k => p[k] = p[k] || []);
+  return p;
+}
+function fnv(str){ let h = 0x811c9dc5; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); }
+function planDeals(c){ return periodDays(c).map(d => dealFor(c, d)).filter(Boolean); }
+function dealsForKey(c, key){ const all = planDeals(c); return key.startsWith('pm:') ? all.filter(d => catOf(d.p) === key.slice(3)) : all; }
+function keyHash(c, key){
+  return fnv(JSON.stringify([c.start, c.count, dealsForKey(c, key).map(d => [d.day, d.p.k, d.hek, d.price, d.qty, d.uvp])]));
+}
+const identOf = p => S.api ? p.pid : p.uid;
+function evalKey(c, key){
+  const ppl = apPeople(c, key), h = keyHash(c, key);
+  const recs = ppl.map(p => { const doc = S.ap.docs[identOf(p)]; const r = doc && doc.entries && doc.entries[key]; return r ? Object.assign({ who: p.name || r.name }, r) : null; }).filter(Boolean);
+  const valid = recs.filter(r => r.hash === h).sort((a,b) => String(b.at).localeCompare(String(a.at)));
+  if (!ppl.length) return { state:'nobody', people:ppl };
+  if (valid.length) return { state: valid[0].status === 'ok' ? 'ok' : 'rejected', rec: valid[0], people:ppl };
+  return { state: recs.length ? 'stale' : 'open', people:ppl };
+}
+function apStatus(c){
+  const deals = planDeals(c);
+  const cats = [...new Set(deals.map(d => catOf(d.p)))].sort((a,b) => PM_CATS.indexOf(a) - PM_CATS.indexOf(b));
+  const pm = cats.map(cat => Object.assign({ key:'pm:' + cat, cat, n: deals.filter(d => catOf(d.p) === cat).length }, evalKey(c, 'pm:' + cat)));
+  const st = { deals, cats, pm, stages:{} };
+  st.stages.pm = { ok: cats.length > 0 && pm.every(x => x.state === 'ok'), rejected: pm.some(x => x.state === 'rejected') };
+  let prevOk = st.stages.pm.ok;
+  ['finance','marketing','sd'].forEach(k => { const e = evalKey(c, k); st.stages[k] = Object.assign(e, { reached: prevOk, ok: prevOk && e.state === 'ok', rejected: prevOk && e.state === 'rejected' }); prevOk = st.stages[k].ok; });
+  st.stages.pm.reached = true;
+  st.done = st.stages.sd.ok;
+  st.current = st.done ? null : STAGES.find(s => !st.stages[s.id].ok).id;
+  st.okCount = STAGES.filter(s => st.stages[s.id].ok).length;
+  return st;
+}
+function myPersons(c){
+  const out = []; const a = (c.approval && c.approval.people) || {};
+  const mine = p => S.api ? (S.ap.pid && p.pid === S.ap.pid) : (S.ap.uid && p.uid === S.ap.uid);
+  Object.entries(a.pm || {}).forEach(([cat, arr]) => (arr || []).forEach(p => { if (mine(p)) out.push({ key:'pm:' + cat, p }); }));
+  ['finance','marketing','sd'].forEach(k => (a[k] || []).forEach(p => { if (mine(p)) out.push({ key:k, p }); }));
+  return out;
+}
+const isApprover = () => !!(S.config && myPersons(S.config).length);
+function canAct(c, st, key){
+  if (!myPersons(c).some(m => m.key === key)) return false;
+  if (key.startsWith('pm:')) return st.cats.includes(key.slice(3));
+  return st.stages[key] && st.stages[key].reached;
+}
+const randId = n => { const a = new Uint8Array(n); crypto.getRandomValues(a); return [...a].map(x => x.toString(16).padStart(2,'0')).join(''); };
+const fmtAt = s => { try { return new Date(s).toLocaleString('de-AT', { timeZone:'Europe/Vienna', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); } catch(e) { return s; } };
+function personLink(p){ return location.origin + '/?k=' + encodeURIComponent(p.token || ''); }
+function stateBadge(e){
+  const m = { ok:['ok','Freigegeben'], rejected:['rej','Abgelehnt'], open:['open','Offen'], stale:['stale','Geändert – neu prüfen'], nobody:['rej','Keine Person hinterlegt'], wait:['wait','Wartet auf Vorstufe'] }[e] || ['open', e];
+  return '<span class="apb ' + m[0] + '">' + m[1] + '</span>';
+}
+function recLine(r){ return r ? '<span class="small">' + esc(r.who || r.name || '') + ' · ' + esc(fmtAt(r.at)) + (r.note ? ' · „' + esc(r.note) + '“' : '') + '</span>' : ''; }
+function apBannerHTML(c){
+  const st = apStatus(c); if (!st.deals.length) return '';
+  const txt = st.done ? 'Planung vollständig freigegeben' : 'Freigabe: ' + st.okCount + ' von 4 Stufen erledigt – aktuell ' + STAGES.find(s => s.id === st.current).label + (STAGES.some(s => st.stages[s.id].rejected) ? ' · Ablehnung liegt vor' : '');
+  return '<p class="apbanner ' + (st.done ? 'done' : '') + '">' + esc(txt) + ' <button type="button" class="linkbtn" data-goto="approval">Zur Freigabe</button></p>';
+}
+
+/* --- Verwaltung: Personen hinterlegen --- */
+function personChip(key, p){
+  const linkBtns = S.api ? '<button type="button" class="pc-b" data-plink="' + esc(key) + '|' + esc(p.pid) + '" title="Persönlichen Freigabe-Link kopieren">Link</button>' +
+    (p.email ? '<a class="pc-b" href="mailto:' + esc(p.email) + '?subject=' + encodeURIComponent('Freigabe Aktionskalender') + '&body=' + encodeURIComponent('Hallo ' + (p.name || '') + ',\n\nbitte die Aktionsplanung über deinen persönlichen Freigabe-Link prüfen und freigeben:\n' + personLink(p) + '\n\nDanke!') + '">E-Mail</a>' : '') : '';
+  const warn = !S.api && !p.uid ? ' <span class="warnline" title="Kein Claude-Konto verknüpft – diese Person kann hier nicht freigeben">!</span>' : '';
+  return '<span class="pchip">' + esc(p.name || p.email || '—') + (p.email ? ' <small>' + esc(p.email) + '</small>' : '') + warn + linkBtns + '<button type="button" class="pc-x" data-pdel="' + esc(key) + '|' + esc(p.pid) + '" aria-label="Entfernen">×</button></span>';
+}
+function peopleRow(c, key, label, inPlan){
+  const ppl = apPeople(c, key);
+  return '<div class="prow' + (inPlan ? ' inplan' : '') + '" data-key="' + esc(key) + '"><div class="prow-l">' + esc(label) + (inPlan ? ' <span class="small">· in Planung</span>' : '') + '</div>' +
+    '<div class="prow-p">' + (ppl.map(p => personChip(key, p)).join('') || '<span class="small">Noch niemand hinterlegt</span>') + '</div>' +
+    '<div class="prow-a"><input type="text" data-pname="' + esc(key) + '" placeholder="' + (S.api ? 'Name' : 'Name oder E-Mail suchen') + '" autocomplete="off" aria-label="Name">' +
+    '<input type="email" data-pmail="' + esc(key) + '" placeholder="E-Mail" aria-label="E-Mail"><button type="button" class="btn" data-padd="' + esc(key) + '">+ Person</button>' +
+    (key.startsWith('pm:') && ppl.length ? '<button type="button" class="btn" data-pall="' + esc(key) + '" title="Diese Personen bei allen Kategorien ohne Person eintragen">Auf leere Kategorien übertragen</button>' : '') +
+    '<div class="psug" data-psug="' + esc(key) + '"></div></div></div>';
+}
+function approvalPeopleHTML(c){
+  const inPlan = new Set(planDeals(c).map(d => catOf(d.p)));
+  return '<section class="section" id="ap-people"><div class="section-head"><div><h3>Freigabe-Personen</h3><span class="small">Ablauf: Produktmanagement (je Produktkategorie) → Finance → Marketing → Sales Director. Pro Stufe genügt die Freigabe einer hinterlegten Person. Wird nach einer Freigabe ein Gerät, HEK, Aktionspreis oder Kontingent geändert, muss die betroffene Kategorie und alle folgenden Stufen neu freigeben.</span></div></div>' +
+    (S.api ? '<p class="small" style="margin-top:0">Jede Person erhält einen persönlichen Freigabe-Link (Knopf „Link“). Die Links erst nach dem Speichern verschicken.</p>' : '<p class="small" style="margin-top:0">Personen über die Suche aus eurer Organisation auswählen, damit ihr Konto verknüpft ist. Freigebende brauchen Zugriff auf dieses Artifact (Teilen → mindestens „kann verwenden“).</p>') +
+    '<h4 class="aph">Produktmanagement je Kategorie</h4>' + PM_CATS.map(cat => peopleRow(c, 'pm:' + cat, cat, inPlan.has(cat))).join('') +
+    '<h4 class="aph">Finance · Marketing · Sales Director</h4>' + ['finance','marketing','sd'].map(k => peopleRow(c, k, keyLabel(k), false)).join('') + '</section>';
+}
+function addPerson(key, name, email, uid){
+  const ppl = ensureApproval(S.draft);
+  const arr = key.startsWith('pm:') ? (ppl.pm[key.slice(3)] = ppl.pm[key.slice(3)] || []) : ppl[key];
+  if (uid && arr.some(p => p.uid === uid)) { toast('Person ist hier bereits hinterlegt'); return; }
+  if (!uid && email && arr.some(p => (p.email || '').toLowerCase() === email.toLowerCase())) { toast('Person ist hier bereits hinterlegt'); return; }
+  // gleiche Person (Konto / E-Mail) in anderen Stufen → gleiche pid und gleicher Link
+  const all = [].concat(...Object.values(ppl.pm), ppl.finance, ppl.marketing, ppl.sd);
+  const twin = all.find(p => (uid && p.uid === uid) || (email && p.email && p.email.toLowerCase() === email.toLowerCase()));
+  const p = twin ? clone(twin) : { pid: randId(6), name, email: email || '' };
+  if (!twin){ if (uid) p.uid = uid; if (S.api) p.token = randId(16); }
+  if (name) p.name = name;
+  arr.push(p); markDirty();
+  const row = document.querySelector('.prow[data-key="' + CSS.escape(key) + '"]'); if (row) row.outerHTML = peopleRow(S.draft, key, key.startsWith('pm:') ? key.slice(3) : keyLabel(key), planDeals(S.draft).some(d => 'pm:' + catOf(d.p) === key));
+}
+function rerenderPeople(){ const el = $('ap-people'); if (el) el.outerHTML = approvalPeopleHTML(S.draft); }
+async function personSearch(key, q){
+  const box = document.querySelector('[data-psug="' + CSS.escape(key) + '"]'); if (!box) return;
+  if (S.api || !S.ap.userApi || !S.ap.userApi.search || q.trim().length < 2){ box.innerHTML = ''; return; }
+  let hits = []; try { hits = await S.ap.userApi.search(q.trim()); } catch(e) { hits = []; }
+  box.innerHTML = hits.slice(0, 6).map(h => '<button type="button" class="chip" data-psel="' + esc(key) + '" data-uid="' + esc(h.id) + '" data-n="' + esc(h.name || '') + '" data-e="' + esc(h.email || '') + '">' + esc(h.name || h.email || 'Unbekannt') + (h.email ? ' <small>' + esc(h.email) + '</small>' : '') + '</button>').join('') || '<span class="small">Keine Treffer</span>';
+}
+
+/* --- Ansicht „Freigabe“ --- */
+function dealsTable(c, key){
+  const ds = dealsForKey(c, key); let inv = 0, vol = 0;
+  const rows = ds.map(d => { const i = d.hek != null && d.price != null && d.qty != null ? (d.hek - d.price) * d.qty : null; if (i != null) inv += i; if (d.price != null && d.qty != null) vol += d.price * d.qty;
+    return '<tr><td>' + fmtShort(d.day) + '</td><td><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></td><td class="num">' + eur(d.hek) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.hek && d.price != null ? '−' + Math.round((1 - d.price/d.hek)*100) + ' %' : '–') + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (i != null ? eur(i) : '–') + '</td></tr>'; }).join('');
+  return '<div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag</th><th>Gerät</th><th>HEK</th><th>Aktions-HEK</th><th>Rabatt</th><th>Stk.</th><th>Invest</th></tr></thead><tbody>' + rows + '</tbody>' +
+    '<tfoot><tr><td colspan="5">Summe · Aktionsumsatz ' + eur(vol) + '</td><td class="num">' + ds.reduce((s,d) => s + (d.qty || 0), 0) + '</td><td class="num">' + eur(inv) + '</td></tr></tfoot></table></div>' +
+    '<p class="small" style="margin:6px 0 0">Invest = (HEK − Aktions-HEK) × Kontingent, Werte exkl. MwSt.</p>';
+}
+function actionPanel(c, key){
+  return '<div class="appanel"><h4 style="margin:0 0 8px">' + esc(keyLabel(key)) + ' – prüfen</h4>' + dealsTable(c, key) +
+    '<label class="f" style="margin-top:12px">Kommentar (bei Ablehnung Pflicht)<input type="text" id="ap-note" maxlength="500" placeholder="z. B. Preis Tag 5 zu niedrig"></label>' +
+    '<div class="actions" style="margin-top:10px"><button type="button" class="btn primary" data-apdo="ok" data-key="' + esc(key) + '">Freigeben</button><button type="button" class="btn" data-apdo="rejected" data-key="' + esc(key) + '">Ablehnen</button><button type="button" class="btn" data-apsel="">Schließen</button></div></div>';
+}
+function nextMailLink(c, st, stageId){
+  const idx = STAGES.findIndex(s => s.id === stageId), nxt = STAGES[idx + 1]; if (!nxt) return '';
+  const ppl = nxt.id === 'pm' ? [] : apPeople(c, nxt.id); const mails = ppl.map(p => p.email).filter(Boolean);
+  if (!mails.length || st.stages[nxt.id].ok) return '';
+  const body = 'Hallo,\n\n' + STAGES[idx].label + ' hat die Aktionsplanung „' + (c.title || 'Aktionskalender') + '“ (' + periodLabel(c) + ') freigegeben. Bitte jetzt prüfen und freigeben' + (S.api ? ' – über deinen persönlichen Freigabe-Link.' : ':\n' + location.href) + '\n\nDanke!';
+  return ' <a class="linkbtn" href="mailto:' + mails.map(encodeURIComponent).join(',') + '?subject=' + encodeURIComponent('Freigabe ' + nxt.label + ': ' + (c.title || 'Aktionskalender')) + '&body=' + encodeURIComponent(body) + '">' + esc(nxt.label) + ' per E-Mail informieren</a>';
+}
+function renderApproval(){
+  const c = S.config, st = apStatus(c), mine = myPersons(c);
+  const who = S.api ? (S.ap.pid ? (mine[0] && mine[0].p.name) : '') : (mine[0] && mine[0].p.name);
+  let h = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Freigabe</h2><span class="small">' + esc((c.title || 'Aktionskalender') + ' · ' + periodLabel(c) + ' · ' + st.deals.length + ' Aktionen') + '</span></div>' +
+    (who ? '<span class="small">Angemeldet als <b>' + esc(who) + '</b> · ' + esc([...new Set(mine.map(m => keyLabel(m.key)))].join(', ')) + '</span>' : S.canEdit ? '<span class="small">Du bist in keiner Freigabestufe hinterlegt – nur Ansicht.</span>' : '') + '</div>';
+  if (S.api && !S.ap.pid && !S.canEdit) h += '<p class="warnline">Bitte den persönlichen Freigabe-Link aus deiner E-Mail verwenden.</p>';
+  h += '<ol class="apsteps">' + STAGES.map(s => { const x = st.stages[s.id]; const cls = x.ok ? 'ok' : x.rejected ? 'rej' : st.current === s.id ? 'cur' : ''; return '<li class="' + cls + '"><span>' + (x.ok ? '✓' : x.rejected ? '✕' : STAGES.indexOf(s) + 1) + '</span>' + s.label + '</li>'; }).join('') + '</ol>';
+  if (st.done) h += '<p class="apbanner done" style="margin-bottom:0">Alle vier Stufen haben freigegeben – die Planung ist freigegeben.</p>';
+  h += '</section>';
+  if (!st.deals.length){ $('app').innerHTML = h + '<section class="section"><p style="margin:0">Noch keine Aktionen geplant – es gibt nichts freizugeben.</p></section></div>'; renderSavebar(); return; }
+  // Produktmanagement
+  h += '<section class="section"><div class="section-head"><h3>1 · Produktmanagement je Kategorie</h3><span>' + (st.stages.pm.ok ? stateBadge('ok') + nextMailLink(c, st, 'pm') : '') + '</span></div><div class="aplist">';
+  st.pm.forEach(x => {
+    h += '<div class="apitem"><div class="api-l"><b>' + esc(x.cat) + '</b> <span class="small">· ' + x.n + (x.n === 1 ? ' Aktion' : ' Aktionen') + ' · ' + esc(x.people.map(p => p.name).join(', ') || '—') + '</span><br>' + stateBadge(x.state) + ' ' + recLine(x.rec) + '</div>' +
+      '<div class="api-r">' + (canAct(c, st, x.key) ? '<button type="button" class="btn' + (x.state === 'ok' ? '' : ' primary') + '" data-apsel="' + esc(x.key) + '">' + (x.state === 'ok' ? 'Erneut prüfen' : 'Prüfen') + '</button>' : '') + '</div></div>';
+    if (S.ap.sel === x.key) h += actionPanel(c, x.key);
+  });
+  h += '</div></section>';
+  ['finance','marketing','sd'].forEach((k, i) => {
+    const x = st.stages[k], state = !x.reached ? 'wait' : x.state;
+    h += '<section class="section"><div class="section-head"><h3>' + (i + 2) + ' · ' + esc(keyLabel(k)) + '</h3><span>' + (x.ok ? nextMailLink(c, st, k) : '') + '</span></div><div class="aplist"><div class="apitem"><div class="api-l"><span class="small">' + esc(x.people.map(p => p.name).join(', ') || 'Keine Person hinterlegt') + '</span><br>' + stateBadge(state) + ' ' + recLine(x.rec) + '</div>' +
+      '<div class="api-r">' + (canAct(c, st, k) ? '<button type="button" class="btn' + (x.state === 'ok' ? '' : ' primary') + '" data-apsel="' + k + '">' + (x.state === 'ok' ? 'Erneut prüfen' : 'Prüfen') + '</button>' : '') + '</div></div>' +
+      (S.ap.sel === k ? actionPanel(c, k) : '') + '</div></section>';
+  });
+  // Verlauf
+  const log = []; Object.values(S.ap.docs).forEach(d => (d.log || []).forEach(l => log.push(Object.assign({ name: d.name }, l))));
+  log.sort((a,b) => String(b.at).localeCompare(String(a.at)));
+  h += '<section class="section"><div class="section-head"><h3>Verlauf</h3></div>' + (log.length ? '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Zeitpunkt</th><th>Person</th><th>Stufe</th><th>Entscheidung</th><th>Kommentar</th></tr></thead><tbody>' +
+    log.slice(0, 80).map(l => '<tr><td>' + esc(fmtAt(l.at)) + '</td><td>' + esc(l.name || '') + '</td><td>' + esc(keyLabel(l.key)) + '</td><td>' + (l.status === 'ok' ? 'Freigegeben' : 'Abgelehnt') + '</td><td>' + esc(l.note || '') + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="small" style="margin:0">Noch keine Entscheidungen.</p>') + '</section></div>';
+  $('app').innerHTML = h; renderSavebar();
+}
+async function submitDecision(key, status){
+  const c = S.config, note = ($('ap-note') || {}).value ? $('ap-note').value.trim() : '';
+  if (status === 'rejected' && !note){ toast('Bitte einen Kommentar zur Ablehnung angeben'); const n = $('ap-note'); if (n) n.focus(); return; }
+  if (S.ap.busy) return; S.ap.busy = true;
+  const rec = { status, note, hash: keyHash(c, key), at: new Date().toISOString() };
+  const me = myPersons(c).find(m => m.key === key);
+  try {
+    if (S.api){
+      const r = await fetch('/api/approve', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ token: S.ap.token, key, status, note, hash: rec.hash }) });
+      if (!r.ok) throw new Error('http ' + r.status);
+      await apLoadApprovals();
+    } else {
+      const cur = S.ap.docs[S.ap.uid] || {};
+      const entries = Object.assign({}, cur.entries || {}, { [key]: rec });
+      const log = [{ key, status, note, at: rec.at }].concat(cur.log || []).slice(0, 100);
+      const data = { name: (me && me.p.name) || '', entries, log };
+      await S.db.collection('approvals').doc(S.ap.uid).set(data);
+      S.ap.docs[S.ap.uid] = data;
+    }
+    S.ap.sel = null; toast(status === 'ok' ? 'Freigegeben – danke!' : 'Ablehnung gespeichert'); renderApproval();
+  } catch(e){ toast('Speichern nicht möglich – bitte erneut versuchen'); }
+  S.ap.busy = false;
+}
+async function apLoadApprovals(){
+  if (!S.api) return;
+  try { const r = await fetch('/api/approvals', { cache:'no-store' }); if (r.ok){ const j = await r.json(); S.ap.docs = (j && j.byPid) || {}; S.ap.loaded = true; } } catch(e) {}
+}
+async function apWhoami(){
+  if (!S.api) return;
+  const q = new URLSearchParams(location.search).get('k');
+  if (q){ ssSet('kal-token', q); try { history.replaceState(null, '', location.pathname); } catch(e) {} }
+  const t = q || ssGet('kal-token'); if (!t) return;
+  try { const r = await fetch('/api/whoami', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ token: t }) });
+    if (r.ok){ const j = await r.json(); S.ap.token = t; S.ap.pid = j.pid; } else ssSet('kal-token', null); } catch(e) {}
+}
+document.addEventListener('click', e => {
+  const t = e.target;
+  const go = t.closest('[data-goto]'); if (go){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } S.view = go.dataset.goto; render(); window.scrollTo(0,0); return; }
+  if (S.view === 'approval'){
+    const sel = t.closest('[data-apsel]'); if (sel){ S.ap.sel = sel.dataset.apsel || null; renderApproval(); return; }
+    const d = t.closest('[data-apdo]'); if (d){ submitDecision(d.dataset.key, d.dataset.apdo); return; }
+    return;
+  }
+  if (S.view !== 'admin') return;
+  const add = t.closest('[data-padd]'); if (add){ const k = add.dataset.padd; const n = document.querySelector('[data-pname="' + CSS.escape(k) + '"]').value.trim(), m = document.querySelector('[data-pmail="' + CSS.escape(k) + '"]').value.trim();
+    if (!n && !m){ toast('Bitte Name oder E-Mail eingeben'); return; }
+    if (!S.api) toast('Ohne Kontoauswahl aus der Suche kann diese Person hier nicht freigeben');
+    addPerson(k, n || m, m, null); return; }
+  const ps = t.closest('[data-psel]'); if (ps){ addPerson(ps.dataset.psel, ps.dataset.n || ps.dataset.e, ps.dataset.e, ps.dataset.uid); return; }
+  const del = t.closest('[data-pdel]'); if (del){ const [k, pid] = del.dataset.pdel.split('|'); const ppl = ensureApproval(S.draft);
+    if (k.startsWith('pm:')) ppl.pm[k.slice(3)] = (ppl.pm[k.slice(3)] || []).filter(p => p.pid !== pid); else ppl[k] = ppl[k].filter(p => p.pid !== pid);
+    markDirty(); rerenderPeople(); return; }
+  const all = t.closest('[data-pall]'); if (all){ const k = all.dataset.pall, ppl = ensureApproval(S.draft), src = ppl.pm[k.slice(3)] || []; let n = 0;
+    PM_CATS.forEach(cat => { if (!(ppl.pm[cat] || []).length){ ppl.pm[cat] = clone(src); n++; } }); if (n) { markDirty(); rerenderPeople(); } toast(n ? 'Bei ' + n + ' Kategorien eingetragen' : 'Alle Kategorien haben bereits Personen'); return; }
+  const pl = t.closest('[data-plink]'); if (pl){ const [k, pid] = pl.dataset.plink.split('|'); const p = apPeople(S.draft, k).find(x => x.pid === pid); if (!p) return;
+    const link = personLink(p); (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(() => toast(S.dirty ? 'Link kopiert – vor dem Versand speichern' : 'Freigabe-Link kopiert'), () => toast(link)); return; }
+});
+document.addEventListener('input', e => {
+  if (S.view !== 'admin' || !e.target.dataset || !e.target.dataset.pname) return;
+  const k = e.target.dataset.pname, q = e.target.value; clearTimeout(personSearch._t); personSearch._t = setTimeout(() => personSearch(k, q), 250);
+});
+
+
+/* ---------- Warenkorb & Bestellung ---------- */
+S.cart = []; S.sold = {}; S.orders = null;
+const CUST_FIELDS = [
+  ['firma','Firma',true,'text','organization'], ['kdnr','Kundennummer',false,'text',''], ['name','Ansprechpartner:in',true,'text','name'],
+  ['email','E-Mail',true,'email','email'], ['tel','Telefon',true,'tel','tel'], ['adresse','Lieferadresse (falls abweichend)',false,'text','street-address'], ['notiz','Bemerkung',false,'text','']
+];
+function cartLoad(){ try { const v = JSON.parse(localStorage.getItem('kal-cart') || '[]'); S.cart = Array.isArray(v) ? v : []; } catch(e) { S.cart = []; } cartPrune(); }
+function cartSave(){ try { localStorage.setItem('kal-cart', JSON.stringify(S.cart)); } catch(e) {} }
+function cartPrune(){ const t = today(); const before = S.cart.length; S.cart = S.cart.filter(x => x.day === t && S.config && dealFor(S.config, x.day) && dealFor(S.config, x.day).p.k === x.k); if (S.cart.length !== before) cartSave(); }
+function custLoad(){ try { return JSON.parse(localStorage.getItem('kal-kunde') || '{}') || {}; } catch(e) { return {}; } }
+function custSave(v){ try { const keep = Object.assign({}, v); delete keep.notiz; localStorage.setItem('kal-kunde', JSON.stringify(keep)); } catch(e) {} }
+function cartItems(){ return S.cart.map(x => { const d = dealFor(S.config, x.day); return d ? Object.assign({}, x, { deal:d, line: (d.price || 0) * x.qty }) : null; }).filter(Boolean); }
+function renderCartFab(){
+  let fab = $('cart-fab');
+  if (S.view !== 'kalender' || !S.cart.length){ if (fab) fab.remove(); return; }
+  const n = S.cart.reduce((a,x) => a + x.qty, 0);
+  if (!fab){ fab = document.createElement('button'); fab.type = 'button'; fab.id = 'cart-fab'; fab.className = 'cartfab'; document.body.appendChild(fab); }
+  fab.innerHTML = 'Warenkorb <b>' + n + '</b>';
+}
+function addToCart(day){
+  const deal = dealFor(S.config, day); if (!deal || status(day) !== 'today'){ toast('Diese Aktion ist nicht mehr bestellbar'); return; }
+  const rem = remainingFor(deal); let q = Math.round(num(($('ord-qty') || {}).value) || 1);
+  if (q < 1) q = 1; if (rem != null && q > rem){ q = rem; toast('Nur mehr ' + rem + ' Stück verfügbar'); }
+  if (rem != null && rem <= 0){ toast('Leider ausverkauft'); return; }
+  const ex = S.cart.find(x => x.day === day && x.k === deal.p.k);
+  if (ex) ex.qty = q; else S.cart.push({ day, k: deal.p.k, qty: q });
+  cartSave(); renderCartFab(); toast(deal.p.m + ' · ' + q + ' Stk. im Warenkorb');
+  const b = document.querySelector('[data-addcart]'); if (b) b.textContent = 'Menge im Warenkorb ändern';
+}
+function cartDialog(){
+  cartPrune(); const items = cartItems(), c = S.config, cu = custLoad();
+  if (!items.length){ $('overlay-slot').innerHTML = ''; renderCartFab(); toast('Der Warenkorb ist leer'); return; }
+  const total = items.reduce((a,x) => a + x.line, 0);
+  const rows = items.map(x => { const rem = remainingFor(x.deal); return '<tr><td><b>' + esc(x.deal.p.m) + '</b><br><span class="small">' + esc(x.deal.p.b) + ' · Aktion ' + fmtShort(x.day) + '</span></td>' +
+    '<td><span class="stepper sm"><button type="button" data-cq="-1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Weniger">−</button><span class="num">' + x.qty + '</span><button type="button" data-cq="1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Mehr"' + (rem != null && x.qty >= rem ? ' disabled' : '') + '>+</button></span></td>' +
+    '<td class="num">' + eur(x.deal.price) + '</td><td class="num"><b>' + eur(x.line) + '</b></td><td><button type="button" class="pc-x" data-cdel="' + x.day + '|' + esc(x.k) + '" aria-label="Entfernen">×</button></td></tr>'; }).join('');
+  const fields = CUST_FIELDS.map(([k,l,req,type,ac]) => '<label class="f"' + (k === 'adresse' || k === 'notiz' ? ' style="grid-column:1/-1"' : '') + '>' + esc(l) + (req ? ' *' : '') + '<input type="' + type + '" id="cu-' + k + '" name="' + k + '"' + (ac ? ' autocomplete="' + ac + '"' : '') + (req ? ' required' : '') + ' value="' + esc(cu[k] || '') + '"></label>').join('');
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog cartdlg" role="dialog" aria-modal="true" aria-label="Warenkorb"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button>' +
+    '<div class="cartin"><h2 style="margin:0 0 4px">Warenkorb</h2><p class="small" style="margin:0 0 10px">Bestellbar nur am Aktionstag bis 23:59 Uhr, solange der Vorrat reicht. Preise = Aktions-HEK exkl. MwSt.</p>' +
+    '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Gerät</th><th>Menge</th><th style="text-align:right">Aktions-HEK</th><th style="text-align:right">Summe</th><th></th></tr></thead><tbody>' + rows + '</tbody>' +
+    '<tfoot><tr><td colspan="2">Gesamt exkl. MwSt.</td><td class="hidecell"></td><td class="num">' + eur(total) + '</td><td></td></tr></tfoot></table></div>' +
+    '<form id="orderform" novalidate><h3 style="margin:16px 0 8px;font-size:16px">Ihre Daten</h3><div class="fields">' + fields + '</div>' +
+    '<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px"><input type="checkbox" id="cu-ok" required style="margin-top:3px"><span>Ich bestelle verbindlich zu den angegebenen Aktions-HEK (exkl. MwSt.). Zuteilung nach Eingang, solange der Vorrat reicht.</span></label>' +
+    '<p class="warnline" id="ord-err" hidden></p><div class="actions" style="margin-top:12px"><button type="submit" class="btn primary" id="ord-send">Verbindlich bestellen</button><button type="button" class="btn" id="ov-x2">Weiter ansehen</button></div>' +
+    '<p class="small" style="margin:10px 0 0">' + legalLine(c) + '</p></form></div></div></div>';
+}
+function orderMailto(order){
+  const c = S.config, mail = c.orderEmail || 'order.austria@beko.com';
+  const lines = order.items.map(x => '- ' + x.qty + ' × ' + x.brand + ' ' + x.model + ' (Aktion ' + fmtShort(x.day) + ') à ' + eur(x.price) + ' = ' + eur(x.line)).join('\n');
+  const body = 'Bestellung ' + order.no + ' aus dem ' + (c.title || 'Aktionskalender') + '\n\n' + lines + '\nGesamt exkl. MwSt.: ' + eur(order.total) + '\n\nFirma: ' + order.customer.firma + '\nKundennummer: ' + (order.customer.kdnr || '') + '\nAnsprechpartner:in: ' + order.customer.name + '\nE-Mail: ' + order.customer.email + '\nTelefon: ' + order.customer.tel + (order.customer.adresse ? '\nLieferadresse: ' + order.customer.adresse : '') + (order.customer.notiz ? '\nBemerkung: ' + order.customer.notiz : '');
+  return 'mailto:' + mail + '?subject=' + encodeURIComponent('Bestellung ' + order.no + ' – ' + order.customer.firma) + '&body=' + encodeURIComponent(body);
+}
+function buildOrder(cu){
+  const items = cartItems().map(x => ({ day:x.day, k:x.k, brand:x.deal.p.b, model:x.deal.p.m, type:x.deal.p.t, qty:x.qty, price:x.deal.price, line:x.line }));
+  const d = new Date(), no = 'AK-' + today().replace(/-/g,'') + '-' + randId(2).toUpperCase();
+  return { no, at: d.toISOString(), items, total: items.reduce((a,x) => a + x.line, 0), customer: cu, title: S.config.title || 'Aktionskalender' };
+}
+async function submitOrder(){
+  const err = $('ord-err'), cu = {}; let bad = null;
+  CUST_FIELDS.forEach(([k,l,req]) => { const v = ($('cu-' + k).value || '').trim(); cu[k] = v; if (req && !v && !bad) bad = l; });
+  if (!bad && !/^\S+@\S+\.\S+$/.test(cu.email)) bad = 'eine gültige E-Mail';
+  if (!bad && !$('cu-ok').checked) bad = 'die Bestätigung der verbindlichen Bestellung';
+  if (bad){ err.textContent = 'Bitte ' + bad + ' angeben.'; err.hidden = false; return; }
+  cartPrune(); if (!S.cart.length){ err.textContent = 'Die Aktion ist inzwischen abgelaufen – der Warenkorb ist leer.'; err.hidden = false; return; }
+  const btn = $('ord-send'); btn.disabled = true; btn.textContent = 'Wird gesendet …'; err.hidden = true;
+  custSave(cu);
+  let order = buildOrder(cu), mailed = null;
+  try {
+    if (S.api){
+      const r = await fetch('/api/order', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ items: S.cart, customer: cu }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok){ if (j.sold) S.sold = j.sold; throw new Error(j.error || 'Bestellung nicht möglich'); }
+      order = j.order; mailed = !!j.mailed; if (j.sold) S.sold = j.sold;
+    } else if (S.db && S.ap.uid){
+      const ref = S.db.collection('orders').doc(S.ap.uid); let cur = { orders: [] };
+      try { const g = await ref.get(); if (g.exists) cur = g.data() || cur; } catch(e) {}
+      await ref.set({ orders: [order].concat(cur.orders || []).slice(0, 200) });
+      for (const x of order.items){ const sref = S.db.collection('stock').doc(x.day); let n = 0; try { const g = await sref.get(); if (g.exists) n = (g.data() || {}).n || 0; } catch(e) {} await sref.set({ n: n + x.qty }); S.sold[x.day] = n + x.qty; }
+    }
+  } catch(e){ btn.disabled = false; btn.textContent = 'Verbindlich bestellen'; err.textContent = (e && e.message && !/^http|fetch/i.test(e.message) ? e.message : 'Die Bestellung konnte nicht gesendet werden. Bitte erneut versuchen oder per E-Mail bestellen.'); err.hidden = false; return; }
+  S.cart = []; cartSave(); renderCartFab();
+  const c = S.config, mail = c.orderEmail || 'order.austria@beko.com';
+  const msg = S.api ? (mailed ? 'Ihre Bestellung wurde an ' + esc(mail) + ' übermittelt. Eine Kopie geht an ' + esc(order.customer.email) + '.' : 'Ihre Bestellung ist bei uns eingegangen und wird an ' + esc(mail) + ' weitergeleitet.')
+    : 'Ihre Bestellung ist gespeichert.';
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog cartdlg" role="dialog" aria-modal="true" aria-label="Bestellung bestätigt"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button><div class="cartin">' +
+    '<h2 style="margin:0 0 6px">Danke für Ihre Bestellung</h2><p style="margin:0 0 10px">Bestellnummer <b>' + esc(order.no) + '</b> · ' + esc(fmtAt(order.at)) + '</p><p style="margin:0 0 10px">' + msg + '</p>' +
+    '<div class="tblwrap"><table class="aptbl"><tbody>' + order.items.map(x => '<tr><td>' + x.qty + ' × <b>' + esc(x.brand + ' ' + x.model) + '</b></td><td class="num">' + eur(x.line) + '</td></tr>').join('') + '</tbody><tfoot><tr><td>Gesamt exkl. MwSt.</td><td class="num">' + eur(order.total) + '</td></tr></tfoot></table></div>' +
+    (!S.api ? '<p class="small">Zusätzlich per E-Mail senden: <a href="' + esc(orderMailto(order)) + '">Bestellung an ' + esc(mail) + '</a></p>' : '') +
+    '<p class="small" style="margin-bottom:0">Fragen: Tel. <a href="' + telHref(c.orderPhone) + '">' + esc(c.orderPhone || DEF_PHONE) + '</a> · <a href="mailto:' + esc(mail) + '">' + esc(mail) + '</a></p></div></div></div>';
+  if (S.view === 'kalender') renderDealer();
+}
+/* Verwaltung: Bestellungen */
+async function loadOrders(){
+  try {
+    if (S.api){ const r = await fetch('/api/orders', { cache:'no-store', headers:{ authorization:'Bearer ' + S.pw } }); if (!r.ok) throw 0; const j = await r.json(); S.orders = j.orders || []; if (j.sold) S.sold = j.sold; }
+    else if (S.db){ const snap = await S.db.collection('orders').get(); const all = []; snap.docs.forEach(d => ((d.data() || {}).orders || []).forEach(o => all.push(o))); all.sort((a,b) => String(b.at).localeCompare(String(a.at))); S.orders = all; }
+    else S.orders = S.orders || [];
+  } catch(e){ S.orders = S.orders || []; toast('Bestellungen konnten nicht geladen werden'); }
+}
+function renderOrders(){
+  const list = S.orders;
+  if (list == null){ $('app').innerHTML = '<div class="admin"><section class="section"><h2>Bestellungen</h2><p class="small">Wird geladen …</p></section></div>'; loadOrders().then(() => { if (S.view === 'orders') renderOrders(); }); renderSavebar(); return; }
+  const c = S.config, mail = c.orderEmail || 'order.austria@beko.com';
+  const byDay = {}; list.forEach(o => o.items.forEach(x => { byDay[x.day] = (byDay[x.day] || 0) + x.qty; }));
+  const tot = list.reduce((a,o) => a + (o.total || 0), 0);
+  const sumRows = periodDays(c).map(d => { const deal = dealFor(c, d); if (!deal) return ''; const sold = byDay[d] || 0; return '<tr><td>' + fmtShort(d) + '</td><td>' + esc(deal.p.m) + '</td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('');
+  const rows = list.map(o => '<tr><td>' + esc(fmtAt(o.at)) + '<br><span class="small">' + esc(o.no) + '</span></td><td><b>' + esc(o.customer.firma) + '</b>' + (o.customer.kdnr ? ' · ' + esc(o.customer.kdnr) : '') + '<br><span class="small">' + esc(o.customer.name) + ' · <a href="mailto:' + esc(o.customer.email) + '">' + esc(o.customer.email) + '</a> · <a href="' + telHref(o.customer.tel) + '">' + esc(o.customer.tel) + '</a></span>' + (o.customer.notiz ? '<br><span class="small">„' + esc(o.customer.notiz) + '“</span>' : '') + '</td>' +
+    '<td>' + o.items.map(x => x.qty + ' × ' + esc(x.model) + ' <span class="small">(' + fmtShort(x.day) + ')</span>').join('<br>') + '</td><td class="num">' + eur(o.total) + '</td><td>' + (o.mail === 'sent' ? '<span class="apb ok">versendet</span>' : o.mail === 'failed' ? '<span class="apb rej">Mail fehlgeschlagen</span>' : S.api ? '<span class="apb open">ohne Mail</span>' : '<span class="apb open">gespeichert</span>') + '</td></tr>').join('');
+  $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Bestellungen</h2><span class="small">' + list.length + ' Bestellungen · ' + eur(tot) + ' exkl. MwSt. · Empfänger: ' + esc(mail) + '</span></div>' +
+    '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="ord-reload">Aktualisieren</button><button type="button" class="btn primary" id="ord-csv"' + (list.length ? '' : ' disabled') + '>Als CSV (Excel) herunterladen</button></span></div>' +
+    (S.api ? '' : '<p class="warnline" style="margin-top:0">In dieser Claude-Version werden Bestellungen gespeichert, aber nicht automatisch per E-Mail versendet. Der automatische Versand an ' + esc(mail) + ' läuft in der Cloudflare-Version.</p>') +
+    '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Eingang</th><th>Händler</th><th>Geräte</th><th style="text-align:right">Summe</th><th>E-Mail</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" class="small">Noch keine Bestellungen.</td></tr>') + '</tbody></table></div></section>' +
+    '<section class="section"><div class="section-head"><h3>Kontingent je Aktionstag</h3></div><div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag</th><th>Gerät</th><th>Kontingent</th><th>Bestellt</th><th>Rest</th></tr></thead><tbody>' + sumRows + '</tbody></table></div></section></div>';
+  renderSavebar();
+}
+async function ordersCsv(){
+  const q = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+  const head = ['Bestellnummer','Eingang','Aktionstag','Marke','Modell','Menge','Aktions-HEK','Summe','Firma','Kundennummer','Ansprechpartner','E-Mail','Telefon','Lieferadresse','Bemerkung','Mail'];
+  const lines = [head.map(q).join(';')];
+  (S.orders || []).forEach(o => o.items.forEach(x => lines.push([o.no, fmtAt(o.at), fmtShort(x.day), x.brand, x.model, x.qty, String(x.price).replace('.',','), String(x.line).replace('.',','), o.customer.firma, o.customer.kdnr, o.customer.name, o.customer.email, o.customer.tel, o.customer.adresse, o.customer.notiz, o.mail || ''].map(q).join(';'))));
+  const r = await saveFile('Bestellungen_' + (S.config.title || 'Aktionskalender').replace(/[^\wäöüÄÖÜß-]+/g,'_') + '_' + today() + '.csv', new Blob(['﻿' + lines.join('\r\n')], { type:'text/csv' }));
+  if (r === 'saved') toast('CSV gespeichert');
+}
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('#cart-fab')){ cartDialog(); return; }
+  if (t.id === 'ov-x2'){ $('overlay-slot').innerHTML = ''; return; }
+  const ac = t.closest('[data-addcart]'); if (ac){ addToCart(ac.dataset.addcart); return; }
+  const qs = t.closest('[data-qstep]'); if (qs){ const inp = $('ord-qty'); if (inp){ const mx = inp.max ? +inp.max : 999; inp.value = Math.min(mx, Math.max(1, (+inp.value || 1) + (+qs.dataset.qstep))); } return; }
+  const cq = t.closest('[data-cq]'); if (cq){ const [day, k] = cq.dataset.ci.split(/\|(.*)/s); const it = S.cart.find(x => x.day === day && x.k === k); if (it){ const rem = remainingFor(dealFor(S.config, day)); it.qty = Math.max(1, it.qty + (+cq.dataset.cq)); if (rem != null) it.qty = Math.min(it.qty, rem); cartSave(); const keep = {}; CUST_FIELDS.forEach(([f]) => { const el = $('cu-' + f); if (el) keep[f] = el.value; }); custSave(Object.assign(custLoad(), keep)); cartDialog(); renderCartFab(); } return; }
+  const cd = t.closest('[data-cdel]'); if (cd){ const [day, k] = cd.dataset.cdel.split(/\|(.*)/s); S.cart = S.cart.filter(x => !(x.day === day && x.k === k)); cartSave(); renderCartFab(); cartDialog(); return; }
+  if (t.id === 'ord-reload'){ S.orders = null; renderOrders(); return; }
+  if (t.id === 'ord-csv'){ ordersCsv(); return; }
+});
+document.addEventListener('submit', e => { if (e.target.id === 'orderform'){ e.preventDefault(); submitOrder(); } });
+
 /* ---------- Gesamtdarstellung ---------- */
 function renderHeader(){
   const c = S.view === 'admin' ? S.draft : S.config;
@@ -821,14 +1579,18 @@ function renderHeader(){
   if (S.config.example && S.view !== 'admin') notes.push('Beispieldaten – Preise noch nicht freigegeben');
   if (S.demo && S.view !== 'admin') notes.push('Vorschau mit Beispieldaten');
   $('h-notice').innerHTML = notes.map(n => '<span class="notice">' + esc(n) + '</span> ').join('');
-  $('tabs').hidden = !S.canEdit;
-  $('tab-kal').setAttribute('aria-pressed', S.view === 'kalender'); $('tab-adm').setAttribute('aria-pressed', S.view === 'admin');
+  const apv = isApprover() || (S.api && !!S.ap.token);
+  $('tabs').hidden = !(S.canEdit || apv); $('tab-adm').hidden = !S.canEdit; $('tab-fly').hidden = !S.canEdit; $('tab-ord').hidden = !S.canEdit;
+  $('tab-ord').setAttribute('aria-pressed', S.view === 'orders');
+  $('tab-apv').setAttribute('aria-pressed', S.view === 'approval');
+  $('tab-kal').setAttribute('aria-pressed', S.view === 'kalender'); $('tab-adm').setAttribute('aria-pressed', S.view === 'admin'); $('tab-fly').setAttribute('aria-pressed', S.view === 'flyer');
 }
 function render(){
   if (!S.loaded) return;
   if (S.api && !S.canEdit && wantsAdmin()){ renderHeader(); renderLogin(); renderSavebar(); return; }
   renderHeader();
-  if (S.view === 'admin') renderAdmin(); else { renderDealer(); renderSavebar(); }
+  if (S.view === 'admin') renderAdmin(); else if (S.view === 'orders' && S.canEdit) renderOrders(); else if (S.view === 'flyer' && S.canEdit) renderFlyer(); else if (S.view === 'approval' && (S.canEdit || isApprover() || (S.api && S.ap.token))) renderApproval(); else { if (S.view !== 'kalender') S.view = 'kalender'; renderHeader(); renderDealer(); renderSavebar(); }
+  renderCartFab();
 }
 
 
@@ -862,27 +1624,37 @@ setInterval(() => {
   if (!db){
     const raw = await apiLoad();
     if (raw !== undefined){
-      S.api = true; S.config = cfgFrom(raw); S.draft = clone(S.config); S.loaded = true;
-      const pw = ssGet('kal-admin'); if (pw && await apiAuth(pw)){ S.pw = pw; S.canEdit = true; if (wantsAdmin()) S.view = 'admin'; }
+      S.api = true; S.config = cfgFrom(raw); S.draft = clone(S.config); S.loaded = true; cartLoad();
+      const pw = ssGet('kal-admin'); if (pw && await apiAuth(pw)){ S.pw = pw; S.canEdit = true; if (wantsAdmin()) S.view = 'admin'; const full = await apiLoad(); if (full !== undefined){ S.config = cfgFrom(full); S.draft = clone(S.config); } }
+      await Promise.all([apWhoami(), apLoadApprovals()]);
+      if (S.ap.token && !wantsAdmin()) S.view = 'approval';
       render();
       setInterval(poll, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
       return;
     }
-    S.demo = true; S.canEdit = true; S.config = exampleConfig(defaultConfig()); S.config.example = false; S.draft = clone(S.config); S.loaded = true; render(); return;
+    S.demo = true; S.canEdit = true; S.config = exampleConfig(defaultConfig()); S.config.example = false; S.draft = clone(S.config); S.loaded = true; cartLoad(); render(); return;
   }
   S.db = db;
   try { S.canEdit = user ? !!(await user.canEdit()) : false; } catch(e) { S.canEdit = false; }
+  S.ap.userApi = user; try { S.ap.uid = user ? await user.id() : null; } catch(e) { S.ap.uid = null; }
+  db.collection('stock').onSnapshot(snap => { const m = {}; snap.docs.forEach(d => { if (d.exists) m[d.id] = (d.data() || {}).n || 0; }); S.sold = m; if (S.loaded && S.view === 'kalender' && !$('ov')) renderDealer(); }, () => {});
+  db.collection('approvals').onSnapshot(snap => {
+    const docs = {}; snap.docs.forEach(d => { if (d.exists) docs[d.id] = d.data(); }); S.ap.docs = docs; S.ap.loaded = true;
+    if (!S.loaded) return;
+    if (S.view === 'approval' && !S.ap.sel) render(); else if (S.view !== 'admin' || !S.dirty) renderHeader();
+  }, () => {});
   db.doc('calendar/config').onSnapshot(snap => {
     const data = snap.exists ? snap.data() : null;
     S.config = data ? normalize(Object.assign({ orderEmail:'order.austria@beko.com', title:'' }, data)) : defaultConfig();
     if (!S.dirty) S.draft = clone(S.config);
-    const first = !S.loaded; S.loaded = true;
+    const first = !S.loaded; S.loaded = true; if (first) cartLoad();
     if (first || S.view === 'kalender') render();
     else if (!S.dirty) render();
   }, () => { S.config = S.config || defaultConfig(); S.draft = S.draft || clone(S.config); S.loaded = true; render(); });
 })();
 })();
 </script>
+
 
 </body>
 </html>
