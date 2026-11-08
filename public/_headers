@@ -1,0 +1,10 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Robots-Tag: noindex, nofollow
+
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
