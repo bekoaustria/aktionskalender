@@ -741,6 +741,9 @@ function periodDays(c){ const out = []; for (let i=0; i<c.count; i++) out.push(a
 const isAdvent = c => c.theme === 'xmas' && c.count === 24 && c.start.slice(5) === '12-01';
 const useWeekGrid = c => !isAdvent(c) && c.count >= 15;
 const colsClass = c => useWeekGrid(c) ? '' : ' cols-' + (c.count <= 4 ? c.count : (c.count % 4 === 0 && c.count <= 16) ? 4 : (c.count === 5 ? 5 : 6));
+/* Aktionstage fürs Laufband, z. B. „Mo 23.11. – Mo 30.11.2026“ */
+function tickerDays(c){ const d = periodDays(c), a = d[0], b = d[d.length-1]; return a === b ? WD[dowOf(a)] + ' ' + fmtShort(a) + a.slice(0,4) : WD[dowOf(a)] + ' ' + fmtShort(a) + ' – ' + WD[dowOf(b)] + ' ' + fmtShort(b) + b.slice(0,4); }
+function tickerDeals(c){ const t = String(c.title || 'Black').trim(); return 'Täglich neue ' + (/deals?$/i.test(t) ? t.replace(/deal$/i, 'Deals') : t + ' Deals'); }
 function periodLabel(c){
   const d = periodDays(c), a = d[0], b = d[d.length-1];
   if (isAdvent(c)) return '1.–24. Dezember ' + a.slice(0,4);
@@ -1734,7 +1737,7 @@ function flyerDoc(c, opt){
   const imp = 'Impressum: ' + esc(c.impressum || DEF_IMPRESSUM) + ' · Tel. ' + esc(phone) + ' · ' + esc(mail);
   const orderTile = '<div class="t order"><div class="ob">So bestellen Sie</div>' + (web ? '<p>Online im Aktionskalender</p>' + webA : '') + '<p>per E-Mail</p>' + mailA + '<p>oder telefonisch</p>' + telA + '<p>Solange der Vorrat reicht.</p></div>';
   const orderBar = '<footer class="obar"><div><b>So bestellen Sie</b>' + (web ? 'Online: ' + webA + '<br>' : '') + 'E-Mail: ' + mailA + '<br>Telefon: ' + telA + '<br>Am Aktionstag Modell und Stückzahl angeben – Zuteilung nach Eingang, solange der Vorrat reicht.</div><div class="fine">' + fine + '<br><br>' + imp + '</div></footer>';
-  const unit = '<span>' + esc(title.toUpperCase()) + '</span><b>✦</b><span>' + (c.count === 1 && deals.length === 1 ? 'Nur 1 Tag' : nDays + ' Tage · ' + deals.length + ' Deals') + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b>';
+  const unit = '<span>' + esc(title.toUpperCase()) + '</span><b>✦</b><span>' + esc(tickerDays(c)) + '</span><b>✦</b><span>' + (c.count === 1 && deals.length === 1 ? 'Nur 1 Tag' : c.count + ' Tage · ' + esc(tickerDeals(c))) + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b>';
   const mark = flyDraftMark(c) ? '<span class="draftmark">Entwurf – Preise nicht freigegeben</span>' : '';
   const bigHead = '<header class="band"><div class="logos">' + logos + '</div>' + mark + '<div class="kick">Exklusiv für den österreichischen Fachhandel</div><h1>' + esc(title) + '</h1>' +
     '<div class="per">' + esc(per) + '</div><p>' + esc(flyIntro(c)) + '</p></header><div class="ticker">' + unit.repeat(4) + '</div>';
@@ -2435,7 +2438,7 @@ function renderHeader(){
   $('h-sub').textContent = c.count === 1
     ? 'Am ' + fmtLong(c.start) + ' ein Top-Gerät zum Sonder-HEK für den Fachhandel – nur von 0:00 bis 23:59 Uhr bestellbar.'
     : 'Vom ' + fmtShort(c.start) + ' bis ' + fmtShort(last) + last.slice(0,4) + ' jeden Tag ein neues Aktionsgerät zum Sonder-HEK für den Fachhandel. Jede Aktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr.' + (S.config && rangeDeals(c).length ? ' Dazu Aktionen, die über mehrere Tage gelten.' : '');
-  const mq = $('marquee'); if (mq){ const unit = '<span>' + esc((c.title || 'Black Deals').toUpperCase()) + '</span><b>✦</b><span>' + (c.count === 1 ? 'Nur 1 Tag' : 'Täglich neuer Deal') + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b><span>Solange der Vorrat reicht</span><b>✦</b>'; mq.innerHTML = '<div class="mq-track">' + unit.repeat(6) + '</div>'; }
+  const mq = $('marquee'); if (mq){ const unit = '<span>' + esc((c.title || 'Black Deals').toUpperCase()) + '</span><b>✦</b><span>' + esc(tickerDays(c)) + '</span><b>✦</b><span>' + (c.count === 1 ? 'Nur 1 Tag' : c.count + ' Tage · ' + esc(tickerDeals(c))) + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b><span>Solange der Vorrat reicht</span><b>✦</b>'; mq.innerHTML = '<div class="mq-track">' + unit.repeat(6) + '</div>'; }
   const notes = [];
   if (S.sim) notes.push('Testansicht für den ' + fmtLong(S.sim));
   if (S.config.example && S.view !== 'admin') notes.push('Beispieldaten – Preise noch nicht freigegeben');
