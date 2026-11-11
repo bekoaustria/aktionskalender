@@ -168,9 +168,17 @@ input[type=text],input[type=number],input[type=email],input[type=date],input[typ
 .toggle{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
 .pcard.on .toggle{background:var(--ok);border-color:var(--ok);color:#fff}
 .days{display:flex;flex-direction:column;gap:6px}
-.drow{display:grid;grid-template-columns:92px minmax(0,2.4fr) repeat(2,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
+.drow{display:grid;grid-template-columns:92px 56px minmax(0,2.4fr) repeat(2,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
 .drow.today{box-shadow:inset 0 0 0 2px var(--gold)}
 .drow.past{opacity:.7}
+.thumb{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:0 0 auto;background:transparent;overflow:hidden}
+.thumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.thumb.sm{width:44px;height:44px}
+.thumb:empty{border:1px dashed var(--line);border-radius:8px}
+.thumb:empty::after{content:'kein Foto';font-size:9px;color:#999;text-align:center;line-height:1.1}
+.drow .thumb,.rrow .thumb{align-self:end}
+.withpic{display:flex;gap:10px;align-items:center}
+.withpic>div{min-width:0}
 .drow .dt{font-weight:700;font-size:14px;align-self:center}
 .drow .dt small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
 .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;height:38px;width:36px;font-size:16px;color:var(--muted)}
@@ -342,7 +350,7 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 .upl{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:5px 9px;font-weight:700;font-size:12.5px;cursor:pointer}
 .upl input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.rrow{display:grid;grid-template-columns:minmax(0,2.2fr) 150px 150px repeat(2,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
+.rrow{display:grid;grid-template-columns:56px minmax(0,2.2fr) 150px 150px repeat(2,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
 .rrow .rfull{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;font-weight:600}
 .rrow.past{opacity:.7}
 .rrow.today{box-shadow:inset 0 0 0 2px var(--gold)}
@@ -360,11 +368,13 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
   .grid.month .door .flap .d,.grid.month .door .knob{display:none}
   .grid.month .door .stamp{font-size:7.5px;padding:1px 3px;border-width:1px}
   .grid.month .door .ribbon{font-size:7px;padding:1px 3px}
-  .drow{grid-template-columns:repeat(2,minmax(0,1fr)) 36px}
+  .drow{grid-template-columns:56px repeat(2,minmax(0,1fr)) 36px}
   .drow .dt{grid-column:1/-1}
-  .drow .prod{grid-column:1/-1}
-  .rrow{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .rrow .prod{grid-column:1/-1}
+  .drow .prod{grid-column:2/-1}
+  .drow .thumb{grid-row:span 2;align-self:start;margin-top:18px}
+  .rrow{grid-template-columns:56px repeat(2,minmax(0,1fr))}
+  .rrow .prod{grid-column:2/-1}
+  .rrow .thumb{grid-row:span 4;align-self:start;margin-top:18px}
 }
 @media (max-width:820px){.grid.cols-5{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:420px){.grid.cols-6,.grid:not([class*='cols-']):not(.month){grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -632,6 +642,8 @@ function normalize(c){
   c.ranges = Array.isArray(c.ranges) ? c.ranges.filter(r => r && r.id) : [];
   c.extra = c.extra && typeof c.extra === 'object' && !Array.isArray(c.extra) ? c.extra : {};
   c.codes = c.codes && typeof c.codes === 'object' && !Array.isArray(c.codes) ? c.codes : {};
+  c.dsl = c.dsl && typeof c.dsl === 'object' && !Array.isArray(c.dsl) ? c.dsl : {};
+  c.dsu = c.dsu && typeof c.dsu === 'object' && !Array.isArray(c.dsu) ? c.dsu : {};
   /* UVP: gleich wie im Katalog (= Fachhandels-Apps) → automatisch, nur abweichende Werte bleiben als manuelle Eingabe */
   Object.values(c.pool).forEach(e => { if (e) delete e.uvp; }); /* UVP immer aus FH-App (eigene Produkte: UVP beim Produkt) */
   if (c.orderPhone == null) c.orderPhone = DEF_PHONE;
@@ -653,12 +665,15 @@ const DS_MAP = JSON.parse(document.getElementById('ds-map').textContent);
 const blobUrl = id => String(id).startsWith('kv:') ? location.origin + '/api/file/' + String(id).slice(3) : location.origin + '/_blob/' + id;
 const dsIdOk = id => !!id && (String(id).startsWith('kv:') ? !!S.api : !S.api);
 const canUpload = () => S.api ? !!S.pw : !!S.assets;
-function dsUrl(c, k){ const e = (c.pool || {})[k] || {}; return (e.ds || '').trim() || (dsIdOk(e.dsId) ? blobUrl(e.dsId) : '') || DS_MAP[k] || ''; }
-const dsIsUpload = (c, k) => { const e = (c.pool || {})[k] || {}; return !(e.ds || '').trim() && dsIdOk(e.dsId) && !S.api; };
+function dsUrl(c, k){ const e = (c.pool || {})[k] || {}, l = (c.dsl || {})[k], u = (c.dsu || {})[k];
+  return (e.ds || '').trim() || (dsIdOk(e.dsId) ? blobUrl(e.dsId) : '') || (l || '').trim() || (dsIdOk(u) ? blobUrl(u) : '') || DS_MAP[k] || ''; }
+const dsIsUpload = (c, k) => { const e = (c.pool || {})[k] || {}; if ((e.ds || '').trim()) return false; if (dsIdOk(e.dsId)) return !S.api; if (((c.dsl || {})[k] || '').trim()) return false; return dsIdOk((c.dsu || {})[k]) && !S.api; };
 /* ---------- Eigene Produkte (nicht im Katalog) ---------- */
 function syncExtras(){
   for (let i = CAT.length - 1; i >= 0; i--) if (CAT[i].x){ BYK.delete(CAT[i].k); CAT.splice(i, 1); }
   const src = S.view === 'admin' && S.draft ? S.draft : S.config, all = (src && src.extra) || {};
+  const pool = (src && src.pool) || {};
+  CAT.forEach(p => { if (p.x) return; if (p.i0 === undefined) p.i0 = p.i || ''; const ov = pool[p.k] && pool[p.k].img; p.i = ov || p.i0; });
   Object.entries(all).forEach(([k, e]) => { if (!e || !e.m || BYK.has(k)) return; const p = { b:e.b, c:e.c, m:e.m, t:e.t || '', u: e.u ?? null, i: e.i || '', x:true, k }; CAT.unshift(p); BYK.set(k, p); });
 }
 async function imgToData(file){
@@ -760,6 +775,7 @@ function dealBySlot(c, sl){ if (String(sl).startsWith('r-')){ const r = (c.range
 function slotLabel(sl){ if (String(sl).startsWith('r-')){ const d = S.config && dealBySlot(S.config, sl); return d ? (d.range.full ? 'Zeitraum ' + fmtShort(d.from) + '–' + fmtShort(d.to) : 'Zeitraum ' + d.label) : 'Zeitraum-Aktion'; } return fmtShort(sl); }
 function dealDateLabel(d){ return d.range ? (d.range.full ? fmtShort(d.from) + '–' + fmtShort(d.to) + ' (gesamt)' : d.label) : fmtShort(d.day); }
 const status = day => day < today() ? 'past' : day === today() ? 'today' : 'future';
+const thumb = (p, cls) => '<span class="thumb' + (cls ? ' ' + cls : '') + '">' + (p && p.i ? '<img src="' + p.i + '" alt="' + esc(p.b + ' ' + p.m) + '" loading="lazy">' : '') + '</span>';
 const imgTag = (p, cls) => p.i ? '<img src="' + p.i + '" alt="' + esc(p.b + ' ' + p.m) + '"' + (cls ? ' class="'+cls+'"' : '') + ' loading="lazy">' : '<div class="noimg"></div>';
 function stockText(q){
   if (q == null) return '';
@@ -918,8 +934,9 @@ function poolCard(p){
   return '<div class="pcard' + (on ? ' on' : '') + '" data-k="' + esc(p.k) + '">' + imgTag(p) +
     '<div class="meta">' + (p.x ? '<span class="xbadge">Eigenes Produkt</span> <button type="button" class="linkbtn" data-xedit style="font-size:12px">Bearbeiten</button>' : '') + '<div class="badge-brand">' + esc(p.b) + ' · ' + esc(p.c) + '</div><div class="m">' + esc(p.m) + '</div><div class="t">' + esc(p.t) + '</div></div>' +
     '<div class="row">' +
-    (on ? '<label class="f" style="grid-column:1/-1">Datenblatt-Link' + (dsUrl(S.draft, p.k) ? ' · <a href="' + esc(dsUrl(S.draft, p.k)) + '" target="_blank" rel="noopener">öffnen</a>' : ' · <span style="color:var(--warn)">fehlt</span>') + '<input type="text" id="ds-' + esc(p.k) + '" data-f="ds" value="' + esc(e.ds || '') + '" placeholder="' + esc(dsIdOk(e.dsId) ? 'PDF hochgeladen' : DS_MAP[p.k] ? 'automatisch hinterlegt' : 'https://… (PDF-Link)') + '"></label>' +
+    (on ? '<label class="f" style="grid-column:1/-1">Datenblatt-Link' + (dsUrl(S.draft, p.k) ? ' · <a href="' + esc(dsUrl(S.draft, p.k)) + '" target="_blank" rel="noopener">öffnen</a>' : ' · <span style="color:var(--warn)">fehlt</span>') + '<input type="text" id="ds-' + esc(p.k) + '" data-f="ds" value="' + esc(e.ds || '') + '" placeholder="' + esc(dsIdOk(e.dsId) ? 'PDF hochgeladen' : (S.draft.dsl || {})[p.k] ? 'aus Datenblatt-Liste' : dsIdOk((S.draft.dsu || {})[p.k]) ? 'PDF aus Sammel-Upload' : DS_MAP[p.k] ? 'automatisch hinterlegt' : 'https://… (PDF-Link)') + '"></label>' +
       (canUpload() ? '<div class="dsup"><label class="upl">PDF hochladen<input type="file" accept="application/pdf,.pdf" data-dsup></label>' + (dsIdOk(e.dsId) ? '<span>Upload ✓ <a href="' + esc(blobUrl(e.dsId)) + '" target="_blank" rel="noopener">öffnen</a>' + ((e.ds || '').trim() ? ' (Link hat Vorrang)' : '') + '</span><button type="button" class="linkbtn" data-dsrm>Upload entfernen</button>' : '<span class="small">eigenes Datenblatt</span>') + '</div>' : '') : '') +
+    (on && !p.x ? '<div class="dsup"><label class="upl">' + (e.img ? 'Foto ersetzen' : p.i0 ? 'Eigenes Foto' : 'Foto hochladen') + '<input type="file" accept="image/png,image/webp,image/jpeg" data-imgup></label>' + (e.img ? '<span>eigenes Foto ✓</span><button type="button" class="linkbtn" data-imgrm>' + (p.i0 ? 'Original wiederherstellen' : 'Foto entfernen') + '</button>' : p.i0 ? '<span class="small">Foto aus FH-App</span>' : '<span style="color:var(--warn)">kein Foto – bitte freigestellt hochladen (PNG/WebP)</span>') + '</div>' : '') +
     (() => { const cp = on ? cardPrice(p.k) : { v:null, n:0 };
       return '<label class="f">Aktions-HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="ap-' + esc(p.k) + '" data-f="price" value="' + (cp.v ?? '') + '"' + (on ? '' : ' disabled') + (cp.mixed ? ' placeholder="unterschiedlich"' : '') + '></label>' +
         '<label class="f">UVP €<input type="number" step="0.01" min="0" inputmode="decimal" id="uvp-' + esc(p.k) + '" data-f="uvp" value="' + (p.u ?? '') + '"' + (on && p.x ? '' : ' disabled') + (p.x ? '' : ' title="UVP kommt immer aus der Fachhandels-App"') + '></label>' +
@@ -967,7 +984,7 @@ function poolOptions(sel){
 }
 function dayRow(day){
   const d = S.draft.days[day] || {}, st = status(day), poolHek = d.k && S.draft.pool[d.k] ? S.draft.pool[d.k].hek : null;
-  return '<div class="drow ' + st + '" data-day="' + day + '"><div class="dt">' + fmtShort(day) + '<small>' + WD[dowOf(day)] + (st === 'today' ? ' · heute' : st === 'past' ? ' · abgelaufen' : '') + '<br>0:00–23:59 Uhr</small></div>' +
+  return '<div class="drow ' + st + '" data-day="' + day + '"><div class="dt">' + fmtShort(day) + '<small>' + WD[dowOf(day)] + (st === 'today' ? ' · heute' : st === 'past' ? ' · abgelaufen' : '') + '<br>0:00–23:59 Uhr</small></div>' + thumb(d.k ? BYK.get(d.k) : null) +
     '<label class="f prod">Gerät<select id="k-' + day + '" data-f="k">' + poolOptions(d.k) + '</select></label>' +
     '<label class="f">Aktions-HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="p-' + day + '" data-f="price" value="' + (d.price ?? '') + '"></label>' +
     '<label class="f">Menge Stk.<input type="number" step="1" min="0" inputmode="numeric" id="q-' + day + '" data-f="qty" value="' + (d.qty ?? '') + '"></label>' +
@@ -977,7 +994,7 @@ function renderDays(){ $('days').innerHTML = periodDays(S.draft).map(dayRow).joi
 function rangeRow(r){
   const c = S.draft, days = periodDays(c), a = days[0], b = days[days.length-1], x = rangeSpan(c, r);
   const poolHek = r.k && c.pool[r.k] ? c.pool[r.k].hek : null, d = rangeDeal(c, r), st = d ? rangeStatus(d) : '';
-  return '<div class="rrow ' + st + '" data-rid="' + esc(r.id) + '">' +
+  return '<div class="rrow ' + st + '" data-rid="' + esc(r.id) + '">' + thumb(r.k ? BYK.get(r.k) : null) +
     '<label class="f prod">Gerät<select data-rf="k">' + poolOptions(r.k) + '</select></label>' +
     '<label class="f">Von<input type="date" data-rf="from" min="' + a + '" max="' + b + '" value="' + x.from + '"' + (r.full ? ' disabled' : '') + '></label>' +
     '<label class="f">Bis<input type="date" data-rf="to" min="' + a + '" max="' + b + '" value="' + x.to + '"' + (r.full ? ' disabled' : '') + '></label>' +
@@ -996,6 +1013,7 @@ const rangeById = id => (S.draft.ranges || []).find(r => r.id === id);
 const CODE_MAP = JSON.parse(document.getElementById('code-map').textContent);
 const normM = v => String(v ?? '').toUpperCase().replace(/[\s\-\/.]/g, '');
 const IMP_COLS = [
+  ['ds', /^datenblatt|^produktdatenblatt|^link|^url|^pdf/],
   ['name', /bezeichnung|beschreibung|kurztext|produktname|^name$|^produkt$|^artikeltext/],
   ['ahek', /aktion.*(hek|preis|ek)|sonderpreis|sonderhek|^ahek|^promo|^deal|^bf(hek|preis|ek)|blackfriday|^nettoaktion/],
   ['code', /^(code|artikel|artikelnr|artikelnummer|artnr|material|materialnr|materialnummer|sap|sapnr|sapnummer|modell|model|modellnummer|ean|sku|produktcode|typennummer)$/],
@@ -1103,7 +1121,7 @@ function impParse(rows){
     if (!r || !r.some(v => v !== '' && v != null)) return;
     const code = String(g(r, 'code')).trim(), name = String(g(r, 'name')).trim();
     if (!code && !name) return;
-    out.push({ line: hi + i + 2, code, name, uvp: impNum(g(r, 'uvp')), hek: impNum(g(r, 'hek')), ahek: impNum(g(r, 'ahek')), qty: impNum(g(r, 'qty')), tage: g(r, 'tage'), von: g(r, 'von'), bis: g(r, 'bis') });
+    out.push({ line: hi + i + 2, code, name, uvp: impNum(g(r, 'uvp')), hek: impNum(g(r, 'hek')), ahek: impNum(g(r, 'ahek')), qty: impNum(g(r, 'qty')), tage: g(r, 'tage'), von: g(r, 'von'), bis: g(r, 'bis'), ds: (s => /^https?:\/\//i.test(s) ? s : '')(String(g(r, 'ds')).trim()) });
   });
   const names = {}; Object.entries(map).forEach(([key, j]) => names[key] = String((rows[hi] || [])[j] ?? '').trim()); return { rows: out, map, names };
 }
@@ -1139,7 +1157,7 @@ function impRender(){
     const price = I.hasA ? r.ahek : r.hek;
     return '<tr class="' + (r.choice === 'skip' ? 'skip ' : '') + (r.err ? 'err' : '') + '" data-ir="' + i + '"><td class="small">' + r.line + '</td><td>' + st + '<div class="sub"><select data-ic aria-label="Zuordnung Zeile ' + r.line + '">' + impOptions(r.choice) + '</select></div>' +
       (r.choice === 'new' ? '<div class="sub"><select data-inb aria-label="Marke">' + BRANDS.map(b => '<option' + ((r.nb || I.brand) === b ? ' selected' : '') + '>' + b + '</option>').join('') + '</select><select data-inc aria-label="Kategorie"><option value="">Kategorie …</option>' + xCats().map(x => '<option' + (r.nc === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></div>' : '') + '</td>' +
-      '<td><b>' + esc(r.code) + '</b>' + (p && normM(p.m) !== normM(r.code) ? '<br><span class="small">→ ' + esc(p.b + ' ' + p.m) + '</span>' : '') + '</td><td>' + esc(r.name) + '</td>' +
+      '<td><div class="withpic">' + thumb(p, 'sm') + '<div><b>' + esc(r.code) + '</b>' + (p && normM(p.m) !== normM(r.code) ? '<br><span class="small">→ ' + esc(p.b + ' ' + p.m) + '</span>' : '') + '</div></div></td><td>' + esc(r.name) + (r.ds ? '<br><a class="small" href="' + esc(r.ds) + '" target="_blank" rel="noopener">Datenblatt ✓</a>' : '') + '</td>' +
       '<td class="num">' + (p && !p.x ? eur(p.u) + (r.uvp != null && r.uvp !== p.u ? '<br><span class="small">Liste: ' + eur(r.uvp) + '</span>' : '') : eur(r.uvp)) + '</td>' +
       '<td class="num">' + (price != null ? '<b>' + eur(price) + '</b>' : r.choice === 'skip' || r.err ? '–' : '<span class="ist no">fehlt</span>') + '</td><td class="num">' + (r.qty ?? '–') + '</td>' +
       '<td>' + (r.err ? esc(r.err) : esc(r.slots.map(slotText).join(', '))) + '</td></tr>';
@@ -1173,6 +1191,7 @@ function impApply(){
     const pe = c.pool[k] || (c.pool[k] = { hek:null });
     if (regular != null) pe.hek = regular;
     if (price != null) pe.price = price;
+    if (r.ds) pe.ds = r.ds;
     const p = BYK.get(k); if (r.uvp != null && p.x && c.extra[k]) c.extra[k].u = r.uvp;
     const qty = r.qty == null ? null : Math.max(0, Math.round(r.qty));
     r.slots.forEach(sl => {
@@ -1185,6 +1204,84 @@ function impApply(){
   });
   S.imp = null; $('overlay-slot').innerHTML = ''; syncExtras(); markDirty(); renderAdmin();
   toast(nR + ' Zeitraum- und ' + nD + ' Tagesaktionen übernommen' + (nN ? ', ' + nN + ' neue Produkte' : '') + (nO ? ' · ' + nO + ' belegte Tage überschrieben' : '') + ' – bitte prüfen und speichern');
+}
+/* ---------- Datenblätter gesammelt: Links per CSV/Excel, PDFs per Mehrfach-Upload ---------- */
+function dsPlace(k, url, uploadId){
+  const c = S.draft, pe = c.pool[k];
+  c.dsl = c.dsl || {}; c.dsu = c.dsu || {};
+  if (url){ if (pe){ pe.ds = url; } else c.dsl[k] = url; }
+  if (uploadId){ if (pe){ pe.dsId = uploadId; pe.ds = ''; } else { c.dsu[k] = uploadId; delete c.dsl[k]; } }
+}
+async function dslStart(file){
+  try {
+    const rows = await impRead(file), hn = v => String(v ?? '').toLowerCase().replace(/[^a-z0-9äöüß]/g, '');
+    let hi = -1, cc = null, cn = null, cd = null;
+    for (let i = 0; i < Math.min(rows.length, 20) && hi < 0; i++){
+      let a = null, n = null, d = null;
+      (rows[i] || []).forEach((cell, j) => { const h = hn(cell); if (!h) return;
+        if (d == null && /^datenblatt|^produktdatenblatt|^link|^url|^pdf/.test(h)) d = j;
+        else if (n == null && /bezeichnung|beschreibung|^name$|^produkt$/.test(h)) n = j;
+        else if (a == null && /^(code|artikel|artikelnr|artikelnummer|artnr|material|materialnr|materialnummer|sap|sapnr|modell|model|modellnummer|ean|sku|produktcode|typennummer)$/.test(h)) a = j; });
+      if ((a != null || n != null) && d != null){ hi = i; cc = a; cn = n; cd = d; }
+    }
+    if (hi < 0){ toast('Keine Kopfzeile gefunden – erwartet: Code und Datenblatt (Link)'); return; }
+    const list = [];
+    rows.slice(hi + 1).forEach((r, i) => {
+      if (!r) return; const code = cc == null ? '' : String(r[cc] ?? '').trim(), name = cn == null ? '' : String(r[cn] ?? '').trim(), url = String(r[cd] ?? '').trim();
+      if (!code && !name && !url) return;
+      const m = impMatch(code, name), ok = /^https?:\/\/\S+$/i.test(url);
+      list.push({ line: hi + i + 2, code: code || name, url, ok, k: m ? m.k : null, how: m ? m.how : '', choice: m && ok ? m.k : 'skip' });
+    });
+    if (!list.length){ toast('Die Liste enthält keine Einträge'); return; }
+    S.dsi = { mode:'link', file: file.name, rows: list }; dsiRender();
+  } catch(e){ toast('Die Datei konnte nicht gelesen werden'); }
+}
+function dspStart(files){
+  const list = [...files].map((f, i) => {
+    const base = f.name.replace(/\.pdf$/i, '').replace(/%20/g, ' ').replace(/[_\s-]*(produkt)?(datenblatt|datasheet|neu|new)\b/gi, '').replace(/_/g, ' ').trim();
+    const m = impMatch(base, base);
+    return { line: i + 1, code: f.name, file: f, ok: /\.pdf$/i.test(f.name) && f.size <= 20 * 1024 * 1024, k: m ? m.k : null, how: m ? m.how : '', choice: m ? m.k : 'skip' };
+  });
+  S.dsi = { mode:'pdf', file: list.length + ' Dateien', rows: list }; dsiRender();
+}
+function dsiOptions(sel){
+  let h = '<option value="skip"' + (sel === 'skip' ? ' selected' : '') + '>Nicht übernehmen</option>';
+  BRANDS.forEach(b => { h += '<optgroup label="' + b + '">' + CAT.filter(p => p.b === b).map(p => '<option value="' + esc(p.k) + '"' + (p.k === sel ? ' selected' : '') + '>' + esc(p.m) + (p.x ? ' (eigenes Produkt)' : '') + '</option>').join('') + '</optgroup>'; });
+  return h;
+}
+function dsiRender(){
+  const D = S.dsi; if (!D) return; const c = S.draft;
+  const n = D.rows.filter(r => r.choice !== 'skip' && r.ok).length;
+  const rows = D.rows.map((r, i) => {
+    const old = r.choice !== 'skip' ? dsUrl(c, r.choice) : '';
+    const st = !r.ok ? '<span class="ist no">' + (D.mode === 'pdf' ? 'kein PDF / > 20 MB' : 'kein gültiger Link') + '</span>' : r.choice === 'skip' ? '<span class="ist no">' + (r.k ? 'übersprungen' : 'nicht erkannt') + '</span>' : !old ? '<span class="ist ok">neu</span>' : old === r.url ? '<span class="ist ok">unverändert</span>' : '<span class="ist new">ersetzt</span>';
+    return '<tr class="' + (r.choice === 'skip' ? 'skip' : '') + '" data-di="' + i + '"><td class="small">' + r.line + '</td><td><b>' + esc(r.code) + '</b></td><td><select data-dc aria-label="Gerät">' + dsiOptions(r.choice) + '</select>' + (r.k && r.k === r.choice ? '<br><span class="small">' + esc(r.how) + '</span>' : '') + '</td>' +
+      '<td style="max-width:360px;overflow-wrap:anywhere">' + (D.mode === 'pdf' ? esc(Math.round(r.file.size / 1024) + ' KB') : r.ok ? '<a class="small" href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(r.url.length > 80 ? r.url.slice(0, 77) + '…' : r.url) + '</a>' : '<span class="small">' + esc(r.url || '–') + '</span>') +
+      (old && old !== r.url ? '<br><span class="small">bisher: ' + esc(old.length > 60 ? old.slice(0, 57) + '…' : old) + '</span>' : '') + '</td><td>' + st + '</td></tr>';
+  }).join('');
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov-dsi"><div class="dialog impdlg" role="dialog" aria-modal="true" aria-label="Datenblätter übernehmen"><button type="button" class="x" id="dsi-x" aria-label="Schließen">×</button><div class="impin">' +
+    '<h2 style="margin:0 0 4px">' + (D.mode === 'pdf' ? 'Datenblätter (PDF) hochladen' : 'Datenblatt-Links importieren') + '</h2><p class="small" style="margin:0 0 10px">' + esc(D.file) + ' · ' + D.rows.length + ' Einträge. Gilt für alle Geräte des Katalogs und eigene Produkte – auch wenn sie noch nicht im Aktionssortiment sind.' + (D.mode === 'pdf' && !S.api ? ' Hinweis: hochgeladene PDFs öffnen nur für Personen mit Zugriff auf diesen Kalender – für Druck-Flyer besser öffentliche Links.' : '') + '</p>' +
+    '<div class="tblwrap"><table class="aptbl"><thead><tr><th>' + (D.mode === 'pdf' ? 'Nr.' : 'Zeile') + '</th><th>' + (D.mode === 'pdf' ? 'Datei' : 'Code') + '</th><th>Gerät</th><th>' + (D.mode === 'pdf' ? 'Größe' : 'Link') + '</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="warnline" id="dsi-msg" hidden></p><div class="actions"><button type="button" class="btn primary" id="dsi-go"' + (n ? '' : ' disabled') + '>' + n + ' Datenblätter übernehmen</button><button type="button" class="btn" id="dsi-cancel">Abbrechen</button></div></div></div></div>';
+}
+async function dsiApply(){
+  const D = S.dsi, todo = D.rows.filter(r => r.choice !== 'skip' && r.ok), msg = $('dsi-msg'), go = $('dsi-go');
+  if (D.mode === 'link'){ todo.forEach(r => { dsPlace(r.choice, r.url, null); if (r.code) S.draft.codes[normM(r.code)] = r.choice; }); }
+  else {
+    go.disabled = true; let done = 0, fail = [];
+    for (const r of todo){
+      msg.hidden = false; msg.textContent = 'Lade hoch … ' + (done + 1) + ' von ' + todo.length;
+      try { const id = await uploadPdf(r.file); dsPlace(r.choice, null, id); done++; } catch(e){ fail.push(r.code); }
+    }
+    if (fail.length){ msg.textContent = done + ' hochgeladen, fehlgeschlagen: ' + fail.join(', '); go.disabled = false; D.rows = D.rows.filter(r => fail.includes(r.code)); markDirty(); renderPoolList(); return; }
+  }
+  const n = todo.length; S.dsi = null; $('overlay-slot').innerHTML = ''; markDirty(); renderPoolList();
+  toast(n + ' Datenblätter übernommen – bitte speichern');
+}
+async function dslTemplate(){
+  const lines = ['Code;Datenblatt', 'MBP 75150 BR;https://produkte.ebag.at/…/MBP%2075150%20BR_Datenblatt.pdf', '8690842696978;https://…/Datenblatt.pdf'];
+  const r = await saveFile('Datenblatt_Links_Vorlage.csv', new Blob(['\uFEFF' + lines.join('\r\n')], { type:'text/csv' }));
+  if (r === 'saved') toast('Vorlage gespeichert – Code (Modell, EAN oder Artikelnr.) und Link je Zeile');
 }
 async function impTemplate(){
   const lines = ['Code;Bezeichnung;UVP;HEK;Menge;Aktionstage', 'BBIE12300XD;Multifunktions-Backofen;499;329;10;', 'MBD 76170 BRB;Multidampfbackofen;1829;1190;;', 'IM 964 MY TIME AT;Waschmaschine 9 kg;419;259;5;01.12.–07.12.', 'GIV 6A580 X;Geschirrspüler vollintegriert;879;549;3;05.12.'];
@@ -1221,7 +1318,10 @@ function renderAdmin(){
     '</div><p class="small" style="margin-bottom:0">Eine Vorlage setzt Zeitraum, Design und Titel – alles bleibt danach frei änderbar. Bereits geplante Tage bleiben erhalten. Die Aktion eines Tages ist von 0:00 bis 23:59 Uhr (Wien) aktiv. Danach zeigt das Türchen das Gerät vergraut mit „Aktion abgelaufen“. Das Testdatum verändert nur deine eigene Ansicht.</p></section>' +
 
     approvalPeopleHTML(c) +
-    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen. Den Aktions-HEK trägst du bei der Tagesaktion bzw. Zeitraum-Aktion ein. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div><div id="xform"></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen. Den Aktions-HEK trägst du bei der Tagesaktion bzw. Zeitraum-Aktion ein. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div>' +
+    '<div class="impopts" style="margin:0 0 12px"><b>Datenblätter gesammelt:</b><label class="btn upl" style="padding:7px 11px">Links importieren (CSV/Excel)<input type="file" id="dsl-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt"></label>' +
+    (canUpload() ? '<label class="btn upl" style="padding:7px 11px">Mehrere PDFs hochladen<input type="file" id="dsp-files" accept="application/pdf,.pdf" multiple></label>' : '') +
+    '<button type="button" class="linkbtn" id="dsl-tpl">Vorlage Links</button><span class="small">Zuordnung über Modell, EAN/Artikelnr. oder Dateiname (z. B. „MBP 75150 BR_Datenblatt.pdf“)</span></div><div id="xform"></div>' +
     '<div class="filters">' + ['alle'].concat(BRANDS).map(b => '<button type="button" class="chip" data-brand="' + b + '" aria-pressed="' + (S.f.brand === b) + '">' + (b === 'alle' ? 'Alle Marken' : b) + '</button>').join('') +
     '<select id="f-cat" aria-label="Kategorie"><option value="alle">Alle Kategorien</option>' + cats.map(x => '<option' + (S.f.cat === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
     '<input type="text" id="f-q" placeholder="Modell suchen" value="' + esc(S.f.q) + '" aria-label="Modell suchen">' +
@@ -1310,8 +1410,12 @@ document.addEventListener('click', e => {
   if (t.id === 'xf-del'){ if (S.xf && S.xf.k) xDelete(S.xf.k); return; }
   const xe = t.closest('[data-xedit]'); if (xe){ const k = xe.closest('.pcard').dataset.k; $('xform').innerHTML = xFormHTML(k); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
   const ur = t.closest('[data-uvpreset]'); if (ur){ const k = ur.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.uvp; markDirty(); refreshCard(k); toast('UVP wieder aus der FH-App'); } return; }
+  const ir = t.closest('[data-imgrm]'); if (ir){ const k = ir.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.img; markDirty(); syncExtras(); refreshCard(k); renderDays(); toast('Foto zurückgesetzt'); } return; }
   const dr = t.closest('[data-dsrm]'); if (dr){ const k = dr.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.dsId; markDirty(); refreshCard(k); toast('Upload entfernt'); } return; }
   if (t.id === 'imp-tpl'){ impTemplate(); return; }
+  if (t.id === 'dsl-tpl'){ dslTemplate(); return; }
+  if (t.id === 'dsi-x' || t.id === 'dsi-cancel' || t.id === 'ov-dsi'){ S.dsi = null; $('overlay-slot').innerHTML = ''; return; }
+  if (t.id === 'dsi-go'){ dsiApply(); return; }
   if (t.id === 'imp-x' || t.id === 'imp-cancel' || t.id === 'ov-imp'){ S.imp = null; $('overlay-slot').innerHTML = ''; return; }
   if (t.id === 'imp-go'){ impApply(); return; }
   if (t.id === 'btn-radd'){ const a = periodDays(S.draft); S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k:'', full:true, from:a[0], to:a[a.length-1], hek:null, price:null, qty:null }); markDirty(); renderRanges(); const sel = document.querySelector('#rows-r .rrow:last-child select'); if (sel) sel.focus(); return; }
@@ -1340,6 +1444,9 @@ document.addEventListener('change', async e => {
     return;
   }
   if (t.id === 'imp-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; impStart(f); return; }
+  if (t.id === 'dsl-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; dslStart(f); return; }
+  if (t.id === 'dsp-files' && t.files && t.files.length){ const fs = [...t.files]; t.value = ''; dspStart(fs); return; }
+  if (S.dsi && t.matches('[data-dc]')){ const r = S.dsi.rows[+t.closest('[data-di]').dataset.di]; r.choice = t.value; dsiRender(); return; }
   if (S.imp && t.closest('#ov-imp')){
     if (t.name === 'imp-hek'){ S.imp.hekIs = t.value; impRender(); return; }
     if (t.id === 'imp-replace'){ S.imp.replace = t.checked; return; }
@@ -1347,6 +1454,12 @@ document.addEventListener('change', async e => {
     if (t.matches('[data-ic]')){ r.choice = t.value; if (r.choice === 'new' && !r.nc) r.nc = impGuessCat(r.name); impRender(); return; }
     if (t.matches('[data-inb]')){ r.nb = t.value; return; }
     if (t.matches('[data-inc]')){ r.nc = t.value; return; }
+    return;
+  }
+  if (t.matches('[data-imgup]') && t.files && t.files[0]){
+    const k = t.closest('.pcard').dataset.k, pe = S.draft.pool[k];
+    try { const u = await imgToData(t.files[0]); if (pe){ pe.img = u; markDirty(); syncExtras(); refreshCard(k); renderDays(); toast('Foto übernommen – Kalender, Flyer und Listen nach dem Speichern'); } }
+    catch(x){ toast('Bild konnte nicht gelesen werden'); }
     return;
   }
   if (t.matches('[data-dsup]') && t.files && t.files[0]){
@@ -1817,6 +1930,7 @@ function renderFlyer(){
     (() => { const miss = planDeals(c).filter(d => !dsUrl(c, d.p.k)); const u = [...new Set(miss.map(d => d.p.m))];
       const up = [...new Set(planDeals(c).filter(d => dsIsUpload(c, d.p.k)).map(d => d.p.m))];
       return (u.length ? '<p class="warnline">Ohne Datenblatt-Link (kein QR-Code/Link): ' + esc(u.join(', ')) + ' – Link im Aktionssortiment beim Gerät eintragen.</p>' : '<p class="small" style="color:var(--ok);font-weight:700">Alle Aktionsgeräte haben einen Datenblatt-Link.</p>') +
+        ((np => np.length ? '<p class="warnline">Ohne Foto: ' + esc(np.join(', ')) + ' – in der Verwaltung beim Gerät „Foto hochladen“.</p>' : '')([...new Set(planDeals(c).filter(d => !d.p.i).map(d => d.p.m))])) +
         (up.length ? '<p class="warnline">Hochgeladenes Datenblatt (' + esc(up.join(', ')) + '): QR-Code und Link öffnen nur für angemeldete Personen mit Zugriff auf diesen Kalender. Für gedruckte Flyer besser einen öffentlichen PDF-Link eintragen.</p>' : ''); })() +
     '<div class="tblwrap"><table class="aptbl" style="margin-top:12px"><thead><tr><th>Datei</th><th>Format</th><th>Wofür</th></tr></thead><tbody>' +
     '<tr><td><b>PDF Online</b></td><td>A4, anklickbare Links zu Datenblättern, E-Mail und Telefon</td><td>Per E-Mail an Händler, Website, Newsletter</td></tr>' +
@@ -2054,7 +2168,7 @@ async function personSearch(key, q){
 function dealsTable(c, key){
   const ds = dealsForKey(c, key); let inv = 0, vol = 0;
   const rows = ds.map(d => { const v = d.price != null && d.qty != null ? d.price * d.qty : null; if (v != null) vol += v;
-    return '<tr><td>' + esc(dealDateLabel(d)) + '</td><td><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></td><td class="num">' + eur(d.uvp) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (v != null ? eur(v) : '–') + '</td></tr>'; }).join('');
+    return '<tr><td>' + esc(dealDateLabel(d)) + '</td><td><div class="withpic">' + thumb(d.p, 'sm') + '<div><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></div></div></td><td class="num">' + eur(d.uvp) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (v != null ? eur(v) : '–') + '</td></tr>'; }).join('');
   return '<div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag / Zeitraum</th><th>Gerät</th><th>UVP</th><th>Aktions-HEK</th><th>Stk.</th><th>Volumen</th></tr></thead><tbody>' + rows + '</tbody>' +
     '<tfoot><tr><td colspan="4">Summe exkl. MwSt.</td><td class="num">' + ds.reduce((s,d) => s + (d.qty || 0), 0) + '</td><td class="num">' + eur(vol) + '</td></tr></tfoot></table></div>' +
     '<p class="small" style="margin:6px 0 0">Volumen = Aktions-HEK × Kontingent (ohne Kontingent nicht berechnet), Werte exkl. MwSt.</p>';
@@ -2198,7 +2312,7 @@ function cartDialog(){
   cartPrune(); const items = cartItems(), c = S.config, cu = custLoad();
   if (!items.length){ $('overlay-slot').innerHTML = ''; renderCartFab(); toast('Der Warenkorb ist leer'); return; }
   const total = items.reduce((a,x) => a + x.line, 0);
-  const rows = items.map(x => { const rem = remainingFor(x.deal); return '<tr><td><b>' + esc(x.deal.p.m) + '</b><br><span class="small">' + esc(x.deal.p.b) + ' · Aktion ' + esc(slotLabel(x.day)) + '</span></td>' +
+  const rows = items.map(x => { const rem = remainingFor(x.deal); return '<tr><td><div class="withpic">' + thumb(x.deal.p, 'sm') + '<div><b>' + esc(x.deal.p.m) + '</b><br><span class="small">' + esc(x.deal.p.b) + ' · Aktion ' + esc(slotLabel(x.day)) + '</span></div></div></td>' +
     '<td><span class="stepper sm"><button type="button" data-cq="-1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Weniger">−</button><span class="num">' + x.qty + '</span><button type="button" data-cq="1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Mehr"' + (rem != null && x.qty >= rem ? ' disabled' : '') + '>+</button></span></td>' +
     '<td class="num">' + eur(x.deal.price) + '</td><td class="num"><b>' + eur(x.line) + '</b></td><td><button type="button" class="pc-x" data-cdel="' + x.day + '|' + esc(x.k) + '" aria-label="Entfernen">×</button></td></tr>'; }).join('');
   const fields = CUST_FIELDS.map(([k,l,req,type,ac]) => '<label class="f"' + (k === 'adresse' || k === 'notiz' ? ' style="grid-column:1/-1"' : '') + '>' + esc(l) + (req ? ' *' : '') + '<input type="' + type + '" id="cu-' + k + '" name="' + k + '"' + (ac ? ' autocomplete="' + ac + '"' : '') + (req ? ' required' : '') + ' value="' + esc(cu[k] || '') + '"></label>').join('');
@@ -2270,10 +2384,10 @@ function renderOrders(){
   const c = S.config, mail = c.orderEmail || 'order.austria@beko.com';
   const byDay = {}; list.forEach(o => o.items.forEach(x => { byDay[x.day] = (byDay[x.day] || 0) + x.qty; }));
   const tot = list.reduce((a,o) => a + (o.total || 0), 0);
-  const sumRows = periodDays(c).map(d => { const deal = dealFor(c, d); if (!deal) return ''; const sold = byDay[d] || 0; return '<tr><td>' + fmtShort(d) + '</td><td>' + esc(deal.p.m) + '</td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('') +
-    rangeDeals(c).map(deal => { const sold = byDay[deal.sk] || 0; return '<tr><td>' + esc(dealDateLabel(deal)) + '</td><td>' + esc(deal.p.m) + '</td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('');
+  const sumRows = periodDays(c).map(d => { const deal = dealFor(c, d); if (!deal) return ''; const sold = byDay[d] || 0; return '<tr><td>' + fmtShort(d) + '</td><td><div class="withpic">' + thumb(deal.p, 'sm') + '<div>' + esc(deal.p.m) + '</div></div></td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('') +
+    rangeDeals(c).map(deal => { const sold = byDay[deal.sk] || 0; return '<tr><td>' + esc(dealDateLabel(deal)) + '</td><td><div class="withpic">' + thumb(deal.p, 'sm') + '<div>' + esc(deal.p.m) + '</div></div></td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('');
   const rows = list.map(o => '<tr><td>' + esc(fmtAt(o.at)) + '<br><span class="small">' + esc(o.no) + '</span></td><td><b>' + esc(o.customer.firma) + '</b>' + (o.customer.kdnr ? ' · ' + esc(o.customer.kdnr) : '') + '<br><span class="small">' + esc(o.customer.name) + ' · <a href="mailto:' + esc(o.customer.email) + '">' + esc(o.customer.email) + '</a> · <a href="' + telHref(o.customer.tel) + '">' + esc(o.customer.tel) + '</a></span>' + (o.customer.notiz ? '<br><span class="small">„' + esc(o.customer.notiz) + '“</span>' : '') + '</td>' +
-    '<td>' + o.items.map(x => x.qty + ' × ' + esc(x.model) + ' <span class="small">(' + esc(x.aktion || slotLabel(x.day)) + ')</span>').join('<br>') + '</td><td class="num">' + eur(o.total) + '</td><td>' + (o.mail === 'sent' ? '<span class="apb ok">versendet</span>' : o.mail === 'failed' ? '<span class="apb rej">Mail fehlgeschlagen</span>' : S.api ? '<span class="apb open">ohne Mail</span>' : '<span class="apb open">gespeichert</span>') + '</td></tr>').join('');
+    '<td>' + o.items.map(x => '<div class="withpic" style="margin:2px 0">' + thumb(BYK.get(x.k), 'sm') + '<div>' + x.qty + ' × ' + esc(x.model) + ' <span class="small">(' + esc(x.aktion || slotLabel(x.day)) + ')</span></div></div>').join('') + '</td><td class="num">' + eur(o.total) + '</td><td>' + (o.mail === 'sent' ? '<span class="apb ok">versendet</span>' : o.mail === 'failed' ? '<span class="apb rej">Mail fehlgeschlagen</span>' : S.api ? '<span class="apb open">ohne Mail</span>' : '<span class="apb open">gespeichert</span>') + '</td></tr>').join('');
   $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Bestellungen</h2><span class="small">' + list.length + ' Bestellungen · ' + eur(tot) + ' exkl. MwSt. · Empfänger: ' + esc(mail) + '</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="ord-reload">Aktualisieren</button><button type="button" class="btn primary" id="ord-csv"' + (list.length ? '' : ' disabled') + '>Als CSV (Excel) herunterladen</button></span></div>' +
     (S.api ? '' : '<p class="warnline" style="margin-top:0">In dieser Claude-Version werden Bestellungen gespeichert, aber nicht automatisch per E-Mail versendet. Der automatische Versand an ' + esc(mail) + ' läuft in der Cloudflare-Version.</p>') +
