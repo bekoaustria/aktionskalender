@@ -165,7 +165,7 @@ input[type=text],input[type=number],input[type=email],input[type=date],input[typ
 .toggle{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
 .pcard.on .toggle{background:var(--ok);border-color:var(--ok);color:#fff}
 .days{display:flex;flex-direction:column;gap:6px}
-.drow{display:grid;grid-template-columns:92px minmax(0,2.4fr) repeat(3,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
+.drow{display:grid;grid-template-columns:92px minmax(0,2.4fr) repeat(2,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
 .drow.today{box-shadow:inset 0 0 0 2px var(--gold)}
 .drow.past{opacity:.7}
 .drow .dt{font-weight:700;font-size:14px;align-self:center}
@@ -339,7 +339,7 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 .upl{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:5px 9px;font-weight:700;font-size:12.5px;cursor:pointer}
 .upl input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.rrow{display:grid;grid-template-columns:minmax(0,2.2fr) 150px 150px repeat(3,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
+.rrow{display:grid;grid-template-columns:minmax(0,2.2fr) 150px 150px repeat(2,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
 .rrow .rfull{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;font-weight:600}
 .rrow.past{opacity:.7}
 .rrow.today{box-shadow:inset 0 0 0 2px var(--gold)}
@@ -356,7 +356,7 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
   .grid.month .door .flap .d,.grid.month .door .knob{display:none}
   .grid.month .door .stamp{font-size:7.5px;padding:1px 3px;border-width:1px}
   .grid.month .door .ribbon{font-size:7px;padding:1px 3px}
-  .drow{grid-template-columns:repeat(3,minmax(0,1fr)) 36px}
+  .drow{grid-template-columns:repeat(2,minmax(0,1fr)) 36px}
   .drow .dt{grid-column:1/-1}
   .drow .prod{grid-column:1/-1}
   .rrow{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -685,7 +685,6 @@ function xFormHTML(k){
     '<label class="f">Modell *<input type="text" id="xf-m" value="' + esc(ex ? ex.m : '') + '"' + (k ? ' readonly' : '') + ' placeholder="z. B. BBIE 12300 XD"></label>' +
     '<label class="f">Bezeichnung *<input type="text" id="xf-t" value="' + esc(ex ? ex.t : '') + '" placeholder="z. B. Multifunktions-Backofen"></label>' +
     '<label class="f">UVP €<input type="number" step="0.01" min="0" inputmode="decimal" id="xf-u" value="' + (ex && ex.u != null ? ex.u : '') + '"></label>' +
-    '<label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="xf-h" value="' + (pe.hek ?? '') + '"></label>' +
     '<label class="f">Produktbild (freigestellt, PNG/WebP)<input type="file" id="xf-img" accept="image/png,image/webp,image/jpeg"></label>' +
     '<div class="xprev" id="xf-prev">' + (S.xf.i ? '<img src="' + S.xf.i + '" alt="Vorschau">' : '<span class="small">noch kein Bild</span>') + '</div>' +
     (canUpload() ? '<label class="f">Datenblatt (PDF hochladen, max. 20 MB)<input type="file" id="xf-pdf" accept="application/pdf,.pdf"></label><div class="xprev small" id="xf-pdfst">' + (dsIdOk(S.xf.dsId) ? 'PDF hochgeladen ✓ · <a href="' + esc(blobUrl(S.xf.dsId)) + '" target="_blank" rel="noopener">öffnen</a>' : 'noch kein PDF') + '</div>' : '') +
@@ -702,7 +701,7 @@ function xSave(){
   S.draft.extra = S.draft.extra || {};
   S.draft.extra[k] = { b, c, m, t, u: num(f('xf-u')), i: S.xf.i || '' };
   const pe = S.draft.pool[k] || (S.draft.pool[k] = {});
-  pe.hek = num(f('xf-h')); pe.ds = f('xf-ds').trim(); if (S.xf.dsId) pe.dsId = S.xf.dsId; else delete pe.dsId;
+  pe.ds = f('xf-ds').trim(); if (S.xf.dsId) pe.dsId = S.xf.dsId; else delete pe.dsId;
   const isNew = !S.xf.k; S.xf = null; syncExtras(); markDirty();
   $('xform').innerHTML = ''; renderPoolList(); renderDays();
   toast(isNew ? m + ' angelegt und aufgenommen' : m + ' aktualisiert');
@@ -806,7 +805,6 @@ function heroHTML(c, deal, opts){
     '<h2>' + esc(p.m) + '</h2><p class="type">' + esc(p.t) + '</p>' +
     (dsUrl(c, p.k) ? '<a class="dslink" href="' + esc(dsUrl(c, p.k)) + '" target="_blank" rel="noopener">Produktdatenblatt (PDF) ›</a>' : '') +
     '<div class="prices"><div><span class="plabel">Aktions-HEK</span><span class="deal num">' + eur(deal.price) + '</span></div>' +
-    (deal.hek ? '<div><span class="plabel">statt HEK</span><span class="was num">' + eur(deal.hek) + '</span></div>' : '') + savePct(deal.hek, deal.price) +
     (deal.uvp ? '<div><span class="plabel">UVP</span><span class="num">' + eur(deal.uvp) + '</span></div>' : '') + '</div>' +
     (deal.note ? '<p class="small" style="margin:0">' + esc(deal.note) + '</p>' : '') +
     (expired ? '<span class="stock out">Aktion abgelaufen</span>' : stockText(rem)) +
@@ -842,7 +840,7 @@ function rangesHTML(c){
     const badge = st === 'today' ? (rem != null && rem <= 0 ? 'Ausverkauft' : 'Jetzt bestellbar') : st === 'future' ? 'Ab ' + fmtShort(d.from) : 'Abgelaufen';
     return '<button type="button" class="rcard ' + st + '" data-range="' + esc(d.sk) + '" aria-label="' + esc(p.b + ' ' + p.m + ', ' + d.label + ', ' + badge) + '"><span class="rpic">' + imgTag(p) + '</span><span>' +
       '<span class="rb">' + esc(badge) + '</span><span class="rm">' + esc(p.b) + ' ' + esc(p.m) + '</span><span class="rs">' + esc(p.c) + ' · ' + esc(d.range.full ? 'gültig ' + fmtShort(d.from) + ' – ' + fmtShort(d.to) : d.label) + '</span>' +
-      '<span class="rp num">' + eur(d.price) + '</span>' + (d.hek && d.price != null && d.price < d.hek ? '<span class="rs">statt ' + eur(d.hek) + ' · −' + Math.round((1 - d.price/d.hek)*100) + ' %</span>' : '') +
+      '<span class="rp num">' + eur(d.price) + '</span>' + 
       (st === 'today' ? stockText(rem) : st === 'past' ? '<span class="stock out">Aktion abgelaufen</span>' : '') + '</span></button>';
   }).join('');
   return '<section class="ranges"><div class="rhead"><div><h3>' + (allFull ? 'Aktionen im gesamten Zeitraum' : 'Zeitraum-Aktionen') + '</h3><span class="small">Zusätzlich zu den Tagesaktionen – bestellbar an jedem Tag des angegebenen Zeitraums von 0:00 bis 23:59 Uhr, solange der Vorrat reicht.</span></div></div><div class="rlist">' + cards + '</div></section>';
@@ -915,7 +913,7 @@ function poolCard(p){
   const on = !!S.draft.pool[p.k], e = S.draft.pool[p.k] || {};
   return '<div class="pcard' + (on ? ' on' : '') + '" data-k="' + esc(p.k) + '">' + imgTag(p) +
     '<div class="meta">' + (p.x ? '<span class="xbadge">Eigenes Produkt</span> <button type="button" class="linkbtn" data-xedit style="font-size:12px">Bearbeiten</button>' : '') + '<div class="badge-brand">' + esc(p.b) + ' · ' + esc(p.c) + '</div><div class="m">' + esc(p.m) + '</div><div class="t">' + esc(p.t) + '</div></div>' +
-    '<div class="row"><label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="hek-' + esc(p.k) + '" data-f="hek" value="' + (e.hek ?? '') + '"' + (on ? '' : ' disabled') + ' placeholder="HEK"></label>' +
+    '<div class="row">' +
     (on ? '<label class="f" style="grid-column:1/-1">Datenblatt-Link' + (dsUrl(S.draft, p.k) ? ' · <a href="' + esc(dsUrl(S.draft, p.k)) + '" target="_blank" rel="noopener">öffnen</a>' : ' · <span style="color:var(--warn)">fehlt</span>') + '<input type="text" id="ds-' + esc(p.k) + '" data-f="ds" value="' + esc(e.ds || '') + '" placeholder="' + esc(dsIdOk(e.dsId) ? 'PDF hochgeladen' : DS_MAP[p.k] ? 'automatisch hinterlegt' : 'https://… (PDF-Link)') + '"></label>' +
       (canUpload() ? '<div class="dsup"><label class="upl">PDF hochladen<input type="file" accept="application/pdf,.pdf" data-dsup></label>' + (dsIdOk(e.dsId) ? '<span>Upload ✓ <a href="' + esc(blobUrl(e.dsId)) + '" target="_blank" rel="noopener">öffnen</a>' + ((e.ds || '').trim() ? ' (Link hat Vorrang)' : '') + '</span><button type="button" class="linkbtn" data-dsrm>Upload entfernen</button>' : '<span class="small">eigenes Datenblatt</span>') + '</div>' : '') : '') +
     '<label class="f">UVP € <span style="font-weight:500">· ' + (p.x ? 'eigenes Produkt' : 'aus FH-App') + '</span><input type="number" step="0.01" min="0" inputmode="decimal" id="uvp-' + esc(p.k) + '" data-f="uvp" value="' + (p.u ?? '') + '"' + (on && p.x ? '' : ' disabled') + (p.x ? '' : ' title="UVP kommt immer aus der Fachhandels-App"') + '></label>' +
@@ -958,7 +956,6 @@ function dayRow(day){
   const d = S.draft.days[day] || {}, st = status(day), poolHek = d.k && S.draft.pool[d.k] ? S.draft.pool[d.k].hek : null;
   return '<div class="drow ' + st + '" data-day="' + day + '"><div class="dt">' + fmtShort(day) + '<small>' + WD[dowOf(day)] + (st === 'today' ? ' · heute' : st === 'past' ? ' · abgelaufen' : '') + '<br>0:00–23:59 Uhr</small></div>' +
     '<label class="f prod">Gerät<select id="k-' + day + '" data-f="k">' + poolOptions(d.k) + '</select></label>' +
-    '<label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="h-' + day + '" data-f="hek" value="' + (d.hek ?? '') + '" placeholder="' + (poolHek ?? '') + '"></label>' +
     '<label class="f">Aktions-HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="p-' + day + '" data-f="price" value="' + (d.price ?? '') + '"></label>' +
     '<label class="f">Menge Stk.<input type="number" step="1" min="0" inputmode="numeric" id="q-' + day + '" data-f="qty" value="' + (d.qty ?? '') + '"></label>' +
     '<button type="button" class="icon-btn" data-clear aria-label="Tag ' + fmtShort(day) + ' leeren" title="Tag leeren">×</button></div>';
@@ -971,7 +968,6 @@ function rangeRow(r){
     '<label class="f prod">Gerät<select data-rf="k">' + poolOptions(r.k) + '</select></label>' +
     '<label class="f">Von<input type="date" data-rf="from" min="' + a + '" max="' + b + '" value="' + x.from + '"' + (r.full ? ' disabled' : '') + '></label>' +
     '<label class="f">Bis<input type="date" data-rf="to" min="' + a + '" max="' + b + '" value="' + x.to + '"' + (r.full ? ' disabled' : '') + '></label>' +
-    '<label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" data-rf="hek" value="' + (r.hek ?? '') + '" placeholder="' + (poolHek ?? '') + '"></label>' +
     '<label class="f">Aktions-HEK €<input type="number" step="0.01" min="0" inputmode="decimal" data-rf="price" value="' + (r.price ?? '') + '"></label>' +
     '<label class="f">Menge gesamt<input type="number" step="1" min="0" inputmode="numeric" data-rf="qty" value="' + (r.qty ?? '') + '"></label>' +
     '<button type="button" class="icon-btn" data-rdel aria-label="Zeitraum-Aktion entfernen" title="Entfernen">×</button>' +
@@ -1110,7 +1106,7 @@ async function impStart(file){
       if (it.err) it.choice = m ? m.k : 'skip';
       return it;
     });
-    S.imp = { file: file.name, rows: list, hasA: res.map.ahek != null, hasH: res.map.hek != null, hekIs: res.map.ahek != null ? 'regulaer' : 'aktion', brand: S.f.brand !== 'alle' ? S.f.brand : BRANDS[0], replace: false };
+    S.imp = { file: file.name, rows: list, hasA: res.map.ahek != null, hasH: res.map.hek != null, hekIs: 'aktion', brand: S.f.brand !== 'alle' ? S.f.brand : BRANDS[0], replace: false };
     impRender();
   } catch(e){ toast('Die Datei konnte nicht gelesen werden'); }
 }
@@ -1122,7 +1118,7 @@ function impOptions(sel){
 function impRender(){
   const I = S.imp, c = S.draft; if (!I) return;
   const nOk = I.rows.filter(r => r.choice !== 'skip' && r.choice !== 'new' && !r.err).length, nNew = I.rows.filter(r => r.choice === 'new' && !r.err).length, nSkip = I.rows.length - nOk - nNew;
-  const pLab = I.hasA ? 'Aktions-HEK' : I.hekIs === 'aktion' ? 'Aktions-HEK' : 'HEK';
+  const pLab = 'Aktions-HEK';
   const rows = I.rows.map((r, i) => {
     const p = r.choice !== 'new' && r.choice !== 'skip' ? BYK.get(r.choice) : null;
     const st = r.err ? '<span class="ist no">Fehler</span>' : r.choice === 'skip' ? '<span class="ist no">wird übersprungen</span>' : r.choice === 'new' ? '<span class="ist new">neu</span>' : '<span class="ist ok">✓ ' + esc(r.k === r.choice ? r.how : 'manuell') + '</span>';
@@ -1131,15 +1127,14 @@ function impRender(){
       (r.choice === 'new' ? '<div class="sub"><select data-inb aria-label="Marke">' + BRANDS.map(b => '<option' + ((r.nb || I.brand) === b ? ' selected' : '') + '>' + b + '</option>').join('') + '</select><select data-inc aria-label="Kategorie"><option value="">Kategorie …</option>' + xCats().map(x => '<option' + (r.nc === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></div>' : '') + '</td>' +
       '<td><b>' + esc(r.code) + '</b>' + (p && normM(p.m) !== normM(r.code) ? '<br><span class="small">→ ' + esc(p.b + ' ' + p.m) + '</span>' : '') + '</td><td>' + esc(r.name) + '</td>' +
       '<td class="num">' + (p && !p.x ? eur(p.u) + (r.uvp != null && r.uvp !== p.u ? '<br><span class="small">Liste: ' + eur(r.uvp) + '</span>' : '') : eur(r.uvp)) + '</td>' +
-      (I.hasA ? '<td class="num">' + eur(r.hek) + '</td>' : '') + '<td class="num"><b>' + eur(price) + '</b></td><td class="num">' + (r.qty ?? '–') + '</td>' +
+      '<td class="num"><b>' + eur(price) + '</b></td><td class="num">' + (r.qty ?? '–') + '</td>' +
       '<td>' + (r.err ? esc(r.err) : esc(r.slots.map(slotText).join(', '))) + '</td></tr>';
   }).join('');
   $('overlay-slot').innerHTML = '<div class="overlay" id="ov-imp"><div class="dialog impdlg" role="dialog" aria-modal="true" aria-label="Liste importieren"><button type="button" class="x" id="imp-x" aria-label="Schließen">×</button><div class="impin">' +
     '<h2 style="margin:0 0 4px">Liste importieren</h2><p class="small" style="margin:0">' + esc(I.file) + ' · ' + I.rows.length + ' Zeilen · Aktionszeitraum ' + esc(periodLabel(c)) + '. Ohne Angabe von Aktionstagen gilt ein Produkt im gesamten Aktionszeitraum.</p>' +
-    '<div class="impopts">' + (I.hasA ? '<span>Spalte HEK = regulärer HEK, Spalte Aktions-HEK = Aktionspreis</span>' :
-      I.hasH ? '<span><b>Der HEK in der Liste ist</b></span><label><input type="radio" name="imp-hek" value="aktion"' + (I.hekIs === 'aktion' ? ' checked' : '') + '>der Aktions-HEK (Händler zahlt diesen Preis)</label><label><input type="radio" name="imp-hek" value="regulaer"' + (I.hekIs === 'regulaer' ? ' checked' : '') + '>der reguläre HEK (Aktions-HEK trage ich danach ein)</label>' : '') +
+    '<div class="impopts">' + (I.hasA && I.hasH ? '<span>Verwendet wird die Spalte Aktions-HEK.</span>' : I.hasH ? '<span>Die Spalte HEK wird als Aktions-HEK übernommen.</span>' : '') +
     '<label><input type="checkbox" id="imp-replace"' + (I.replace ? ' checked' : '') + '>Bisherige Zeitraum-Aktionen ersetzen (sonst ergänzen/aktualisieren)</label></div>' +
-    '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Zeile</th><th>Zuordnung</th><th>Code</th><th>Bezeichnung</th><th style="text-align:right">UVP</th>' + (I.hasA ? '<th style="text-align:right">HEK</th>' : '') + '<th style="text-align:right">' + pLab + '</th><th style="text-align:right">Menge</th><th>Aktionstage</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Zeile</th><th>Zuordnung</th><th>Code</th><th>Bezeichnung</th><th style="text-align:right">UVP</th>' + '<th style="text-align:right">' + pLab + '</th><th style="text-align:right">Menge</th><th>Aktionstage</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
     '<p class="small">' + nOk + ' aus dem Katalog erkannt · ' + nNew + ' neu als eigenes Produkt (Bild und Datenblatt danach beim Produkt ergänzen) · ' + nSkip + ' werden nicht übernommen. Die UVP kommt immer aus der FH-App; die UVP aus der Liste wird nur bei neuen eigenen Produkten verwendet.</p>' +
     '<p class="warnline" id="imp-err" hidden></p><div class="actions"><button type="button" class="btn primary" id="imp-go"' + (nOk + nNew ? '' : ' disabled') + '>' + (nOk + nNew) + ' Produkte übernehmen</button><button type="button" class="btn" id="imp-cancel">Abbrechen</button></div></div></div></div>';
 }
@@ -1160,7 +1155,7 @@ function impApply(){
     }
     if (!BYK.get(k)) return;
     if (r.code) c.codes[normM(r.code)] = k;
-    const regular = I.hasA ? r.hek : I.hekIs === 'regulaer' ? r.hek : null, price = I.hasA ? r.ahek : I.hekIs === 'aktion' ? r.hek : null;
+    const regular = null, price = I.hasA ? r.ahek : r.hek;
     const pe = c.pool[k] || (c.pool[k] = { hek:null });
     if (regular != null) pe.hek = regular;
     const p = BYK.get(k); if (r.uvp != null && p.x && c.extra[k]) c.extra[k].u = r.uvp;
@@ -1190,7 +1185,7 @@ function renderAdmin(){
   $('app').innerHTML = '<div class="admin">' +
     (S.demo ? '<p class="warnline" style="margin-top:0">Vorschau ohne Datenspeicher: Änderungen bleiben nur in diesem Fenster.</p>' : '') +
     (S.dirty ? '' : apBannerHTML(S.config)) +
-    (c.example ? '<p class="warnline" style="margin-top:0">Beispielbelegung mit geschätzten HEK-Werten (62 % der UVP). Bitte HEK, Aktionspreise und Mengen prüfen und speichern.</p>' : '') +
+    (c.example ? '<p class="warnline" style="margin-top:0">Beispielbelegung mit geschätzten Aktions-HEK. Bitte Aktions-HEK und Mengen prüfen und speichern.</p>' : '') +
 
     '<section class="section"><div class="section-head"><h3>Einstellungen</h3></div><div class="fields">' +
     '</div><div class="f" style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px">Vorlage<div class="filters" style="margin:4px 0 0">' +
@@ -1211,7 +1206,7 @@ function renderAdmin(){
     '</div><p class="small" style="margin-bottom:0">Eine Vorlage setzt Zeitraum, Design und Titel – alles bleibt danach frei änderbar. Bereits geplante Tage bleiben erhalten. Die Aktion eines Tages ist von 0:00 bis 23:59 Uhr (Wien) aktiv. Danach zeigt das Türchen das Gerät vergraut mit „Aktion abgelaufen“. Das Testdatum verändert nur deine eigene Ansicht.</p></section>' +
 
     approvalPeopleHTML(c) +
-    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen, HEK direkt eintragen. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div><div id="xform"></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen. Den Aktions-HEK trägst du bei der Tagesaktion bzw. Zeitraum-Aktion ein. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div><div id="xform"></div>' +
     '<div class="filters">' + ['alle'].concat(BRANDS).map(b => '<button type="button" class="chip" data-brand="' + b + '" aria-pressed="' + (S.f.brand === b) + '">' + (b === 'alle' ? 'Alle Marken' : b) + '</button>').join('') +
     '<select id="f-cat" aria-label="Kategorie"><option value="alle">Alle Kategorien</option>' + cats.map(x => '<option' + (S.f.cat === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
     '<input type="text" id="f-q" placeholder="Modell suchen" value="' + esc(S.f.q) + '" aria-label="Modell suchen">' +
@@ -1221,7 +1216,7 @@ function renderAdmin(){
     '<section class="section"><div class="section-head"><div><h3>Zeitraum-Aktionen</h3><span class="small">Ein Gerät gilt über mehrere Tage oder den gesamten Aktionszeitraum – zusätzlich zu den Tagesaktionen. Händler sehen es während des ganzen Zeitraums. Menge = Kontingent für den ganzen Zeitraum.</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn upl" style="padding:8px 12px">Liste importieren (Excel/CSV)<input type="file" id="imp-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt"></label><button type="button" class="linkbtn" id="imp-tpl">Vorlage</button><button type="button" class="btn" id="btn-radd">+ Zeitraum-Aktion</button></span></div><div class="rows-r" id="rows-r"></div></section>' +
 
-    '<section class="section"><div class="section-head"><div><h3>Tagesbelegung</h3><span class="small">Pro Tag ein Gerät aus dem Aktionssortiment wählen. HEK leer lassen = HEK aus dem Sortiment.</span></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Tagesbelegung</h3><span class="small">Pro Tag ein Gerät aus dem Aktionssortiment wählen.</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="btn-auto">Leere Tage automatisch füllen</button><button type="button" class="btn" id="btn-example">Beispielbelegung</button><button type="button" class="btn" id="btn-clearall">Alle Tage leeren</button></span></div>' +
     '<div id="clear-confirm"></div><div class="days" id="days"></div></section></div>';
   renderPoolList(); renderDays(); renderSavebar();
@@ -1582,9 +1577,9 @@ function flyTile(c, d, i, extra){
   const big = /hero|single/.test(extra || '');
   const badge = d.range ? '<span class="n">★</span><span class="dd">' + (d.range.full ? 'Gesamter<br>Zeitraum' : fmtShort(d.from) + '<br>– ' + fmtShort(d.to)) + '</span>' : th === 'black' ? '<span class="n">' + WD[dowOf(d.day)] + '</span><span class="dd">' + fmtShort(d.day) + '</span>'
     : '<span class="n">' + doorNo(c, d.day) + '</span><span class="dd">' + WD[dowOf(d.day)] + '<br>' + fmtShort(d.day) + '</span>';
-  const sv = d.hek && d.price != null && d.price < d.hek ? '<div class="sv">−' + Math.round((1 - d.price/d.hek)*100) + ' %</div>' : '';
+  const sv = '';
   const brCls = {elektrabregenz:'eb', Beko:'bk', Indesit:'in'}[p.b] || '';
-  const foot = [S.fo.hek && d.hek && d.price != null && d.price < d.hek ? '<span>statt <s>' + flyEur(d.hek) + '</s></span>' : '', S.fo.uvp && d.uvp ? '<span>UVP ' + flyEur(d.uvp) + '</span>' : ''].join('');
+  const foot = [S.fo.uvp && d.uvp ? '<span>UVP ' + flyEur(d.uvp) + '</span>' : ''].join('');
   return '<div class="t c' + (i % 3) + ' ' + (extra || '') + '"><div class="day">' + badge + (tag && big ? '<span class="tag">' + tag + '</span>' : '') + '</div>' + sv +
     '<div class="img">' + (p.i ? '<img src="' + p.i + '" alt="">' : '') + (tag && !big ? '<span class="itag">' + tag + '</span>' : '') + '</div>' +
     '<div class="tx"><div class="dsrow"><div><div class="br ' + brCls + '">' + esc(p.b) + '</div><div class="m">' + esc(p.m) + '</div><div class="ty">' + esc(p.t || '') + '</div></div>' + ((S.fo.curMode || S.fo.mode) !== 'online' ? flyDs(c, p, { mode:'print' }) : '') + '</div>' +
@@ -1761,8 +1756,8 @@ function flyerDocSeason(c, opt, th){
     : ebOnly(c) ? '<footer class="foot"><span class="famp fa1">&amp;</span><span class="famp fa2">&amp;</span><div class="fin"><img class="lg" src="' + ebLogo + '" alt="elektrabregenz"><div class="tag">The Perfect Fit</div><div class="ct">' + imp + ' · Telefon: ' + telA + (webA ? ' · Web: ' + webA : '') + ' · E-Mail: ' + mailA + '</div><div class="legal">' + legal + '</div></div></footer>'
     : '<footer class="foot mixed"><div class="mlogos">' + flyLogos() + '</div><div class="ct">' + imp + ' · Telefon: ' + telA + (webA ? ' · Web: ' + webA : '') + ' · E-Mail: ' + mailA + '</div><div class="legal">' + legal + '</div></footer>';
   const card = (d, i, extra) => {
-    const p = d.p, sv = d.hek && d.price != null && d.price < d.hek ? '<span class="sv">−' + Math.round((1 - d.price/d.hek)*100) + ' %</span>' : '';
-    const was = [S.fo.hek && d.hek && d.price != null && d.price < d.hek ? 'statt <s>' + flyEur(d.hek) + '</s>' : '', S.fo.uvp && d.uvp ? 'UVP ' + flyEur(d.uvp) : ''].filter(Boolean).join('<br>');
+    const p = d.p, sv = '';
+    const was = [S.fo.uvp && d.uvp ? 'UVP ' + flyEur(d.uvp) : ''].filter(Boolean).join('<br>');
     return '<div class="card c' + ((i % 6) + 1) + (extra ? ' ' + extra : '') + '"><div class="pic"><span class="day">' + (d.range ? '<b>★</b>' + (d.range.full ? 'Gesamter Zeitraum' : fmtShort(d.from) + '–' + fmtShort(d.to)) : '<b>' + WD[dowOf(d.day)] + '</b>' + fmtShort(d.day)) + '</span>' + sv + (p.i ? '<img src="' + p.i + '" alt="">' : '') + '</div>' +
       '<div class="dsrow"><div><div class="br">' + esc(p.b) + '</div><div class="m">' + esc(p.m) + '</div><div class="ty">' + esc(p.t || '') + '</div></div>' + (S.fo.curMode !== 'online' ? flyDs(c, p, { mode:'print' }) : '') + '</div>' +
       '<div class="pr"><span class="btn">' + (d.price != null ? flyEur(d.price) : 'auf Anfrage') + '</span>' + (was ? '<span class="was">' + was + '</span>' : '') + '</div>' +
@@ -1797,7 +1792,7 @@ function renderFlyer(){
     (c.example ? '<p class="warnline" style="margin-top:0">Die Planung enthält Beispielpreise. Der Flyer trägt deshalb den Hinweis „Entwurf“, bis die Preise in der Verwaltung freigegeben und gespeichert sind.</p>' : '') +
     apBannerHTML(c) + '<div class="fields"><label class="f">Design<select id="fo-theme">' + Object.entries(FLY_TH).map(([k,v]) => '<option value="' + k + '"' + (S.fo.theme === k ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label>' +
     '<label class="f" style="grid-column:span 2">Einleitungstext<input type="text" id="fo-intro" value="' + esc(S.fo.intro) + '" placeholder="' + esc(flyIntro(Object.assign({}, c))) + '"></label></div>' +
-    '<div class="filters" style="margin:12px 0 0">' + opt('hek','statt-HEK zeigen') + opt('uvp','UVP zeigen') + opt('qty','Kontingent zeigen') +
+    '<div class="filters" style="margin:12px 0 0">' + opt('uvp','UVP zeigen') + opt('qty','Kontingent zeigen') +
     '<label class="chip" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="fo-draft"' + (flyDraftMark(c) ? ' checked' : '') + '>Entwurf-Hinweis</label>' +
     '<span class="seg" style="margin-left:4px"><button type="button" data-fomode="print" aria-pressed="' + (S.fo.mode !== 'online') + '">Vorschau Print (QR)</button><button type="button" data-fomode="online" aria-pressed="' + (S.fo.mode === 'online') + '">Vorschau Online (Links)</button></span></div>' +
     (() => { const miss = planDeals(c).filter(d => !dsUrl(c, d.p.k)); const u = [...new Set(miss.map(d => d.p.m))];
@@ -2039,11 +2034,11 @@ async function personSearch(key, q){
 /* --- Ansicht „Freigabe“ --- */
 function dealsTable(c, key){
   const ds = dealsForKey(c, key); let inv = 0, vol = 0;
-  const rows = ds.map(d => { const i = d.hek != null && d.price != null && d.qty != null ? (d.hek - d.price) * d.qty : null; if (i != null) inv += i; if (d.price != null && d.qty != null) vol += d.price * d.qty;
-    return '<tr><td>' + esc(dealDateLabel(d)) + '</td><td><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></td><td class="num">' + eur(d.hek) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.hek && d.price != null ? '−' + Math.round((1 - d.price/d.hek)*100) + ' %' : '–') + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (i != null ? eur(i) : '–') + '</td></tr>'; }).join('');
-  return '<div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag / Zeitraum</th><th>Gerät</th><th>HEK</th><th>Aktions-HEK</th><th>Rabatt</th><th>Stk.</th><th>Invest</th></tr></thead><tbody>' + rows + '</tbody>' +
-    '<tfoot><tr><td colspan="5">Summe · Aktionsumsatz ' + eur(vol) + '</td><td class="num">' + ds.reduce((s,d) => s + (d.qty || 0), 0) + '</td><td class="num">' + eur(inv) + '</td></tr></tfoot></table></div>' +
-    '<p class="small" style="margin:6px 0 0">Invest = (HEK − Aktions-HEK) × Kontingent, Werte exkl. MwSt.</p>';
+  const rows = ds.map(d => { const v = d.price != null && d.qty != null ? d.price * d.qty : null; if (v != null) vol += v;
+    return '<tr><td>' + esc(dealDateLabel(d)) + '</td><td><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></td><td class="num">' + eur(d.uvp) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (v != null ? eur(v) : '–') + '</td></tr>'; }).join('');
+  return '<div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag / Zeitraum</th><th>Gerät</th><th>UVP</th><th>Aktions-HEK</th><th>Stk.</th><th>Volumen</th></tr></thead><tbody>' + rows + '</tbody>' +
+    '<tfoot><tr><td colspan="4">Summe exkl. MwSt.</td><td class="num">' + ds.reduce((s,d) => s + (d.qty || 0), 0) + '</td><td class="num">' + eur(vol) + '</td></tr></tfoot></table></div>' +
+    '<p class="small" style="margin:6px 0 0">Volumen = Aktions-HEK × Kontingent (ohne Kontingent nicht berechnet), Werte exkl. MwSt.</p>';
 }
 function actionPanel(c, key){
   return '<div class="appanel"><h4 style="margin:0 0 8px">' + esc(keyLabel(key)) + ' – prüfen</h4>' + dealsTable(c, key) +
