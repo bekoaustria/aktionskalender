@@ -1,10 +1,4 @@
-<!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Adventkalender Fachhandel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -305,6 +299,36 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
 :root[data-theme="dark"] body.xmas .xmas-foot{color:var(--gold)}
 @media (prefers-reduced-motion: reduce){.lights span::before,body.xmas .door.today:not(.open) .flap{animation:none}}
 @media (max-width:820px){body.xmas .grid.month .door .flap .knob{display:none}}
+.ranges{margin:0 0 26px}
+.ranges .rhead{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+.ranges h3{font-family:var(--f-display);font-size:22px;margin:0}
+.rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-top:10px}
+.rcard{display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:left;cursor:pointer;color:inherit;font:inherit;width:100%;position:relative}
+.rcard:hover{border-color:var(--accent)}
+.rcard .rpic{display:grid;place-items:center;background:var(--surface-2);border-radius:10px;padding:6px;min-height:100px}
+.rcard .rpic img{max-width:100%;max-height:100px;object-fit:contain}
+.rcard .rb{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);border-radius:4px;padding:2px 6px}
+.rcard.future .rb{background:var(--door);color:var(--door-ink)}
+.rcard.past{filter:grayscale(.9);opacity:.75}
+.rcard.past .rb{background:var(--past);color:#fff}
+.rcard .rm{font-weight:800;margin-top:5px;line-height:1.2}
+.rcard .rp{font-family:var(--f-display);font-weight:800;color:var(--accent);font-size:22px;line-height:1.1;margin-top:4px}
+.rcard .rs{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.rcard .stock{font-size:12.5px;margin-top:4px}
+.rows-r{display:flex;flex-direction:column;gap:6px}
+.xform{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px}
+.xform h4{margin:0 0 2px;font-size:16px}
+.xform .xprev{display:flex;align-items:center;gap:10px;min-height:20px}
+.xform .xprev img{max-height:90px;max-width:140px;object-fit:contain;background:var(--surface);border-radius:8px;padding:4px}
+.xbadge{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--gold);color:#000;border-radius:4px;padding:1px 6px;margin-bottom:3px}
+.dsup{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+.upl{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:5px 9px;font-weight:700;font-size:12.5px;cursor:pointer}
+.upl input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.rrow{display:grid;grid-template-columns:minmax(0,2.2fr) 150px 150px repeat(3,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
+.rrow .rfull{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;font-weight:600}
+.rrow.past{opacity:.7}
+.rrow.today{box-shadow:inset 0 0 0 2px var(--gold)}
 @media (max-width:820px){
   .hero{grid-template-columns:1fr}
   .hero .pic{min-height:180px}
@@ -321,6 +345,8 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
   .drow{grid-template-columns:repeat(3,minmax(0,1fr)) 36px}
   .drow .dt{grid-column:1/-1}
   .drow .prod{grid-column:1/-1}
+  .rrow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rrow .prod{grid-column:1/-1}
 }
 @media (max-width:820px){.grid.cols-5{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:420px){.grid.cols-6,.grid:not([class*='cols-']):not(.month){grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -457,9 +483,6 @@ body.black .cartin h2{font-family:var(--f-cond);font-weight:400;text-transform:u
 .aptbl tfoot td{font-weight:700;border-bottom:0}
 @media (max-width:640px){.prow{grid-template-columns:1fr}.prow-a{grid-column:1}.prow-a input{max-width:none;flex:1 1 140px}}
 </style>
-</head>
-<body>
-
 
 <header class="band">
   <canvas class="snow" id="snow" aria-hidden="true"></canvas>
@@ -587,6 +610,8 @@ function normalize(c){
   if (c.orderFax == null) c.orderFax = '+43 1 615 39 00-1300';
   delete c.mode; delete c.year; delete c.month;
   c.pool = c.pool || {}; c.days = c.days || {};
+  c.ranges = Array.isArray(c.ranges) ? c.ranges.filter(r => r && r.id) : [];
+  c.extra = c.extra && typeof c.extra === 'object' && !Array.isArray(c.extra) ? c.extra : {};
   if (c.orderPhone == null) c.orderPhone = DEF_PHONE;
   if (c.impressum == null) c.impressum = DEF_IMPRESSUM;
   if (c.shopUrl == null) c.shopUrl = '';
@@ -603,10 +628,77 @@ function ebFooterHTML(c){
     '<p>' + esc(c.impressum || DEF_IMPRESSUM) + ' · Tel. <a href="' + telHref(c.orderPhone) + '">' + esc(c.orderPhone || DEF_PHONE) + '</a> · <a href="https://' + esc(web) + '">' + esc(web) + '</a> · <a href="mailto:' + esc(mail) + '">' + esc(mail) + '</a></p></div></footer>';
 }
 const DS_MAP = JSON.parse(document.getElementById('ds-map').textContent);
-function dsUrl(c, k){ const e = (c.pool || {})[k] || {}; return (e.ds || '').trim() || DS_MAP[k] || ''; }
+const blobUrl = id => String(id).startsWith('kv:') ? location.origin + '/api/file/' + String(id).slice(3) : location.origin + '/_blob/' + id;
+const dsIdOk = id => !!id && (String(id).startsWith('kv:') ? !!S.api : !S.api);
+const canUpload = () => S.api ? !!S.pw : !!S.assets;
+function dsUrl(c, k){ const e = (c.pool || {})[k] || {}; return (e.ds || '').trim() || (dsIdOk(e.dsId) ? blobUrl(e.dsId) : '') || DS_MAP[k] || ''; }
+const dsIsUpload = (c, k) => { const e = (c.pool || {})[k] || {}; return !(e.ds || '').trim() && dsIdOk(e.dsId) && !S.api; };
+/* ---------- Eigene Produkte (nicht im Katalog) ---------- */
+function syncExtras(){
+  for (let i = CAT.length - 1; i >= 0; i--) if (CAT[i].x){ BYK.delete(CAT[i].k); CAT.splice(i, 1); }
+  const src = S.view === 'admin' && S.draft ? S.draft : S.config, all = (src && src.extra) || {};
+  Object.entries(all).forEach(([k, e]) => { if (!e || !e.m || BYK.has(k)) return; const p = { b:e.b, c:e.c, m:e.m, t:e.t || '', u: e.u ?? null, i: e.i || '', x:true, k }; CAT.unshift(p); BYK.set(k, p); });
+}
+async function imgToData(file){
+  const bmp = await createImageBitmap(file), max = 480, f = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * f); cv.height = Math.round(bmp.height * f);
+  cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+  let u = cv.toDataURL('image/webp', 0.86); if (!u.startsWith('data:image/webp')) u = cv.toDataURL('image/png');
+  return u;
+}
+async function uploadPdf(file){
+  if (!canUpload()) throw { message:'Upload hier nicht verfügbar' };
+  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') throw { message:'Bitte eine PDF-Datei wählen' };
+  if (file.size > 20 * 1024 * 1024) throw { message:'Die PDF ist größer als 20 MB' };
+  if (S.api){
+    const r = await fetch('/api/file', { method:'POST', headers:{ authorization:'Bearer ' + S.pw, 'content-type':'application/pdf', 'x-file-name': encodeURIComponent(file.name || 'Datenblatt.pdf') }, body: file });
+    const j = await r.json().catch(() => ({})); if (!r.ok || !j.id) throw { message: j.error || 'Upload fehlgeschlagen' }; return 'kv:' + j.id;
+  }
+  const r = await S.assets.upload(file, { type:'application/pdf' }); return r.id;
+}
+const xCats = () => [...new Set(CAT.filter(p => !p.x).map(p => p.c))].sort((a,b) => a.localeCompare(b, 'de'));
+function xFormHTML(k){
+  const ex = k ? (S.draft.extra || {})[k] : null, pe = k ? (S.draft.pool[k] || {}) : {};
+  S.xf = { k: k || null, i: ex ? ex.i || '' : '', dsId: pe.dsId || '' };
+  const b = ex ? ex.b : (S.f.brand !== 'alle' ? S.f.brand : BRANDS[0]), cat = ex ? ex.c : (S.f.cat !== 'alle' ? S.f.cat : '');
+  return '<div class="xform" id="xform-in"><h4>' + (k ? 'Eigenes Produkt bearbeiten' : 'Eigenes Produkt anlegen') + '</h4><p class="small" style="margin:0 0 10px">Für Geräte, die nicht (mehr) im Katalog sind. Das Produkt wird direkt ins Aktionssortiment aufgenommen und kann Tagen oder Zeiträumen zugeordnet werden.</p><div class="fields">' +
+    '<label class="f">Marke *<select id="xf-b"' + (k ? ' disabled' : '') + '>' + BRANDS.map(x => '<option' + (x === b ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></label>' +
+    '<label class="f">Kategorie *<select id="xf-c"><option value="">— wählen —</option>' + xCats().map(x => '<option' + (x === cat ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></label>' +
+    '<label class="f">Modell *<input type="text" id="xf-m" value="' + esc(ex ? ex.m : '') + '"' + (k ? ' readonly' : '') + ' placeholder="z. B. BBIE 12300 XD"></label>' +
+    '<label class="f">Bezeichnung *<input type="text" id="xf-t" value="' + esc(ex ? ex.t : '') + '" placeholder="z. B. Multifunktions-Backofen"></label>' +
+    '<label class="f">UVP €<input type="number" step="0.01" min="0" inputmode="decimal" id="xf-u" value="' + (ex && ex.u != null ? ex.u : '') + '"></label>' +
+    '<label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="xf-h" value="' + (pe.hek ?? '') + '"></label>' +
+    '<label class="f">Produktbild (freigestellt, PNG/WebP)<input type="file" id="xf-img" accept="image/png,image/webp,image/jpeg"></label>' +
+    '<div class="xprev" id="xf-prev">' + (S.xf.i ? '<img src="' + S.xf.i + '" alt="Vorschau">' : '<span class="small">noch kein Bild</span>') + '</div>' +
+    (canUpload() ? '<label class="f">Datenblatt (PDF hochladen, max. 20 MB)<input type="file" id="xf-pdf" accept="application/pdf,.pdf"></label><div class="xprev small" id="xf-pdfst">' + (dsIdOk(S.xf.dsId) ? 'PDF hochgeladen ✓ · <a href="' + esc(blobUrl(S.xf.dsId)) + '" target="_blank" rel="noopener">öffnen</a>' : 'noch kein PDF') + '</div>' : '') +
+    '<label class="f" style="grid-column:1/-1">' + (canUpload() ? 'oder ' : '') + 'Datenblatt-Link (hat Vorrang vor dem Upload)<input type="text" id="xf-ds" value="' + esc(pe.ds || '') + '" placeholder="https://… (PDF-Link)"></label>' +
+    '</div><p class="warnline" id="xf-err" hidden></p><div class="actions" style="margin-top:10px"><button type="button" class="btn primary" id="xf-save">' + (k ? 'Übernehmen' : 'Anlegen &amp; aufnehmen') + '</button><button type="button" class="btn" id="xf-cancel">Abbrechen</button>' + (k ? '<button type="button" class="btn" id="xf-del">Produkt löschen</button>' : '') + '</div></div>';
+}
+function xSave(){
+  const err = $('xf-err'), f = id => ($(id) || {}).value || '';
+  const b = S.xf.k ? S.draft.extra[S.xf.k].b : f('xf-b'), c = f('xf-c'), m = f('xf-m').trim().replace(/\s+/g, ' '), t = f('xf-t').trim();
+  const bad = !m ? 'das Modell' : !c ? 'die Kategorie' : !t ? 'die Bezeichnung' : null;
+  if (bad){ err.textContent = 'Bitte ' + bad + ' angeben.'; err.hidden = false; return; }
+  const k = S.xf.k || (b + '|' + m);
+  if (!S.xf.k && (BYK.has(k) || (S.draft.extra || {})[k])){ err.textContent = BYK.get(k) && !BYK.get(k).x ? 'Dieses Modell ist im Katalog vorhanden – bitte dort ins Aktionssortiment aufnehmen.' : 'Dieses Produkt wurde bereits angelegt.'; err.hidden = false; return; }
+  S.draft.extra = S.draft.extra || {};
+  S.draft.extra[k] = { b, c, m, t, u: num(f('xf-u')), i: S.xf.i || '' };
+  const pe = S.draft.pool[k] || (S.draft.pool[k] = {});
+  pe.hek = num(f('xf-h')); pe.uvp = num(f('xf-u')); pe.ds = f('xf-ds').trim(); if (S.xf.dsId) pe.dsId = S.xf.dsId; else delete pe.dsId;
+  const isNew = !S.xf.k; S.xf = null; syncExtras(); markDirty();
+  $('xform').innerHTML = ''; renderPoolList(); renderDays();
+  toast(isNew ? m + ' angelegt und aufgenommen' : m + ' aktualisiert');
+}
+function xDelete(k){
+  const used = periodDays(S.draft).some(d => S.draft.days[d] && S.draft.days[d].k === k) || (S.draft.ranges || []).some(r => r.k === k);
+  if (used){ toast('Zuerst aus Tagesbelegung und Zeitraum-Aktionen entfernen'); return; }
+  delete S.draft.extra[k]; delete S.draft.pool[k]; S.xf = null;
+  syncExtras();
+  markDirty(); $('xform').innerHTML = ''; renderPoolList(); renderDays(); toast('Produkt gelöscht');
+}
 const QR_CACHE = {};
 function qrSrc(url){ if (QR_CACHE[url]) return QR_CACHE[url]; try { const q = qrcode(0, 'M'); q.addData(url); q.make(); const svg = q.createSvgTag({ cellSize:8, margin:0 }); return QR_CACHE[url] = 'data:image/svg+xml;base64,' + btoa(svg); } catch(e){ return ''; } }
-function planBrands(c){ return [...new Set(periodDays(c).map(d => dealFor(c, d)).filter(Boolean).map(d => d.p.b))]; }
+function planBrands(c){ return [...new Set(planDeals(c).map(d => d.p.b))]; }
 const ebOnly = c => { const b = planBrands(c); return b.length === 1 && b[0] === 'elektrabregenz'; };
 function titleHTML(t){ return esc(t).replace(/-(?=\S)/, '-<br>').replace(/\. (?=\S)/, '.<br>'); }
 function periodDays(c){ const out = []; for (let i=0; i<c.count; i++) out.push(addDays(c.start, i)); return out; }
@@ -626,7 +718,26 @@ function dealFor(c, day){
   const pool = c.pool[d.k] || {};
   return { day, p, hek: d.hek != null ? d.hek : (pool.hek ?? null), price: d.price ?? null, qty: d.qty ?? null, uvp: pool.uvp ?? p.u, note: d.note || '' };
 }
-function remainingFor(deal){ if (!deal || deal.qty == null) return null; return Math.max(0, deal.qty - ((S.sold && S.sold[deal.day]) || 0)); }
+function remainingFor(deal){ if (!deal || deal.qty == null) return null; return Math.max(0, deal.qty - ((S.sold && S.sold[deal.sk || deal.day]) || 0)); }
+/* ---------- Zeitraum-Aktionen (ein Gerät über mehrere Tage oder den gesamten Aktionszeitraum) ---------- */
+function rangeSpan(c, r){
+  const days = periodDays(c), a = days[0], b = days[days.length-1];
+  const from = r.full || !r.from || r.from < a || r.from > b ? a : r.from;
+  const to = r.full || !r.to || r.to > b || r.to < a ? b : r.to;
+  return { from, to: to < from ? from : to };
+}
+function rangeLabel(c, r){ if (r.full) return 'Gesamter Aktionszeitraum'; const x = rangeSpan(c, r); return x.from === x.to ? fmtShort(x.from) : fmtShort(x.from) + ' – ' + fmtShort(x.to); }
+function rangeDeal(c, r){
+  if (!r || !r.k) return null; const p = BYK.get(r.k); if (!p) return null;
+  const pool = c.pool[r.k] || {}, x = rangeSpan(c, r);
+  return { day:x.from, from:x.from, to:x.to, range:r, rid:r.id, sk:'r-' + r.id, p, hek: r.hek != null ? r.hek : (pool.hek ?? null), price: r.price ?? null, qty: r.qty ?? null, uvp: pool.uvp ?? p.u, note: r.note || '', label: rangeLabel(c, r) };
+}
+function rangeDeals(c){ return (c.ranges || []).map(r => rangeDeal(c, r)).filter(Boolean).sort((a,b) => a.from.localeCompare(b.from) || (b.range.full ? 1 : 0) - (a.range.full ? 1 : 0)); }
+function rangeStatus(d){ const t = today(); return t < d.from ? 'future' : t > d.to ? 'past' : 'today'; }
+function dealStatus(d){ return d.range ? rangeStatus(d) : status(d.day); }
+function dealBySlot(c, sl){ if (String(sl).startsWith('r-')){ const r = (c.ranges || []).find(x => 'r-' + x.id === sl); return r ? rangeDeal(c, r) : null; } return dealFor(c, sl); }
+function slotLabel(sl){ if (String(sl).startsWith('r-')){ const d = S.config && dealBySlot(S.config, sl); return d ? (d.range.full ? 'Zeitraum ' + fmtShort(d.from) + '–' + fmtShort(d.to) : 'Zeitraum ' + d.label) : 'Zeitraum-Aktion'; } return fmtShort(sl); }
+function dealDateLabel(d){ return d.range ? (d.range.full ? fmtShort(d.from) + '–' + fmtShort(d.to) + ' (gesamt)' : d.label) : fmtShort(d.day); }
 const status = day => day < today() ? 'past' : day === today() ? 'today' : 'future';
 const imgTag = (p, cls) => p.i ? '<img src="' + p.i + '" alt="' + esc(p.b + ' ' + p.m) + '"' + (cls ? ' class="'+cls+'"' : '') + ' loading="lazy">' : '<div class="noimg"></div>';
 function stockText(q){
@@ -657,21 +768,22 @@ function heroHTML(c, deal, opts){
   if (!deal){
     return '<section class="hero"><div class="info empty-hero"><div class="eyebrow">' + esc(opts.eyebrow || 'Heute') + '</div><h2>' + esc(opts.title || 'Heute keine Aktion') + '</h2><p class="small">' + esc(opts.text || '') + '</p>' + (opts.extra || '') + '</div></section>';
   }
-  const p = deal.p, st = status(deal.day), expired = st === 'past';
-  const subject = encodeURIComponent('Adventkalender-Bestellung ' + fmtShort(deal.day) + ' – ' + p.b + ' ' + p.m);
-  const body = encodeURIComponent('Bestellung aus dem ' + (c.title || 'Adventkalender') + '\n\nAktionstag: ' + fmtLong(deal.day) + '\nGerät: ' + p.b + ' ' + p.m + ' (' + p.t + ')\nAktions-HEK: ' + eur(deal.price) + '\nMenge: \n\nHändler / Kundennummer: \n');
+  const p = deal.p, st = dealStatus(deal), expired = st === 'past', slot = deal.sk || deal.day;
+  const subject = encodeURIComponent('Aktionskalender-Bestellung ' + dealDateLabel(deal) + ' – ' + p.b + ' ' + p.m);
+  const body = encodeURIComponent('Bestellung aus dem ' + (c.title || 'Adventkalender') + (deal.range ? '\n\nAktionszeitraum: ' + fmtLong(deal.from) + ' bis ' + fmtLong(deal.to) : '\n\nAktionstag: ' + fmtLong(deal.day)) + '\nGerät: ' + p.b + ' ' + p.m + ' (' + p.t + ')\nAktions-HEK: ' + eur(deal.price) + '\nMenge: \n\nHändler / Kundennummer: \n');
   const mail = c.orderEmail || 'order.austria@beko.com';
   let act = '';
   const rem = remainingFor(deal);
   if (st === 'today' && !(rem != null && rem <= 0) && deal.price != null){
-    const inCart = (S.cart || []).find(x => x.day === deal.day && x.k === p.k);
+    const inCart = (S.cart || []).find(x => x.day === slot && x.k === p.k);
     act = '<div class="orderbox"><label class="f qtyf">Menge<span class="stepper"><button type="button" data-qstep="-1" aria-label="Weniger">−</button><input type="number" id="ord-qty" min="1"' + (rem != null ? ' max="' + rem + '"' : '') + ' value="' + (inCart ? inCart.qty : 1) + '" inputmode="numeric"><button type="button" data-qstep="1" aria-label="Mehr">+</button></span></label>' +
-      '<button type="button" class="btn primary" data-addcart="' + deal.day + '">' + (inCart ? 'Menge im Warenkorb ändern' : 'In den Warenkorb') + '</button></div>' +
+      '<button type="button" class="btn primary" data-addcart="' + slot + '">' + (inCart ? 'Menge im Warenkorb ändern' : 'In den Warenkorb') + '</button></div>' +
       '<p class="small" style="margin:0">Oder bestellen per E-Mail <a href="mailto:' + esc(mail) + '?subject=' + subject + '&body=' + body + '">' + esc(mail) + '</a> bzw. Tel. <a href="' + telHref(c.orderPhone) + '">' + esc(c.orderPhone || DEF_PHONE) + '</a></p>';
   }
   return (expired ? '<div class="expired-banner">Aktion abgelaufen</div>' : '') +
     '<section class="hero"' + (expired ? ' style="filter:grayscale(.9)"' : '') + '><div class="pic">' + imgTag(p) + '</div><div class="info">' +
-    '<div class="eyebrow">' + (st === 'today' ? 'Tagesaktion · ' : st === 'past' ? 'Abgelaufen · ' : '') + esc(fmtLong(deal.day)) + '</div>' +
+    '<div class="eyebrow">' + (deal.range ? (st === 'today' ? 'Zeitraum-Aktion · ' : st === 'past' ? 'Abgelaufen · ' : 'Demnächst · ') + esc(fmtShort(deal.from) + ' – ' + fmtShort(deal.to) + deal.to.slice(0,4)) + (deal.range.full ? ' · gesamter Aktionszeitraum' : '')
+      : (st === 'today' ? 'Tagesaktion · ' : st === 'past' ? 'Abgelaufen · ' : '') + esc(fmtLong(deal.day))) + '</div>' +
     '<div class="badge-brand">' + esc(p.b) + ' · ' + esc(p.c) + '</div>' +
     '<h2>' + esc(p.m) + '</h2><p class="type">' + esc(p.t) + '</p>' +
     (dsUrl(c, p.k) ? '<a class="dslink" href="' + esc(dsUrl(c, p.k)) + '" target="_blank" rel="noopener">Produktdatenblatt (PDF) ›</a>' : '') +
@@ -680,7 +792,9 @@ function heroHTML(c, deal, opts){
     (deal.uvp ? '<div><span class="plabel">UVP</span><span class="num">' + eur(deal.uvp) + '</span></div>' : '') + '</div>' +
     (deal.note ? '<p class="small" style="margin:0">' + esc(deal.note) + '</p>' : '') +
     (expired ? '<span class="stock out">Aktion abgelaufen</span>' : stockText(rem)) +
-    (st === 'today' ? '<div class="clock">Bestellbar heute bis 23:59 Uhr · noch <b class="num" data-countdown>' + fmtLeft(secondsLeft()) + '</b></div>' : '') +
+    (deal.range && st === 'today' && deal.to !== today() ? '<div class="clock">Bestellbar bis ' + esc(fmtLong(deal.to)) + ', 23:59 Uhr</div>'
+      : deal.range && st === 'future' ? '<div class="clock">Bestellbar ab ' + esc(fmtLong(deal.from)) + ', 0:00 Uhr</div>'
+      : st === 'today' ? '<div class="clock">Bestellbar heute bis 23:59 Uhr · noch <b class="num" data-countdown>' + fmtLeft(secondsLeft()) + '</b></div>' : '') +
     act + '</div></section>';
 }
 
@@ -702,6 +816,24 @@ function doorHTML(c, day, idx){
     '<div class="face flap"><span class="n">' + d + '</span><span class="d">' + WD[dowOf(day)] + ' ' + fmtShort(day) + '</span><span class="knob"></span></div></button>';
 }
 
+function rangesHTML(c){
+  const list = rangeDeals(c); if (!list.length) return '';
+  const allFull = list.every(d => d.range.full);
+  const cards = list.map(d => {
+    const st = rangeStatus(d), rem = remainingFor(d), p = d.p;
+    const badge = st === 'today' ? (rem != null && rem <= 0 ? 'Ausverkauft' : 'Jetzt bestellbar') : st === 'future' ? 'Ab ' + fmtShort(d.from) : 'Abgelaufen';
+    return '<button type="button" class="rcard ' + st + '" data-range="' + esc(d.sk) + '" aria-label="' + esc(p.b + ' ' + p.m + ', ' + d.label + ', ' + badge) + '"><span class="rpic">' + imgTag(p) + '</span><span>' +
+      '<span class="rb">' + esc(badge) + '</span><span class="rm">' + esc(p.b) + ' ' + esc(p.m) + '</span><span class="rs">' + esc(p.c) + ' · ' + esc(d.range.full ? 'gültig ' + fmtShort(d.from) + ' – ' + fmtShort(d.to) : d.label) + '</span>' +
+      '<span class="rp num">' + eur(d.price) + '</span>' + (d.hek && d.price != null && d.price < d.hek ? '<span class="rs">statt ' + eur(d.hek) + ' · −' + Math.round((1 - d.price/d.hek)*100) + ' %</span>' : '') +
+      (st === 'today' ? stockText(rem) : st === 'past' ? '<span class="stock out">Aktion abgelaufen</span>' : '') + '</span></button>';
+  }).join('');
+  return '<section class="ranges"><div class="rhead"><div><h3>' + (allFull ? 'Aktionen im gesamten Zeitraum' : 'Zeitraum-Aktionen') + '</h3><span class="small">Zusätzlich zu den Tagesaktionen – bestellbar an jedem Tag des angegebenen Zeitraums von 0:00 bis 23:59 Uhr, solange der Vorrat reicht.</span></div></div><div class="rlist">' + cards + '</div></section>';
+}
+function openRange(sl){
+  const deal = dealBySlot(S.config, sl); if (!deal) return;
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog" role="dialog" aria-modal="true" aria-label="Zeitraum-Aktion ' + esc(deal.p.m) + '"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button>' + heroHTML(S.config, deal) + '</div></div>';
+  $('ov-x').focus();
+}
 function doorNo(c, day){ return useWeekGrid(c) ? parseIso(day).d : diffDays(c.start, day) + 1; }
 function renderDealer(){
   const c = S.config, days = periodDays(c), t = today();
@@ -716,7 +848,7 @@ function renderDealer(){
     const deal = dealFor(c, t);
     hero = deal && lsGet('door-open-' + t) === '1' ? heroHTML(c, deal) :
       deal ? heroHTML(c, null, {eyebrow:'Tagesaktion · ' + fmtLong(t), title:'Das heutige Türchen wartet', text:'Öffne Türchen ' + doorNo(c,t) + ' und sieh dir die Tagesaktion an.', extra:'<div class="actions"><button type="button" class="btn primary" data-openday="' + t + '">Türchen ' + doorNo(c,t) + ' öffnen</button></div>'}) :
-      heroHTML(c, null, {eyebrow:fmtLong(t), title:'Heute keine Aktion', text:'Morgen geht es weiter.'});
+      heroHTML(c, null, rangeDeals(c).some(d => rangeStatus(d) === 'today') ? {eyebrow:fmtLong(t), title:'Heute keine Tagesaktion', text:'Die Zeitraum-Aktionen unten sind heute bestellbar.'} : {eyebrow:fmtLong(t), title:'Heute keine Aktion', text:'Morgen geht es weiter.'});
   }
   const isMonth = useWeekGrid(c);
   let grid = '';
@@ -727,10 +859,10 @@ function renderDealer(){
   }
   grid += days.map((day, i) => doorHTML(c, day, i)).join('');
   const periodName = periodLabel(c);
-  $('app').innerHTML = hero +
+  $('app').innerHTML = hero + rangesHTML(c) +
     '<div class="cal-head"><h3>' + esc(periodName) + '</h3><div class="legend"><span><i class="l-closed" style="background:var(--door)"></i>noch geschlossen</span><span><i style="background:var(--accent)"></i>heute</span><span><i style="background:var(--past)"></i>Aktion abgelaufen</span></div></div>' +
     '<div class="grid' + (isMonth ? ' month' : colsClass(c)) + '" id="doors">' + grid + '</div>' +
-    '<p class="small" style="margin-top:18px">Alle Preise als Händlereinkaufspreise (HEK) exkl. MwSt., solange der Vorrat reicht. Jede Aktion gilt ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar. Druck- und Satzfehler vorbehalten.</p>' +
+    '<p class="small" style="margin-top:18px">Alle Preise als Händlereinkaufspreise (HEK) exkl. MwSt., solange der Vorrat reicht. ' + (rangeDeals(c).length ? 'Tagesaktionen sind ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar, Zeitraum-Aktionen vom ersten Tag 0:00 Uhr bis zum letzten Tag 23:59 Uhr.' : 'Jede Aktion gilt ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar.') + ' Druck- und Satzfehler vorbehalten.</p>' +
     '<p class="small legal">' + legalLine(c) + '</p>' +
     (ebOnly(c) ? ebFooterHTML(c) : '') +
     (c.theme !== 'xmas' ? '' : '<p class="xmas-foot">Frohe Weihnachten und gute Geschäfte<small>Ihr Beko Austria Team · elektrabregenz · Beko · Indesit</small></p>');
@@ -756,7 +888,7 @@ function renderSavebar(){
   const slot = $('savebar-slot');
   if (S.view !== 'admin'){ slot.innerHTML = ''; return; }
   const pc = Object.keys(S.draft.pool).length, dc = periodDays(S.draft).filter(d => S.draft.days[d] && S.draft.days[d].k).length;
-  slot.innerHTML = '<div class="savebar"><div class="wrap"><span class="small"><b>' + pc + '</b> Geräte im Aktionssortiment · <b>' + dc + '</b> von ' + periodDays(S.draft).length + ' Tagen belegt' +
+  slot.innerHTML = '<div class="savebar"><div class="wrap"><span class="small"><b>' + pc + '</b> Geräte im Aktionssortiment · <b>' + dc + '</b> von ' + periodDays(S.draft).length + ' Tagen belegt' + ((S.draft.ranges || []).length ? ' · <b>' + S.draft.ranges.length + '</b> Zeitraum-Aktion' + (S.draft.ranges.length === 1 ? '' : 'en') : '') +
     (S.dirty ? ' · <span class="dirty">Nicht gespeicherte Änderungen</span>' : '') + '</span>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap">' + (S.api ? '<button type="button" class="btn" id="btn-logout">Abmelden</button>' : '') + '<button type="button" class="btn" id="btn-discard"' + (S.dirty ? '' : ' disabled') + '>Verwerfen</button><button type="button" class="btn primary" id="btn-save"' + (S.dirty ? '' : ' disabled') + '>Speichern &amp; veröffentlichen</button></span></div></div>';
 }
@@ -764,9 +896,10 @@ function renderSavebar(){
 function poolCard(p){
   const on = !!S.draft.pool[p.k], e = S.draft.pool[p.k] || {};
   return '<div class="pcard' + (on ? ' on' : '') + '" data-k="' + esc(p.k) + '">' + imgTag(p) +
-    '<div class="meta"><div class="badge-brand">' + esc(p.b) + ' · ' + esc(p.c) + '</div><div class="m">' + esc(p.m) + '</div><div class="t">' + esc(p.t) + '</div></div>' +
+    '<div class="meta">' + (p.x ? '<span class="xbadge">Eigenes Produkt</span> <button type="button" class="linkbtn" data-xedit style="font-size:12px">Bearbeiten</button>' : '') + '<div class="badge-brand">' + esc(p.b) + ' · ' + esc(p.c) + '</div><div class="m">' + esc(p.m) + '</div><div class="t">' + esc(p.t) + '</div></div>' +
     '<div class="row"><label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="hek-' + esc(p.k) + '" data-f="hek" value="' + (e.hek ?? '') + '"' + (on ? '' : ' disabled') + ' placeholder="HEK"></label>' +
-    (on ? '<label class="f" style="grid-column:1/-1">Datenblatt-Link' + (dsUrl(S.draft, p.k) ? ' · <a href="' + esc(dsUrl(S.draft, p.k)) + '" target="_blank" rel="noopener">öffnen</a>' : ' · <span style="color:var(--warn)">fehlt</span>') + '<input type="text" id="ds-' + esc(p.k) + '" data-f="ds" value="' + esc(e.ds || '') + '" placeholder="' + esc(DS_MAP[p.k] ? 'automatisch hinterlegt' : 'https://… (PDF-Link)') + '"></label>' : '') +
+    (on ? '<label class="f" style="grid-column:1/-1">Datenblatt-Link' + (dsUrl(S.draft, p.k) ? ' · <a href="' + esc(dsUrl(S.draft, p.k)) + '" target="_blank" rel="noopener">öffnen</a>' : ' · <span style="color:var(--warn)">fehlt</span>') + '<input type="text" id="ds-' + esc(p.k) + '" data-f="ds" value="' + esc(e.ds || '') + '" placeholder="' + esc(dsIdOk(e.dsId) ? 'PDF hochgeladen' : DS_MAP[p.k] ? 'automatisch hinterlegt' : 'https://… (PDF-Link)') + '"></label>' +
+      (canUpload() ? '<div class="dsup"><label class="upl">PDF hochladen<input type="file" accept="application/pdf,.pdf" data-dsup></label>' + (dsIdOk(e.dsId) ? '<span>Upload ✓ <a href="' + esc(blobUrl(e.dsId)) + '" target="_blank" rel="noopener">öffnen</a>' + ((e.ds || '').trim() ? ' (Link hat Vorrang)' : '') + '</span><button type="button" class="linkbtn" data-dsrm>Upload entfernen</button>' : '<span class="small">eigenes Datenblatt</span>') + '</div>' : '') : '') +
     '<label class="f">UVP €<input type="number" step="0.01" min="0" inputmode="decimal" id="uvp-' + esc(p.k) + '" data-f="uvp" value="' + (e.uvp ?? p.u ?? '') + '"' + (on ? '' : ' disabled') + '></label>' +
     '<button type="button" class="toggle" data-toggle>' + (on ? '✓ Im Sortiment' : '+ Aufnehmen') + '</button></div>' + (on ? assignHTML(p) : '') + '</div>';
 }
@@ -812,9 +945,29 @@ function dayRow(day){
     '<label class="f">Menge Stk.<input type="number" step="1" min="0" inputmode="numeric" id="q-' + day + '" data-f="qty" value="' + (d.qty ?? '') + '"></label>' +
     '<button type="button" class="icon-btn" data-clear aria-label="Tag ' + fmtShort(day) + ' leeren" title="Tag leeren">×</button></div>';
 }
-function renderDays(){ $('days').innerHTML = periodDays(S.draft).map(dayRow).join(''); }
+function renderDays(){ $('days').innerHTML = periodDays(S.draft).map(dayRow).join(''); renderRanges(); }
+function rangeRow(r){
+  const c = S.draft, days = periodDays(c), a = days[0], b = days[days.length-1], x = rangeSpan(c, r);
+  const poolHek = r.k && c.pool[r.k] ? c.pool[r.k].hek : null, d = rangeDeal(c, r), st = d ? rangeStatus(d) : '';
+  return '<div class="rrow ' + st + '" data-rid="' + esc(r.id) + '">' +
+    '<label class="f prod">Gerät<select data-rf="k">' + poolOptions(r.k) + '</select></label>' +
+    '<label class="f">Von<input type="date" data-rf="from" min="' + a + '" max="' + b + '" value="' + x.from + '"' + (r.full ? ' disabled' : '') + '></label>' +
+    '<label class="f">Bis<input type="date" data-rf="to" min="' + a + '" max="' + b + '" value="' + x.to + '"' + (r.full ? ' disabled' : '') + '></label>' +
+    '<label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" data-rf="hek" value="' + (r.hek ?? '') + '" placeholder="' + (poolHek ?? '') + '"></label>' +
+    '<label class="f">Aktions-HEK €<input type="number" step="0.01" min="0" inputmode="decimal" data-rf="price" value="' + (r.price ?? '') + '"></label>' +
+    '<label class="f">Menge gesamt<input type="number" step="1" min="0" inputmode="numeric" data-rf="qty" value="' + (r.qty ?? '') + '"></label>' +
+    '<button type="button" class="icon-btn" data-rdel aria-label="Zeitraum-Aktion entfernen" title="Entfernen">×</button>' +
+    '<label class="rfull"><input type="checkbox" data-rf="full"' + (r.full ? ' checked' : '') + '>Gesamter Aktionszeitraum (' + fmtShort(a) + ' – ' + fmtShort(b) + b.slice(0,4) + ')' +
+    (st ? ' · <span class="small">' + (st === 'today' ? 'läuft' : st === 'past' ? 'abgelaufen' : 'startet ' + fmtShort(d.from)) + ' · ' + (diffDays(x.from, x.to) + 1) + ' Tage</span>' : '') + '</label></div>';
+}
+function renderRanges(){
+  const el = $('rows-r'); if (!el) return; const list = S.draft.ranges || [];
+  el.innerHTML = list.length ? list.map(rangeRow).join('') : '<p class="small" style="margin:0">Noch keine Zeitraum-Aktion angelegt.</p>';
+}
+const rangeById = id => (S.draft.ranges || []).find(r => r.id === id);
 
 function renderAdmin(){
+  syncExtras();
   const c = S.draft;
   const cats = [...new Set(CAT.filter(p => S.f.brand === 'alle' || p.b === S.f.brand).map(p => p.c))];
   if (S.f.cat !== 'alle' && !cats.includes(S.f.cat)) S.f.cat = 'alle';
@@ -842,12 +995,15 @@ function renderAdmin(){
     '</div><p class="small" style="margin-bottom:0">Eine Vorlage setzt Zeitraum, Design und Titel – alles bleibt danach frei änderbar. Bereits geplante Tage bleiben erhalten. Die Aktion eines Tages ist von 0:00 bis 23:59 Uhr (Wien) aktiv. Danach zeigt das Türchen das Gerät vergraut mit „Aktion abgelaufen“. Das Testdatum verändert nur deine eigene Ansicht.</p></section>' +
 
     approvalPeopleHTML(c) +
-    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen, HEK und UVP direkt anpassen.</span></div><span class="small" id="pcount"></span></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen, HEK und UVP direkt anpassen.</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div><div id="xform"></div>' +
     '<div class="filters">' + ['alle'].concat(BRANDS).map(b => '<button type="button" class="chip" data-brand="' + b + '" aria-pressed="' + (S.f.brand === b) + '">' + (b === 'alle' ? 'Alle Marken' : b) + '</button>').join('') +
     '<select id="f-cat" aria-label="Kategorie"><option value="alle">Alle Kategorien</option>' + cats.map(x => '<option' + (S.f.cat === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
     '<input type="text" id="f-q" placeholder="Modell suchen" value="' + esc(S.f.q) + '" aria-label="Modell suchen">' +
     '<button type="button" class="chip" id="f-only" aria-pressed="' + S.f.only + '">Nur aufgenommene</button></div>' +
     '<div class="plist" id="plist"></div></section>' +
+
+    '<section class="section"><div class="section-head"><div><h3>Zeitraum-Aktionen</h3><span class="small">Ein Gerät gilt über mehrere Tage oder den gesamten Aktionszeitraum – zusätzlich zu den Tagesaktionen. Händler sehen es während des ganzen Zeitraums. Menge = Kontingent für den ganzen Zeitraum.</span></div>' +
+    '<button type="button" class="btn" id="btn-radd">+ Zeitraum-Aktion</button></div><div class="rows-r" id="rows-r"></div></section>' +
 
     '<section class="section"><div class="section-head"><div><h3>Tagesbelegung</h3><span class="small">Pro Tag ein Gerät aus dem Aktionssortiment wählen. HEK leer lassen = HEK aus dem Sortiment.</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="btn-auto">Leere Tage automatisch füllen</button><button type="button" class="btn" id="btn-example">Beispielbelegung</button><button type="button" class="btn" id="btn-clearall">Alle Tage leeren</button></span></div>' +
@@ -910,6 +1066,7 @@ document.addEventListener('click', e => {
   }
   const od = t.closest('[data-openday]'); if (od){ openDoor(od.dataset.openday, document.querySelector('.door[data-day="' + od.dataset.openday + '"]')); return; }
   const door = t.closest('.door[data-day]'); if (door && S.view === 'kalender'){ openDoor(door.dataset.day, door); return; }
+  const rcd = t.closest('[data-range]'); if (rcd && S.view === 'kalender'){ openRange(rcd.dataset.range); return; }
   if (S.view !== 'admin') return;
   const pre = t.closest('[data-preset]'); if (pre){ Object.assign(S.draft, PRESETS[pre.dataset.preset].make(S.draft)); if (isSeason(S.draft)) S.f.brand = S.draft.theme === 'eb' ? 'elektrabregenz' : 'Beko'; markDirty(); renderHeader(); renderAdmin(); toast('Vorlage „' + PRESETS[pre.dataset.preset].label + '“ übernommen'); return; }
   const brand = t.closest('[data-brand]'); if (brand){ S.f.brand = brand.dataset.brand; renderAdmin(); return; }
@@ -921,8 +1078,16 @@ document.addEventListener('click', e => {
   }
   const ua = t.closest('[data-unassign]'); if (ua){ const day = ua.dataset.unassign, k = (S.draft.days[day] || {}).k; delete S.draft.days[day]; markDirty(); if (k) refreshCard(k); renderDays(); return; }
   const clr = t.closest('[data-clear]'); if (clr){ const day = clr.closest('.drow').dataset.day; const ck = (S.draft.days[day] || {}).k; delete S.draft.days[day]; if (ck) setTimeout(() => refreshCard(ck)); markDirty(); clr.closest('.drow').outerHTML = dayRow(day); return; }
+  if (t.id === 'btn-xnew'){ $('xform').innerHTML = xFormHTML(null); $('xf-m') && $('xf-m').focus(); return; }
+  if (t.id === 'xf-cancel'){ S.xf = null; $('xform').innerHTML = ''; return; }
+  if (t.id === 'xf-save'){ xSave(); return; }
+  if (t.id === 'xf-del'){ if (S.xf && S.xf.k) xDelete(S.xf.k); return; }
+  const xe = t.closest('[data-xedit]'); if (xe){ const k = xe.closest('.pcard').dataset.k; $('xform').innerHTML = xFormHTML(k); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+  const dr = t.closest('[data-dsrm]'); if (dr){ const k = dr.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.dsId; markDirty(); refreshCard(k); toast('Upload entfernt'); } return; }
+  if (t.id === 'btn-radd'){ const a = periodDays(S.draft); S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k:'', full:true, from:a[0], to:a[a.length-1], hek:null, price:null, qty:null }); markDirty(); renderRanges(); const sel = document.querySelector('#rows-r .rrow:last-child select'); if (sel) sel.focus(); return; }
+  const rdl = t.closest('[data-rdel]'); if (rdl){ const id = rdl.closest('.rrow').dataset.rid; S.draft.ranges = (S.draft.ranges || []).filter(r => r.id !== id); markDirty(); renderRanges(); return; }
   if (t.id === 'btn-auto'){ autoFill(); return; }
-  if (t.id === 'btn-example'){ const keep = { start:S.draft.start, count:S.draft.count, theme:S.draft.theme, motif:S.draft.motif, title:S.draft.title, orderEmail:S.draft.orderEmail, orderPhone:S.draft.orderPhone, orderFax:S.draft.orderFax, impressum:S.draft.impressum, shopUrl:S.draft.shopUrl, approval:S.draft.approval };
+  if (t.id === 'btn-example'){ const keep = { start:S.draft.start, count:S.draft.count, theme:S.draft.theme, motif:S.draft.motif, title:S.draft.title, orderEmail:S.draft.orderEmail, orderPhone:S.draft.orderPhone, orderFax:S.draft.orderFax, impressum:S.draft.impressum, shopUrl:S.draft.shopUrl, approval:S.draft.approval, ranges:S.draft.ranges };
     S.draft = Object.assign(exampleConfig(Object.assign(defaultConfig(), keep)), keep); markDirty(); renderAdmin(); return; }
   if (t.id === 'btn-clearall'){ $('clear-confirm').innerHTML = '<p class="warnline">Alle Tagesbelegungen dieses Zeitraums entfernen? <button type="button" class="btn" id="btn-clear-yes">Ja, leeren</button> <button type="button" class="btn" id="btn-clear-no">Abbrechen</button></p>'; return; }
   if (t.id === 'btn-clear-yes'){ periodDays(S.draft).forEach(d => delete S.draft.days[d]); markDirty(); renderAdmin(); return; }
@@ -930,6 +1095,25 @@ document.addEventListener('click', e => {
   if (t.id === 'btn-save'){ save(); return; }
   if (t.id === 'btn-logout'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } ssSet('kal-admin', null); S.pw = null; S.canEdit = false; S.view = 'kalender'; try { history.replaceState(null, '', '/'); } catch(e) {} render(); toast('Abgemeldet'); return; }
   if (t.id === 'btn-discard'){ S.draft = clone(S.config); S.dirty = false; renderAdmin(); return; }
+});
+document.addEventListener('change', async e => {
+  if (S.view !== 'admin') return;
+  const t = e.target;
+  if (t.id === 'xf-img' && t.files && t.files[0]){
+    try { S.xf.i = await imgToData(t.files[0]); $('xf-prev').innerHTML = '<img src="' + S.xf.i + '" alt="Vorschau">'; } catch(x){ toast('Bild konnte nicht gelesen werden'); }
+    return;
+  }
+  if (t.id === 'xf-pdf' && t.files && t.files[0]){
+    const st = $('xf-pdfst'); st.textContent = 'Wird hochgeladen …';
+    try { S.xf.dsId = await uploadPdf(t.files[0]); st.innerHTML = 'PDF hochgeladen ✓ · <a href="' + esc(blobUrl(S.xf.dsId)) + '" target="_blank" rel="noopener">öffnen</a>'; }
+    catch(x){ st.textContent = 'Upload fehlgeschlagen: ' + ((x && x.message) || 'unbekannter Fehler'); }
+    return;
+  }
+  if (t.matches('[data-dsup]') && t.files && t.files[0]){
+    const k = t.closest('.pcard').dataset.k, lab = t.closest('.upl'); if (lab) lab.firstChild.textContent = 'Wird hochgeladen …';
+    try { const id = await uploadPdf(t.files[0]); const pe = S.draft.pool[k]; if (pe){ pe.dsId = id; pe.ds = ''; markDirty(); } refreshCard(k); toast('Datenblatt hochgeladen'); }
+    catch(x){ toast('Upload fehlgeschlagen: ' + ((x && x.message) || 'unbekannter Fehler')); refreshCard(k); }
+  }
 });
 /* ---------- Eigener Server (GitHub + Cloudflare Pages) ---------- */
 const ssGet = k => { try { return sessionStorage.getItem(k); } catch(e) { return null; } };
@@ -977,6 +1161,9 @@ document.addEventListener('input', e => {
   if (t.id === 'f-q'){ S.f.q = t.value; renderPoolList(); return; }
   const card = t.closest('.pcard');
   if (card && t.dataset.f){ const e2 = S.draft.pool[card.dataset.k]; if (e2){ e2[t.dataset.f] = t.dataset.f === 'ds' ? t.value.trim() : num(t.value); markDirty(); } return; }
+  const rr = t.closest('.rrow');
+  if (rr && t.type === 'number' && t.dataset.rf){ const r = rangeById(rr.dataset.rid); if (!r) return; const v = num(t.value);
+    r[t.dataset.rf] = t.dataset.rf === 'qty' ? (v == null ? null : Math.max(0, Math.round(v))) : v; markDirty(); return; }
   const row = t.closest('.drow');
   if (row && t.dataset.f && t.tagName === 'INPUT'){
     const day = row.dataset.day; const d = S.draft.days[day] || (S.draft.days[day] = {});
@@ -998,6 +1185,15 @@ document.addEventListener('change', e => {
   if (t.id === 'cfg-theme'){ const was = isSeason(S.draft); S.draft.theme = t.value; markDirty(); renderHeader(); if (was !== isSeason(S.draft)) renderAdmin(); return; }
   if (t.id === 'cfg-motif'){ S.draft.motif = t.value; markDirty(); renderHeader(); return; }
   if (t.id === 'cfg-sim'){ S.sim = t.value || null; renderDays(); renderHeader(); toast(S.sim ? 'Ansicht zeigt jetzt den ' + fmtShort(S.sim) : 'Testdatum entfernt'); return; }
+  const rr = t.closest('.rrow');
+  if (rr && t.dataset.rf && t.type !== 'number'){
+    const r = rangeById(rr.dataset.rid); if (!r) return; const f = t.dataset.rf, days = periodDays(S.draft), a = days[0], b = days[days.length-1];
+    if (f === 'k'){ r.k = t.value; if (t.value && r.price == null){ const hek = S.draft.pool[t.value] ? S.draft.pool[t.value].hek : null; if (hek != null) r.price = Math.round(hek * 0.9); } if (t.value && r.qty == null) r.qty = 10; }
+    else if (f === 'full'){ r.full = t.checked; if (!r.full){ const x = rangeSpan(S.draft, Object.assign({}, r, { full:true })); r.from = r.from && r.from >= a && r.from <= b ? r.from : x.from; r.to = r.to && r.to >= a && r.to <= b ? r.to : x.to; } }
+    else if (f === 'from' || f === 'to'){ if (!/^\d{4}-\d{2}-\d{2}$/.test(t.value)) return; let v = t.value < a ? a : t.value > b ? b : t.value; r[f] = v;
+      if (r.from && r.to && r.from > r.to){ if (f === 'from') r.to = r.from; else r.from = r.to; } if (r.from === a && r.to === b) r.full = true; }
+    markDirty(); rr.outerHTML = rangeRow(r); return;
+  }
   if (t.matches('[data-assign]') && t.value){ const k = t.closest('.pcard').dataset.k, day = t.value; assignDay(day, k); toast(BYK.get(k).m + ' → Aktionstag ' + fmtShort(day)); return; }
   const row = t.closest('.drow');
   if (row && t.dataset.f === 'k'){
@@ -1135,12 +1331,13 @@ const FLY_DS_CSS = `
 .ebf img{height:9mm;display:block;margin:0 auto}
 .ebf b{display:block;font-size:12pt;margin-top:.8mm}
 `;
+function flyWhen(c){ return rangeDeals(c).length ? 'am angegebenen Tag bzw. im angegebenen Zeitraum' : 'am angegebenen Tag'; }
 function flyTheme(c){ return S.fo.theme === 'auto' ? c.theme : S.fo.theme; }
 function flyDraftMark(c){ return S.fo.draft == null ? (!!c.example || !apStatus(c).done) : S.fo.draft; }
 function flyIntro(c){
   if (S.fo.intro) return S.fo.intro;
   return c.count === 1 ? 'Ein Top-Gerät zum Sonder-HEK – nur am ' + fmtLong(c.start) + ' von 0:00 bis 23:59 Uhr bestellbar, solange das Kontingent reicht.'
-    : c.count + ' Tage – jeden Tag ein neues Aktionsgerät zum Sonder-HEK. Jede Aktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr, solange das Kontingent reicht.';
+    : c.count + ' Tage – jeden Tag ein neues Aktionsgerät zum Sonder-HEK. Jede Tagesaktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr, solange das Kontingent reicht.' + (rangeDeals(c).length ? (rangeDeals(c).length === 1 ? ' Dazu eine Aktion, die über mehrere Tage gilt.' : ' Dazu ' + rangeDeals(c).length + ' Aktionen, die über mehrere Tage gelten.') : '');
 }
 function flyEur(n){ return n == null || isNaN(n) ? '' : Number(n).toLocaleString('de-AT',{maximumFractionDigits:2, minimumFractionDigits: Number(n)%1 ? 2 : 0}) + ' €'; }
 function flyLogos(){
@@ -1148,10 +1345,10 @@ function flyLogos(){
   return [...imgs].map((im,i) => '<img class="' + cls[i] + '" src="' + im.getAttribute('src') + '" alt="' + esc(im.alt) + '">').join('');
 }
 function flyTile(c, d, i, extra){
-  const th = flyTheme(c), p = d.p, isBF = d.day === blackFriday(+d.day.slice(0,4)), isCM = d.day === addDays(blackFriday(+d.day.slice(0,4)), 3);
+  const th = flyTheme(c), p = d.p, isBF = !d.range && d.day === blackFriday(+d.day.slice(0,4)), isCM = !d.range && d.day === addDays(blackFriday(+d.day.slice(0,4)), 3);
   const tag = th === 'black' && c.count > 1 ? (isBF ? 'BLACK FRIDAY' : isCM ? 'CYBER MONDAY' : '') : '';
   const big = /hero|single/.test(extra || '');
-  const badge = th === 'black' ? '<span class="n">' + WD[dowOf(d.day)] + '</span><span class="dd">' + fmtShort(d.day) + '</span>'
+  const badge = d.range ? '<span class="n">★</span><span class="dd">' + (d.range.full ? 'Gesamter<br>Zeitraum' : fmtShort(d.from) + '<br>– ' + fmtShort(d.to)) + '</span>' : th === 'black' ? '<span class="n">' + WD[dowOf(d.day)] + '</span><span class="dd">' + fmtShort(d.day) + '</span>'
     : '<span class="n">' + doorNo(c, d.day) + '</span><span class="dd">' + WD[dowOf(d.day)] + '<br>' + fmtShort(d.day) + '</span>';
   const sv = d.hek && d.price != null && d.price < d.hek ? '<div class="sv">−' + Math.round((1 - d.price/d.hek)*100) + ' %</div>' : '';
   const brCls = {elektrabregenz:'eb', Beko:'bk', Indesit:'in'}[p.b] || '';
@@ -1167,18 +1364,19 @@ function flyerDoc(c, opt){
   opt = opt || {}; S.fo.curMode = opt.mode || S.fo.mode;
   if (flyTheme(c) === 'beko' || flyTheme(c) === 'eb') return flyerDocSeason(c, opt, flyTheme(c));
   const th = flyTheme(c), mail = c.orderEmail || 'order.austria@beko.com';
-  const deals = periodDays(c).map(day => dealFor(c, day)).filter(Boolean);
+  const deals = rangeDeals(c).concat(periodDays(c).map(day => dealFor(c, day)).filter(Boolean));
+  const nDays = deals.filter(d => !d.range).length;
   const logos = flyLogos(), title = c.title || 'Aktionskalender', per = periodLabel(c);
   const mailA = '<a href="mailto:' + esc(mail) + '">' + esc(mail) + '</a>';
   const fineOld = 'Alle Preise in Euro exkl. MwSt. Aktions-HEK nur am angegebenen Tag (0:00–23:59 Uhr) und nur solange das Tageskontingent reicht. UVP = unverbindliche Verkaufsempfehlung inkl. MwSt. Irrtümer und Änderungen vorbehalten. Beko Austria AG, Wien.';
   const phone = c.orderPhone || DEF_PHONE, telA = '<a href="' + telHref(phone) + '">' + esc(phone) + '</a>';
   const web = (c.shopUrl || (S.api ? location.host : '')).replace(/^https?:\/\//, '').replace(/\/$/, '');
   const webA = web ? '<a href="https://' + esc(web) + '">' + esc(web) + '</a>' : '';
-  const fine = 'Alle Preise in Euro exkl. MwSt. Aktions-HEK nur am angegebenen Tag (0:00–23:59 Uhr), solange der Vorrat reicht. UVP = unverbindliche Verkaufsempfehlung inkl. MwSt. Druck- und Satzfehler vorbehalten.';
+  const fine = 'Alle Preise in Euro exkl. MwSt. Aktions-HEK nur ' + flyWhen(c) + ' (0:00–23:59 Uhr), solange der Vorrat reicht. UVP = unverbindliche Verkaufsempfehlung inkl. MwSt. Druck- und Satzfehler vorbehalten.';
   const imp = 'Impressum: ' + esc(c.impressum || DEF_IMPRESSUM) + ' · Tel. ' + esc(phone) + ' · ' + esc(mail);
   const orderTile = '<div class="t order"><div class="ob">So bestellen Sie</div>' + (web ? '<p>Online im Aktionskalender</p>' + webA : '') + '<p>per E-Mail</p>' + mailA + '<p>oder telefonisch</p>' + telA + '<p>Solange der Vorrat reicht.</p></div>';
   const orderBar = '<footer class="obar"><div><b>So bestellen Sie</b>' + (web ? 'Online: ' + webA + '<br>' : '') + 'E-Mail: ' + mailA + '<br>Telefon: ' + telA + '<br>Am Aktionstag Modell und Stückzahl angeben – Zuteilung nach Eingang, solange der Vorrat reicht.</div><div class="fine">' + fine + '<br><br>' + imp + '</div></footer>';
-  const unit = '<span>' + esc(title.toUpperCase()) + '</span><b>✦</b><span>' + (c.count === 1 ? 'Nur 1 Tag' : deals.length + ' Tage · ' + deals.length + ' Deals') + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b>';
+  const unit = '<span>' + esc(title.toUpperCase()) + '</span><b>✦</b><span>' + (c.count === 1 && deals.length === 1 ? 'Nur 1 Tag' : nDays + ' Tage · ' + deals.length + ' Deals') + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b>';
   const mark = flyDraftMark(c) ? '<span class="draftmark">Entwurf – Preise nicht freigegeben</span>' : '';
   const bigHead = '<header class="band"><div class="logos">' + logos + '</div>' + mark + '<div class="kick">Exklusiv für den österreichischen Fachhandel</div><h1>' + esc(title) + '</h1>' +
     '<div class="per">' + esc(per) + '</div><p>' + esc(flyIntro(c)) + '</p></header><div class="ticker">' + unit.repeat(4) + '</div>';
@@ -1192,7 +1390,7 @@ function flyerDoc(c, opt){
   } else {
     const rows = []; let cur = [];
     deals.forEach((d, i) => {
-      const hero = th === 'black' && deals.length <= 11 && d.day === blackFriday(+d.day.slice(0,4));
+      const hero = th === 'black' && deals.length <= 11 && !d.range && d.day === blackFriday(+d.day.slice(0,4));
       if (hero){ if (cur.length) rows.push(cur); rows.push([{ hero:true, html: flyTile(c, d, i, 'hero') }]); cur = []; return; }
       cur.push({ html: flyTile(c, d, i) }); if (cur.length === 4){ rows.push(cur); cur = []; }
     });
@@ -1312,7 +1510,7 @@ body.eb .foot .ct{font-size:7.8pt}
 `;
 function flyerDocSeason(c, opt, th){
   S.fo.curMode = opt.mode || S.fo.mode;
-  const deals = periodDays(c).map(day => dealFor(c, day)).filter(Boolean);
+  const deals = rangeDeals(c).concat(periodDays(c).map(day => dealFor(c, day)).filter(Boolean));
   const title = c.title || MOTIF_TITLE[c.motif] || 'Aktionen', per = periodLabel(c);
   const img = (SEASON_IMG[th] || {})[c.motif] || '';
   const mail = c.orderEmail || 'order.austria@beko.com', phone = c.orderPhone || DEF_PHONE, fax = c.orderFax || '';
@@ -1321,7 +1519,7 @@ function flyerDocSeason(c, opt, th){
   const webA = web ? '<a href="https://' + esc(web) + '">' + esc(web) + '</a>' : '';
   const bekoLogo = (document.querySelector('.brandrow .lg-beko') || {}).src || '', ebLogo = (document.querySelector('.brandrow .lg-eb') || {}).src || '';
   const mark = flyDraftMark(c) ? '<span class="draftmark">Entwurf – Preise nicht freigegeben</span>' : '';
-  const legal = 'Alle Preise in Euro exkl. MwSt. Aktions-HEK nur am angegebenen Tag (0:00–23:59 Uhr), solange der Vorrat reicht. UVP = unverbindliche Verkaufsempfehlung inkl. MwSt. Druck- und Satzfehler vorbehalten.';
+  const legal = 'Alle Preise in Euro exkl. MwSt. Aktions-HEK nur ' + flyWhen(c) + ' (0:00–23:59 Uhr), solange der Vorrat reicht. UVP = unverbindliche Verkaufsempfehlung inkl. MwSt. Druck- und Satzfehler vorbehalten.';
   const imp = esc(c.impressum || DEF_IMPRESSUM);
   const head = first => th === 'beko'
     ? '<header class="head">' + mark + '<img class="logo" src="' + bekoLogo + '" alt="beko"><h1>' + titleHTML(title) + '</h1>' + (first ? '<div class="per">' + esc(per) + '</div><p class="intro">' + esc(flyIntro(c)) + '</p><div class="circ"><img src="' + img + '" alt=""></div>' : '') + '</header>'
@@ -1333,12 +1531,12 @@ function flyerDocSeason(c, opt, th){
   const card = (d, i, extra) => {
     const p = d.p, sv = d.hek && d.price != null && d.price < d.hek ? '<span class="sv">−' + Math.round((1 - d.price/d.hek)*100) + ' %</span>' : '';
     const was = [S.fo.hek && d.hek && d.price != null && d.price < d.hek ? 'statt <s>' + flyEur(d.hek) + '</s>' : '', S.fo.uvp && d.uvp ? 'UVP ' + flyEur(d.uvp) : ''].filter(Boolean).join('<br>');
-    return '<div class="card c' + ((i % 6) + 1) + (extra ? ' ' + extra : '') + '"><div class="pic"><span class="day"><b>' + WD[dowOf(d.day)] + '</b>' + fmtShort(d.day) + '</span>' + sv + (p.i ? '<img src="' + p.i + '" alt="">' : '') + '</div>' +
+    return '<div class="card c' + ((i % 6) + 1) + (extra ? ' ' + extra : '') + '"><div class="pic"><span class="day">' + (d.range ? '<b>★</b>' + (d.range.full ? 'Gesamter Zeitraum' : fmtShort(d.from) + '–' + fmtShort(d.to)) : '<b>' + WD[dowOf(d.day)] + '</b>' + fmtShort(d.day)) + '</span>' + sv + (p.i ? '<img src="' + p.i + '" alt="">' : '') + '</div>' +
       '<div class="dsrow"><div><div class="br">' + esc(p.b) + '</div><div class="m">' + esc(p.m) + '</div><div class="ty">' + esc(p.t || '') + '</div></div>' + (S.fo.curMode !== 'online' ? flyDs(c, p, { mode:'print' }) : '') + '</div>' +
       '<div class="pr"><span class="btn">' + (d.price != null ? flyEur(d.price) : 'auf Anfrage') + '</span>' + (was ? '<span class="was">' + was + '</span>' : '') + '</div>' +
       (S.fo.qty && d.qty != null ? '<div class="q">' + (d.qty > 0 ? 'Kontingent: ' + d.qty + ' Stk. · solange der Vorrat reicht' : 'Ausverkauft') + '</div>' : '') + (S.fo.curMode === 'online' ? flyDs(c, p, { mode:'online' }) : '') + '</div>';
   };
-  const orderCard = i => '<div class="card c' + ((i % 6) + 1) + '"><div class="order"><div class="ob">So bestellen Sie</div>' + (c.shopUrl || S.api ? '<p>Online im Aktionskalender</p><a href="https://' + esc((c.shopUrl || location.host).replace(/^https?:\/\//, '')) + '">' + esc((c.shopUrl || location.host).replace(/^https?:\/\//, '')) + '</a>' : '') + '<p>per E-Mail</p>' + mailA + '<p>oder telefonisch</p>' + telA + '<p>Am Aktionstag bis 23:59 Uhr, solange der Vorrat reicht.</p></div></div>';
+  const orderCard = i => '<div class="card c' + ((i % 6) + 1) + '"><div class="order"><div class="ob">So bestellen Sie</div>' + (c.shopUrl || S.api ? '<p>Online im Aktionskalender</p><a href="https://' + esc((c.shopUrl || location.host).replace(/^https?:\/\//, '')) + '">' + esc((c.shopUrl || location.host).replace(/^https?:\/\//, '')) + '</a>' : '') + '<p>per E-Mail</p>' + mailA + '<p>oder telefonisch</p>' + telA + '<p>' + (rangeDeals(c).length ? 'Am Aktionstag bzw. im Aktionszeitraum' : 'Am Aktionstag') + ' bis 23:59 Uhr, solange der Vorrat reicht.</p></div></div>';
   const pages = [];
   if (!deals.length) pages.push(head(true) + '<div class="grid"><div class="card single" style="justify-content:center;align-items:center;text-align:center"><div class="m">Noch keine Aktionen geplant</div></div></div>' + foot);
   else if (deals.length === 1) pages.push(head(true) + '<div class="grid">' + card(deals[0], 0, 'single') + '</div>' + foot);
@@ -1360,7 +1558,7 @@ function fitFlyer(){
   fr.style.height = h + 'px'; fr.style.transform = s < 1 ? 'scale(' + s + ')' : 'none'; fr.style.margin = s < 1 ? '0' : '0 auto'; box.style.height = Math.ceil(h * s) + 'px';
 }
 function renderFlyer(){
-  const c = S.config, deals = periodDays(c).filter(d => dealFor(c, d)).length;
+  const c = S.config, deals = planDeals(c).length;
   const opt = (k, label) => '<label class="chip" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" data-fo="' + k + '"' + (S.fo[k] ? ' checked' : '') + '>' + label + '</label>';
   $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Flyer</h2><span class="small">Druckfertiger A4-Flyer für den Fachhandel aus der gespeicherten Planung: ' + esc(periodLabel(c)) + ' · ' + deals + ' Aktionen</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="fly-pdf">PDF Online (mit Links)</button><button type="button" class="btn" id="fly-pdf-qr">PDF Print (QR-Codes)</button><button type="button" class="btn" id="fly-pdf-print">Druckerei-PDF (QR, 3 mm Beschnitt)</button><button type="button" class="btn" id="fly-dl">HTML-Datei</button></span></div>' +
@@ -1370,8 +1568,10 @@ function renderFlyer(){
     '<div class="filters" style="margin:12px 0 0">' + opt('hek','statt-HEK zeigen') + opt('uvp','UVP zeigen') + opt('qty','Kontingent zeigen') +
     '<label class="chip" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="fo-draft"' + (flyDraftMark(c) ? ' checked' : '') + '>Entwurf-Hinweis</label>' +
     '<span class="seg" style="margin-left:4px"><button type="button" data-fomode="print" aria-pressed="' + (S.fo.mode !== 'online') + '">Vorschau Print (QR)</button><button type="button" data-fomode="online" aria-pressed="' + (S.fo.mode === 'online') + '">Vorschau Online (Links)</button></span></div>' +
-    (() => { const miss = periodDays(c).map(d => dealFor(c, d)).filter(Boolean).filter(d => !dsUrl(c, d.p.k)); const u = [...new Set(miss.map(d => d.p.m))];
-      return u.length ? '<p class="warnline">Ohne Datenblatt-Link (kein QR-Code/Link): ' + esc(u.join(', ')) + ' – Link im Aktionssortiment beim Gerät eintragen.</p>' : '<p class="small" style="color:var(--ok);font-weight:700">Alle Aktionsgeräte haben einen Datenblatt-Link.</p>'; })() +
+    (() => { const miss = planDeals(c).filter(d => !dsUrl(c, d.p.k)); const u = [...new Set(miss.map(d => d.p.m))];
+      const up = [...new Set(planDeals(c).filter(d => dsIsUpload(c, d.p.k)).map(d => d.p.m))];
+      return (u.length ? '<p class="warnline">Ohne Datenblatt-Link (kein QR-Code/Link): ' + esc(u.join(', ')) + ' – Link im Aktionssortiment beim Gerät eintragen.</p>' : '<p class="small" style="color:var(--ok);font-weight:700">Alle Aktionsgeräte haben einen Datenblatt-Link.</p>') +
+        (up.length ? '<p class="warnline">Hochgeladenes Datenblatt (' + esc(up.join(', ')) + '): QR-Code und Link öffnen nur für angemeldete Personen mit Zugriff auf diesen Kalender. Für gedruckte Flyer besser einen öffentlichen PDF-Link eintragen.</p>' : ''); })() +
     '<div class="tblwrap"><table class="aptbl" style="margin-top:12px"><thead><tr><th>Datei</th><th>Format</th><th>Wofür</th></tr></thead><tbody>' +
     '<tr><td><b>PDF Online</b></td><td>A4, anklickbare Links zu Datenblättern, E-Mail und Telefon</td><td>Per E-Mail an Händler, Website, Newsletter</td></tr>' +
     '<tr><td><b>PDF Print</b></td><td>A4 (210 × 297 mm), QR-Codes zu den Datenblättern, 300 dpi</td><td>Druck im Büro, Auflage am POS</td></tr>' +
@@ -1504,10 +1704,10 @@ function ensureApproval(c){
   return p;
 }
 function fnv(str){ let h = 0x811c9dc5; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); }
-function planDeals(c){ return periodDays(c).map(d => dealFor(c, d)).filter(Boolean); }
+function planDeals(c){ return periodDays(c).map(d => dealFor(c, d)).filter(Boolean).concat(rangeDeals(c)); }
 function dealsForKey(c, key){ const all = planDeals(c); return key.startsWith('pm:') ? all.filter(d => catOf(d.p) === key.slice(3)) : all; }
 function keyHash(c, key){
-  return fnv(JSON.stringify([c.start, c.count, dealsForKey(c, key).map(d => [d.day, d.p.k, d.hek, d.price, d.qty, d.uvp])]));
+  return fnv(JSON.stringify([c.start, c.count, dealsForKey(c, key).map(d => [d.range ? d.sk + ':' + d.from + ':' + d.to : d.day, d.p.k, d.hek, d.price, d.qty, d.uvp])]));
 }
 const identOf = p => S.api ? p.pid : p.uid;
 function evalKey(c, key){
@@ -1608,8 +1808,8 @@ async function personSearch(key, q){
 function dealsTable(c, key){
   const ds = dealsForKey(c, key); let inv = 0, vol = 0;
   const rows = ds.map(d => { const i = d.hek != null && d.price != null && d.qty != null ? (d.hek - d.price) * d.qty : null; if (i != null) inv += i; if (d.price != null && d.qty != null) vol += d.price * d.qty;
-    return '<tr><td>' + fmtShort(d.day) + '</td><td><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></td><td class="num">' + eur(d.hek) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.hek && d.price != null ? '−' + Math.round((1 - d.price/d.hek)*100) + ' %' : '–') + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (i != null ? eur(i) : '–') + '</td></tr>'; }).join('');
-  return '<div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag</th><th>Gerät</th><th>HEK</th><th>Aktions-HEK</th><th>Rabatt</th><th>Stk.</th><th>Invest</th></tr></thead><tbody>' + rows + '</tbody>' +
+    return '<tr><td>' + esc(dealDateLabel(d)) + '</td><td><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></td><td class="num">' + eur(d.hek) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.hek && d.price != null ? '−' + Math.round((1 - d.price/d.hek)*100) + ' %' : '–') + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (i != null ? eur(i) : '–') + '</td></tr>'; }).join('');
+  return '<div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag / Zeitraum</th><th>Gerät</th><th>HEK</th><th>Aktions-HEK</th><th>Rabatt</th><th>Stk.</th><th>Invest</th></tr></thead><tbody>' + rows + '</tbody>' +
     '<tfoot><tr><td colspan="5">Summe · Aktionsumsatz ' + eur(vol) + '</td><td class="num">' + ds.reduce((s,d) => s + (d.qty || 0), 0) + '</td><td class="num">' + eur(inv) + '</td></tr></tfoot></table></div>' +
     '<p class="small" style="margin:6px 0 0">Invest = (HEK − Aktions-HEK) × Kontingent, Werte exkl. MwSt.</p>';
 }
@@ -1727,10 +1927,10 @@ const CUST_FIELDS = [
 ];
 function cartLoad(){ try { const v = JSON.parse(localStorage.getItem('kal-cart') || '[]'); S.cart = Array.isArray(v) ? v : []; } catch(e) { S.cart = []; } cartPrune(); }
 function cartSave(){ try { localStorage.setItem('kal-cart', JSON.stringify(S.cart)); } catch(e) {} }
-function cartPrune(){ const t = today(); const before = S.cart.length; S.cart = S.cart.filter(x => x.day === t && S.config && dealFor(S.config, x.day) && dealFor(S.config, x.day).p.k === x.k); if (S.cart.length !== before) cartSave(); }
+function cartPrune(){ const t = today(); const before = S.cart.length; S.cart = S.cart.filter(x => { const d = S.config && dealBySlot(S.config, x.day); return !!d && d.p.k === x.k && (d.range ? rangeStatus(d) === 'today' : x.day === t); }); if (S.cart.length !== before) cartSave(); }
 function custLoad(){ try { return JSON.parse(localStorage.getItem('kal-kunde') || '{}') || {}; } catch(e) { return {}; } }
 function custSave(v){ try { const keep = Object.assign({}, v); delete keep.notiz; localStorage.setItem('kal-kunde', JSON.stringify(keep)); } catch(e) {} }
-function cartItems(){ return S.cart.map(x => { const d = dealFor(S.config, x.day); return d ? Object.assign({}, x, { deal:d, line: (d.price || 0) * x.qty }) : null; }).filter(Boolean); }
+function cartItems(){ return S.cart.map(x => { const d = dealBySlot(S.config, x.day); return d ? Object.assign({}, x, { deal:d, line: (d.price || 0) * x.qty }) : null; }).filter(Boolean); }
 function renderCartFab(){
   let fab = $('cart-fab');
   if (S.view !== 'kalender' || !S.cart.length){ if (fab) fab.remove(); return; }
@@ -1739,7 +1939,7 @@ function renderCartFab(){
   fab.innerHTML = 'Warenkorb <b>' + n + '</b>';
 }
 function addToCart(day){
-  const deal = dealFor(S.config, day); if (!deal || status(day) !== 'today'){ toast('Diese Aktion ist nicht mehr bestellbar'); return; }
+  const deal = dealBySlot(S.config, day); if (!deal || dealStatus(deal) !== 'today'){ toast('Diese Aktion ist nicht mehr bestellbar'); return; }
   const rem = remainingFor(deal); let q = Math.round(num(($('ord-qty') || {}).value) || 1);
   if (q < 1) q = 1; if (rem != null && q > rem){ q = rem; toast('Nur mehr ' + rem + ' Stück verfügbar'); }
   if (rem != null && rem <= 0){ toast('Leider ausverkauft'); return; }
@@ -1752,12 +1952,12 @@ function cartDialog(){
   cartPrune(); const items = cartItems(), c = S.config, cu = custLoad();
   if (!items.length){ $('overlay-slot').innerHTML = ''; renderCartFab(); toast('Der Warenkorb ist leer'); return; }
   const total = items.reduce((a,x) => a + x.line, 0);
-  const rows = items.map(x => { const rem = remainingFor(x.deal); return '<tr><td><b>' + esc(x.deal.p.m) + '</b><br><span class="small">' + esc(x.deal.p.b) + ' · Aktion ' + fmtShort(x.day) + '</span></td>' +
+  const rows = items.map(x => { const rem = remainingFor(x.deal); return '<tr><td><b>' + esc(x.deal.p.m) + '</b><br><span class="small">' + esc(x.deal.p.b) + ' · Aktion ' + esc(slotLabel(x.day)) + '</span></td>' +
     '<td><span class="stepper sm"><button type="button" data-cq="-1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Weniger">−</button><span class="num">' + x.qty + '</span><button type="button" data-cq="1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Mehr"' + (rem != null && x.qty >= rem ? ' disabled' : '') + '>+</button></span></td>' +
     '<td class="num">' + eur(x.deal.price) + '</td><td class="num"><b>' + eur(x.line) + '</b></td><td><button type="button" class="pc-x" data-cdel="' + x.day + '|' + esc(x.k) + '" aria-label="Entfernen">×</button></td></tr>'; }).join('');
   const fields = CUST_FIELDS.map(([k,l,req,type,ac]) => '<label class="f"' + (k === 'adresse' || k === 'notiz' ? ' style="grid-column:1/-1"' : '') + '>' + esc(l) + (req ? ' *' : '') + '<input type="' + type + '" id="cu-' + k + '" name="' + k + '"' + (ac ? ' autocomplete="' + ac + '"' : '') + (req ? ' required' : '') + ' value="' + esc(cu[k] || '') + '"></label>').join('');
   $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog cartdlg" role="dialog" aria-modal="true" aria-label="Warenkorb"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button>' +
-    '<div class="cartin"><h2 style="margin:0 0 4px">Warenkorb</h2><p class="small" style="margin:0 0 10px">Bestellbar nur am Aktionstag bis 23:59 Uhr, solange der Vorrat reicht. Preise = Aktions-HEK exkl. MwSt.</p>' +
+    '<div class="cartin"><h2 style="margin:0 0 4px">Warenkorb</h2><p class="small" style="margin:0 0 10px">Bestellbar nur am Aktionstag bzw. im Aktionszeitraum bis 23:59 Uhr, solange der Vorrat reicht. Preise = Aktions-HEK exkl. MwSt.</p>' +
     '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Gerät</th><th>Menge</th><th style="text-align:right">Aktions-HEK</th><th style="text-align:right">Summe</th><th></th></tr></thead><tbody>' + rows + '</tbody>' +
     '<tfoot><tr><td colspan="2">Gesamt exkl. MwSt.</td><td class="hidecell"></td><td class="num">' + eur(total) + '</td><td></td></tr></tfoot></table></div>' +
     '<form id="orderform" novalidate><h3 style="margin:16px 0 8px;font-size:16px">Ihre Daten</h3><div class="fields">' + fields + '</div>' +
@@ -1767,12 +1967,12 @@ function cartDialog(){
 }
 function orderMailto(order){
   const c = S.config, mail = c.orderEmail || 'order.austria@beko.com';
-  const lines = order.items.map(x => '- ' + x.qty + ' × ' + x.brand + ' ' + x.model + ' (Aktion ' + fmtShort(x.day) + ') à ' + eur(x.price) + ' = ' + eur(x.line)).join('\n');
+  const lines = order.items.map(x => '- ' + x.qty + ' × ' + x.brand + ' ' + x.model + ' (Aktion ' + (x.aktion || slotLabel(x.day)) + ') à ' + eur(x.price) + ' = ' + eur(x.line)).join('\n');
   const body = 'Bestellung ' + order.no + ' aus dem ' + (c.title || 'Aktionskalender') + '\n\n' + lines + '\nGesamt exkl. MwSt.: ' + eur(order.total) + '\n\nFirma: ' + order.customer.firma + '\nKundennummer: ' + (order.customer.kdnr || '') + '\nAnsprechpartner:in: ' + order.customer.name + '\nE-Mail: ' + order.customer.email + '\nTelefon: ' + order.customer.tel + (order.customer.adresse ? '\nLieferadresse: ' + order.customer.adresse : '') + (order.customer.notiz ? '\nBemerkung: ' + order.customer.notiz : '');
   return 'mailto:' + mail + '?subject=' + encodeURIComponent('Bestellung ' + order.no + ' – ' + order.customer.firma) + '&body=' + encodeURIComponent(body);
 }
 function buildOrder(cu){
-  const items = cartItems().map(x => ({ day:x.day, k:x.k, brand:x.deal.p.b, model:x.deal.p.m, type:x.deal.p.t, qty:x.qty, price:x.deal.price, line:x.line }));
+  const items = cartItems().map(x => ({ day:x.day, aktion: slotLabel(x.day), k:x.k, brand:x.deal.p.b, model:x.deal.p.m, type:x.deal.p.t, qty:x.qty, price:x.deal.price, line:x.line }));
   const d = new Date(), no = 'AK-' + today().replace(/-/g,'') + '-' + randId(2).toUpperCase();
   return { no, at: d.toISOString(), items, total: items.reduce((a,x) => a + x.line, 0), customer: cu, title: S.config.title || 'Aktionskalender' };
 }
@@ -1824,21 +2024,22 @@ function renderOrders(){
   const c = S.config, mail = c.orderEmail || 'order.austria@beko.com';
   const byDay = {}; list.forEach(o => o.items.forEach(x => { byDay[x.day] = (byDay[x.day] || 0) + x.qty; }));
   const tot = list.reduce((a,o) => a + (o.total || 0), 0);
-  const sumRows = periodDays(c).map(d => { const deal = dealFor(c, d); if (!deal) return ''; const sold = byDay[d] || 0; return '<tr><td>' + fmtShort(d) + '</td><td>' + esc(deal.p.m) + '</td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('');
+  const sumRows = periodDays(c).map(d => { const deal = dealFor(c, d); if (!deal) return ''; const sold = byDay[d] || 0; return '<tr><td>' + fmtShort(d) + '</td><td>' + esc(deal.p.m) + '</td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('') +
+    rangeDeals(c).map(deal => { const sold = byDay[deal.sk] || 0; return '<tr><td>' + esc(dealDateLabel(deal)) + '</td><td>' + esc(deal.p.m) + '</td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('');
   const rows = list.map(o => '<tr><td>' + esc(fmtAt(o.at)) + '<br><span class="small">' + esc(o.no) + '</span></td><td><b>' + esc(o.customer.firma) + '</b>' + (o.customer.kdnr ? ' · ' + esc(o.customer.kdnr) : '') + '<br><span class="small">' + esc(o.customer.name) + ' · <a href="mailto:' + esc(o.customer.email) + '">' + esc(o.customer.email) + '</a> · <a href="' + telHref(o.customer.tel) + '">' + esc(o.customer.tel) + '</a></span>' + (o.customer.notiz ? '<br><span class="small">„' + esc(o.customer.notiz) + '“</span>' : '') + '</td>' +
-    '<td>' + o.items.map(x => x.qty + ' × ' + esc(x.model) + ' <span class="small">(' + fmtShort(x.day) + ')</span>').join('<br>') + '</td><td class="num">' + eur(o.total) + '</td><td>' + (o.mail === 'sent' ? '<span class="apb ok">versendet</span>' : o.mail === 'failed' ? '<span class="apb rej">Mail fehlgeschlagen</span>' : S.api ? '<span class="apb open">ohne Mail</span>' : '<span class="apb open">gespeichert</span>') + '</td></tr>').join('');
+    '<td>' + o.items.map(x => x.qty + ' × ' + esc(x.model) + ' <span class="small">(' + esc(x.aktion || slotLabel(x.day)) + ')</span>').join('<br>') + '</td><td class="num">' + eur(o.total) + '</td><td>' + (o.mail === 'sent' ? '<span class="apb ok">versendet</span>' : o.mail === 'failed' ? '<span class="apb rej">Mail fehlgeschlagen</span>' : S.api ? '<span class="apb open">ohne Mail</span>' : '<span class="apb open">gespeichert</span>') + '</td></tr>').join('');
   $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Bestellungen</h2><span class="small">' + list.length + ' Bestellungen · ' + eur(tot) + ' exkl. MwSt. · Empfänger: ' + esc(mail) + '</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="ord-reload">Aktualisieren</button><button type="button" class="btn primary" id="ord-csv"' + (list.length ? '' : ' disabled') + '>Als CSV (Excel) herunterladen</button></span></div>' +
     (S.api ? '' : '<p class="warnline" style="margin-top:0">In dieser Claude-Version werden Bestellungen gespeichert, aber nicht automatisch per E-Mail versendet. Der automatische Versand an ' + esc(mail) + ' läuft in der Cloudflare-Version.</p>') +
     '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Eingang</th><th>Händler</th><th>Geräte</th><th style="text-align:right">Summe</th><th>E-Mail</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" class="small">Noch keine Bestellungen.</td></tr>') + '</tbody></table></div></section>' +
-    '<section class="section"><div class="section-head"><h3>Kontingent je Aktionstag</h3></div><div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag</th><th>Gerät</th><th>Kontingent</th><th>Bestellt</th><th>Rest</th></tr></thead><tbody>' + sumRows + '</tbody></table></div></section></div>';
+    '<section class="section"><div class="section-head"><h3>Kontingent je Aktion</h3></div><div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag</th><th>Gerät</th><th>Kontingent</th><th>Bestellt</th><th>Rest</th></tr></thead><tbody>' + sumRows + '</tbody></table></div></section></div>';
   renderSavebar();
 }
 async function ordersCsv(){
   const q = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
-  const head = ['Bestellnummer','Eingang','Aktionstag','Marke','Modell','Menge','Aktions-HEK','Summe','Firma','Kundennummer','Ansprechpartner','E-Mail','Telefon','Lieferadresse','Bemerkung','Mail'];
+  const head = ['Bestellnummer','Eingang','Aktionstag / Zeitraum','Marke','Modell','Menge','Aktions-HEK','Summe','Firma','Kundennummer','Ansprechpartner','E-Mail','Telefon','Lieferadresse','Bemerkung','Mail'];
   const lines = [head.map(q).join(';')];
-  (S.orders || []).forEach(o => o.items.forEach(x => lines.push([o.no, fmtAt(o.at), fmtShort(x.day), x.brand, x.model, x.qty, String(x.price).replace('.',','), String(x.line).replace('.',','), o.customer.firma, o.customer.kdnr, o.customer.name, o.customer.email, o.customer.tel, o.customer.adresse, o.customer.notiz, o.mail || ''].map(q).join(';'))));
+  (S.orders || []).forEach(o => o.items.forEach(x => lines.push([o.no, fmtAt(o.at), x.aktion || slotLabel(x.day), x.brand, x.model, x.qty, String(x.price).replace('.',','), String(x.line).replace('.',','), o.customer.firma, o.customer.kdnr, o.customer.name, o.customer.email, o.customer.tel, o.customer.adresse, o.customer.notiz, o.mail || ''].map(q).join(';'))));
   const r = await saveFile('Bestellungen_' + (S.config.title || 'Aktionskalender').replace(/[^\wäöüÄÖÜß-]+/g,'_') + '_' + today() + '.csv', new Blob(['﻿' + lines.join('\r\n')], { type:'text/csv' }));
   if (r === 'saved') toast('CSV gespeichert');
 }
@@ -1848,7 +2049,7 @@ document.addEventListener('click', e => {
   if (t.id === 'ov-x2'){ $('overlay-slot').innerHTML = ''; return; }
   const ac = t.closest('[data-addcart]'); if (ac){ addToCart(ac.dataset.addcart); return; }
   const qs = t.closest('[data-qstep]'); if (qs){ const inp = $('ord-qty'); if (inp){ const mx = inp.max ? +inp.max : 999; inp.value = Math.min(mx, Math.max(1, (+inp.value || 1) + (+qs.dataset.qstep))); } return; }
-  const cq = t.closest('[data-cq]'); if (cq){ const [day, k] = cq.dataset.ci.split(/\|(.*)/s); const it = S.cart.find(x => x.day === day && x.k === k); if (it){ const rem = remainingFor(dealFor(S.config, day)); it.qty = Math.max(1, it.qty + (+cq.dataset.cq)); if (rem != null) it.qty = Math.min(it.qty, rem); cartSave(); const keep = {}; CUST_FIELDS.forEach(([f]) => { const el = $('cu-' + f); if (el) keep[f] = el.value; }); custSave(Object.assign(custLoad(), keep)); cartDialog(); renderCartFab(); } return; }
+  const cq = t.closest('[data-cq]'); if (cq){ const [day, k] = cq.dataset.ci.split(/\|(.*)/s); const it = S.cart.find(x => x.day === day && x.k === k); if (it){ const rem = remainingFor(dealBySlot(S.config, day)); it.qty = Math.max(1, it.qty + (+cq.dataset.cq)); if (rem != null) it.qty = Math.min(it.qty, rem); cartSave(); const keep = {}; CUST_FIELDS.forEach(([f]) => { const el = $('cu-' + f); if (el) keep[f] = el.value; }); custSave(Object.assign(custLoad(), keep)); cartDialog(); renderCartFab(); } return; }
   const cd = t.closest('[data-cdel]'); if (cd){ const [day, k] = cd.dataset.cdel.split(/\|(.*)/s); S.cart = S.cart.filter(x => !(x.day === day && x.k === k)); cartSave(); renderCartFab(); cartDialog(); return; }
   if (t.id === 'ord-reload'){ S.orders = null; renderOrders(); return; }
   if (t.id === 'ord-csv'){ ordersCsv(); return; }
@@ -1873,7 +2074,7 @@ function renderHeader(){
   const last = periodDays(c)[c.count-1];
   $('h-sub').textContent = c.count === 1
     ? 'Am ' + fmtLong(c.start) + ' ein Top-Gerät zum Sonder-HEK für den Fachhandel – nur von 0:00 bis 23:59 Uhr bestellbar.'
-    : 'Vom ' + fmtShort(c.start) + ' bis ' + fmtShort(last) + last.slice(0,4) + ' jeden Tag ein neues Aktionsgerät zum Sonder-HEK für den Fachhandel. Jede Aktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr.';
+    : 'Vom ' + fmtShort(c.start) + ' bis ' + fmtShort(last) + last.slice(0,4) + ' jeden Tag ein neues Aktionsgerät zum Sonder-HEK für den Fachhandel. Jede Aktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr.' + (S.config && rangeDeals(c).length ? ' Dazu Aktionen, die über mehrere Tage gelten.' : '');
   const mq = $('marquee'); if (mq){ const unit = '<span>' + esc((c.title || 'Black Deals').toUpperCase()) + '</span><b>✦</b><span>' + (c.count === 1 ? 'Nur 1 Tag' : 'Täglich neuer Deal') + '</span><b>✦</b><span>Nur 0:00–23:59 Uhr</span><b>✦</b><span>Solange der Vorrat reicht</span><b>✦</b>'; mq.innerHTML = '<div class="mq-track">' + unit.repeat(6) + '</div>'; }
   const notes = [];
   if (S.sim) notes.push('Testansicht für den ' + fmtLong(S.sim));
@@ -1888,6 +2089,7 @@ function renderHeader(){
 }
 function render(){
   if (!S.loaded) return;
+  syncExtras();
   if (S.api && !S.canEdit && wantsAdmin()){ renderHeader(); renderLogin(); renderSavebar(); return; }
   renderHeader();
   if (S.view === 'admin') renderAdmin(); else if (S.view === 'orders' && S.canEdit) renderOrders(); else if (S.view === 'flyer' && S.canEdit) renderFlyer(); else if (S.view === 'approval' && (S.canEdit || isApprover() || (S.api && S.ap.token))) renderApproval(); else { if (S.view !== 'kalender') S.view = 'kalender'; renderHeader(); renderDealer(); renderSavebar(); }
@@ -1936,6 +2138,7 @@ setInterval(() => {
     S.demo = true; S.canEdit = true; S.config = exampleConfig(defaultConfig()); S.config.example = false; S.draft = clone(S.config); S.loaded = true; cartLoad(); render(); return;
   }
   S.db = db;
+  window.claude.use('assets').then(a => { S.assets = a || null; if (S.assets && S.view === 'admin' && $('plist')) renderPoolList(); }).catch(() => {});
   try { S.canEdit = user ? !!(await user.canEdit()) : false; } catch(e) { S.canEdit = false; }
   S.ap.userApi = user; try { S.ap.uid = user ? await user.id() : null; } catch(e) { S.ap.uid = null; }
   db.collection('stock').onSnapshot(snap => { const m = {}; snap.docs.forEach(d => { if (d.exists) m[d.id] = (d.data() || {}).n || 0; }); S.sold = m; if (S.loaded && S.view === 'kalender' && !$('ov')) renderDealer(); }, () => {});
@@ -1957,5 +2160,4 @@ setInterval(() => {
 </script>
 
 
-</body>
-</html>
+</body></html>

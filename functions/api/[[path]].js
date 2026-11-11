@@ -1,5 +1,3 @@
-// Alle /api/*-Aufrufe → gemeinsame Serverlogik in lib/kalender.js
-import { route, json } from '../../lib/kalender.js';
-export async function onRequest({ request, env, waitUntil }) {
-  return (await route(request, env, { waitUntil })) || json({ error: 'Nicht gefunden' }, 404);
-}
+/* Alle /api/*-Anfragen → gemeinsame Serverlogik in _core.js */
+import { handleApi } from './_core.js';
+export const onRequest = ({ request, env }) => handleApi(request, env);
