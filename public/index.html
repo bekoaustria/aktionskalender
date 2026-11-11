@@ -612,6 +612,8 @@ function normalize(c){
   c.pool = c.pool || {}; c.days = c.days || {};
   c.ranges = Array.isArray(c.ranges) ? c.ranges.filter(r => r && r.id) : [];
   c.extra = c.extra && typeof c.extra === 'object' && !Array.isArray(c.extra) ? c.extra : {};
+  /* UVP: gleich wie im Katalog (= Fachhandels-Apps) → automatisch, nur abweichende Werte bleiben als manuelle Eingabe */
+  Object.entries(c.pool).forEach(([k, e]) => { const p = BYK.get(k) || (c.extra[k] ? { u: c.extra[k].u } : null); if (e && p && e.uvp != null && p.u != null && +e.uvp === +p.u) delete e.uvp; });
   if (c.orderPhone == null) c.orderPhone = DEF_PHONE;
   if (c.impressum == null) c.impressum = DEF_IMPRESSUM;
   if (c.shopUrl == null) c.shopUrl = '';
@@ -900,7 +902,7 @@ function poolCard(p){
     '<div class="row"><label class="f">HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="hek-' + esc(p.k) + '" data-f="hek" value="' + (e.hek ?? '') + '"' + (on ? '' : ' disabled') + ' placeholder="HEK"></label>' +
     (on ? '<label class="f" style="grid-column:1/-1">Datenblatt-Link' + (dsUrl(S.draft, p.k) ? ' · <a href="' + esc(dsUrl(S.draft, p.k)) + '" target="_blank" rel="noopener">öffnen</a>' : ' · <span style="color:var(--warn)">fehlt</span>') + '<input type="text" id="ds-' + esc(p.k) + '" data-f="ds" value="' + esc(e.ds || '') + '" placeholder="' + esc(dsIdOk(e.dsId) ? 'PDF hochgeladen' : DS_MAP[p.k] ? 'automatisch hinterlegt' : 'https://… (PDF-Link)') + '"></label>' +
       (canUpload() ? '<div class="dsup"><label class="upl">PDF hochladen<input type="file" accept="application/pdf,.pdf" data-dsup></label>' + (dsIdOk(e.dsId) ? '<span>Upload ✓ <a href="' + esc(blobUrl(e.dsId)) + '" target="_blank" rel="noopener">öffnen</a>' + ((e.ds || '').trim() ? ' (Link hat Vorrang)' : '') + '</span><button type="button" class="linkbtn" data-dsrm>Upload entfernen</button>' : '<span class="small">eigenes Datenblatt</span>') + '</div>' : '') : '') +
-    '<label class="f">UVP €<input type="number" step="0.01" min="0" inputmode="decimal" id="uvp-' + esc(p.k) + '" data-f="uvp" value="' + (e.uvp ?? p.u ?? '') + '"' + (on ? '' : ' disabled') + '></label>' +
+    '<label class="f">UVP € <span style="font-weight:500">· ' + (on && e.uvp != null && e.uvp !== p.u ? 'manuell' + (p.u != null && !p.x ? ' (App: ' + eur(p.u) + ') <button type="button" class="linkbtn" data-uvpreset>zurücksetzen</button>' : '') : p.x ? 'eigenes Produkt' : 'aus FH-App') + '</span><input type="number" step="0.01" min="0" inputmode="decimal" id="uvp-' + esc(p.k) + '" data-f="uvp" value="' + (e.uvp ?? p.u ?? '') + '"' + (on ? '' : ' disabled') + '></label>' +
     '<button type="button" class="toggle" data-toggle>' + (on ? '✓ Im Sortiment' : '+ Aufnehmen') + '</button></div>' + (on ? assignHTML(p) : '') + '</div>';
 }
 function assignHTML(p){
@@ -995,7 +997,7 @@ function renderAdmin(){
     '</div><p class="small" style="margin-bottom:0">Eine Vorlage setzt Zeitraum, Design und Titel – alles bleibt danach frei änderbar. Bereits geplante Tage bleiben erhalten. Die Aktion eines Tages ist von 0:00 bis 23:59 Uhr (Wien) aktiv. Danach zeigt das Türchen das Gerät vergraut mit „Aktion abgelaufen“. Das Testdatum verändert nur deine eigene Ansicht.</p></section>' +
 
     approvalPeopleHTML(c) +
-    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen, HEK und UVP direkt anpassen.</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div><div id="xform"></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen, HEK direkt eintragen. UVP kommen automatisch aus den Fachhandels-Apps (Stand 11.11.2026) – eine Änderung im Feld gilt als manuelle UVP.</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div><div id="xform"></div>' +
     '<div class="filters">' + ['alle'].concat(BRANDS).map(b => '<button type="button" class="chip" data-brand="' + b + '" aria-pressed="' + (S.f.brand === b) + '">' + (b === 'alle' ? 'Alle Marken' : b) + '</button>').join('') +
     '<select id="f-cat" aria-label="Kategorie"><option value="alle">Alle Kategorien</option>' + cats.map(x => '<option' + (S.f.cat === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
     '<input type="text" id="f-q" placeholder="Modell suchen" value="' + esc(S.f.q) + '" aria-label="Modell suchen">' +
@@ -1073,7 +1075,7 @@ document.addEventListener('click', e => {
   if (t.id === 'f-only'){ S.f.only = !S.f.only; t.setAttribute('aria-pressed', S.f.only); renderPoolList(); return; }
   if (t.closest('[data-toggle]')){
     const card = t.closest('.pcard'), k = card.dataset.k, p = BYK.get(k);
-    if (S.draft.pool[k]) delete S.draft.pool[k]; else S.draft.pool[k] = { hek: null, uvp: p.u ?? null };
+    if (S.draft.pool[k]) delete S.draft.pool[k]; else S.draft.pool[k] = { hek: null };
     card.outerHTML = poolCard(p); markDirty(); renderDays(); return;
   }
   const ua = t.closest('[data-unassign]'); if (ua){ const day = ua.dataset.unassign, k = (S.draft.days[day] || {}).k; delete S.draft.days[day]; markDirty(); if (k) refreshCard(k); renderDays(); return; }
@@ -1083,6 +1085,7 @@ document.addEventListener('click', e => {
   if (t.id === 'xf-save'){ xSave(); return; }
   if (t.id === 'xf-del'){ if (S.xf && S.xf.k) xDelete(S.xf.k); return; }
   const xe = t.closest('[data-xedit]'); if (xe){ const k = xe.closest('.pcard').dataset.k; $('xform').innerHTML = xFormHTML(k); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+  const ur = t.closest('[data-uvpreset]'); if (ur){ const k = ur.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.uvp; markDirty(); refreshCard(k); toast('UVP wieder aus der FH-App'); } return; }
   const dr = t.closest('[data-dsrm]'); if (dr){ const k = dr.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.dsId; markDirty(); refreshCard(k); toast('Upload entfernt'); } return; }
   if (t.id === 'btn-radd'){ const a = periodDays(S.draft); S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k:'', full:true, from:a[0], to:a[a.length-1], hek:null, price:null, qty:null }); markDirty(); renderRanges(); const sel = document.querySelector('#rows-r .rrow:last-child select'); if (sel) sel.focus(); return; }
   const rdl = t.closest('[data-rdel]'); if (rdl){ const id = rdl.closest('.rrow').dataset.rid; S.draft.ranges = (S.draft.ranges || []).filter(r => r.id !== id); markDirty(); renderRanges(); return; }
@@ -1160,7 +1163,9 @@ document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'f-q'){ S.f.q = t.value; renderPoolList(); return; }
   const card = t.closest('.pcard');
-  if (card && t.dataset.f){ const e2 = S.draft.pool[card.dataset.k]; if (e2){ e2[t.dataset.f] = t.dataset.f === 'ds' ? t.value.trim() : num(t.value); markDirty(); } return; }
+  if (card && t.dataset.f){ const e2 = S.draft.pool[card.dataset.k]; if (e2){ const p = BYK.get(card.dataset.k);
+    if (t.dataset.f === 'uvp' && !(p && p.x)){ const v = num(t.value); if (v == null || (p && v === p.u)) delete e2.uvp; else e2.uvp = v; }
+    else e2[t.dataset.f] = t.dataset.f === 'ds' ? t.value.trim() : num(t.value); markDirty(); } return; }
   const rr = t.closest('.rrow');
   if (rr && t.type === 'number' && t.dataset.rf){ const r = rangeById(rr.dataset.rid); if (!r) return; const v = num(t.value);
     r[t.dataset.rf] = t.dataset.rf === 'qty' ? (v == null ? null : Math.max(0, Math.round(v))) : v; markDirty(); return; }
