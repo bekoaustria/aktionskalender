@@ -170,6 +170,24 @@ input[type=text],input[type=number],input[type=email],input[type=date],input[typ
 .days{display:flex;flex-direction:column;gap:6px}
 .drow{display:grid;grid-template-columns:92px 56px minmax(0,2.4fr) repeat(2,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:8px;border-radius:10px;background:var(--surface-2)}
 .drow.today{box-shadow:inset 0 0 0 2px var(--gold)}
+.dgroup{display:flex;flex-direction:column;gap:4px}
+.dgroup.multi{border-left:3px solid var(--gold);padding-left:6px;border-radius:12px}
+.drow.xd .dt{align-self:center}
+.drow.xd .xdl{display:inline-block;font-size:11.5px;font-weight:800;color:var(--ink);background:color-mix(in srgb,var(--gold) 28%,transparent);border-radius:6px;padding:2px 7px}
+.dmore{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;padding:0 8px 4px 108px;font-size:13px}
+.dmore .ovl{color:var(--muted);font-size:12.5px}
+.door .inside .multi{position:absolute;right:6px;bottom:6px;z-index:1;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;border-radius:999px;padding:1px 7px;line-height:1.5}
+body.black .door .inside .multi{background:var(--gold);color:#000}
+.multihead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.multihead h3{font-family:var(--f-display);font-size:22px;margin:0}
+.heroes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px;margin-bottom:26px}
+.heroes .multihead{grid-column:1/-1;margin:0}
+.heroes .hero{margin:0}
+.heroes .hero .pic{min-height:200px;padding:16px}
+.heroes .hero .pic img{max-height:210px}
+.dialog .heroes{grid-template-columns:1fr;padding:20px;margin:0}
+.dialog .heroes .hero{border:1px solid var(--line)}
+@media (max-width:820px){.dmore{padding-left:8px}}
 .drow.past{opacity:.7}
 .thumb{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:0 0 auto;background:transparent;overflow:hidden}
 .thumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
@@ -340,6 +358,11 @@ body.xmas .xmas-foot small{display:block;font-family:var(--f-body);font-size:13p
 .ist.new{background:color-mix(in srgb,var(--gold) 30%,transparent);color:var(--ink)}
 .ist.no{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
 .impopts{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:10px 0;font-size:13.5px}
+.ibdrop{border:1.5px dashed transparent;border-radius:10px;padding:6px 8px;margin-left:-8px!important;transition:border-color .15s,background .15s}
+.ibdrop.drag{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.ibth{width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:repeating-conic-gradient(#e9e9e9 0 25%,#fff 0 50%) 0 0/12px 12px}
+.ibth img{max-width:54px;max-height:54px;object-fit:contain;display:block}
+.ibth.none{background:var(--surface-2);font-size:9px;color:#999;text-align:center}
 .impopts label{display:inline-flex;gap:6px;align-items:center}
 .xform{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px}
 .xform h4{margin:0 0 2px;font-size:16px}
@@ -640,16 +663,29 @@ function normalize(c){
   delete c.mode; delete c.year; delete c.month;
   c.pool = c.pool || {}; c.days = c.days || {};
   c.ranges = Array.isArray(c.ranges) ? c.ranges.filter(r => r && r.id) : [];
+  parkXd(c);
   c.extra = c.extra && typeof c.extra === 'object' && !Array.isArray(c.extra) ? c.extra : {};
   c.codes = c.codes && typeof c.codes === 'object' && !Array.isArray(c.codes) ? c.codes : {};
   c.dsl = c.dsl && typeof c.dsl === 'object' && !Array.isArray(c.dsl) ? c.dsl : {};
   c.dsu = c.dsu && typeof c.dsu === 'object' && !Array.isArray(c.dsu) ? c.dsu : {};
+  c.imgs = c.imgs && typeof c.imgs === 'object' && !Array.isArray(c.imgs) ? c.imgs : {};
   /* UVP: gleich wie im Katalog (= Fachhandels-Apps) → automatisch, nur abweichende Werte bleiben als manuelle Eingabe */
   Object.values(c.pool).forEach(e => { if (e) delete e.uvp; }); /* UVP immer aus FH-App (eigene Produkte: UVP beim Produkt) */
   if (c.orderPhone == null) c.orderPhone = DEF_PHONE;
   if (c.impressum == null) c.impressum = DEF_IMPRESSUM;
   if (c.shopUrl == null) c.shopUrl = '';
   return c;
+}
+/* Zusätzliche Tagesaktionen außerhalb des Zeitraums werden geparkt (xdOff) und kommen zurück, sobald der Tag wieder im Zeitraum liegt */
+function parkXd(c){
+  c.ranges = c.ranges || [];
+  const ds = periodDays(c), A = ds[0], B = ds[ds.length-1], inP = r => r.from >= A && r.from <= B;
+  const off = Array.isArray(c.xdOff) ? c.xdOff.filter(r => r && r.id) : [];
+  c.ranges.forEach(r => { if (r.xd){ r.full = false; r.to = r.from; } });
+  const back = off.filter(inP);
+  c.xdOff = off.filter(r => !inP(r)).concat(c.ranges.filter(r => r.xd && !inP(r)));
+  c.ranges = c.ranges.filter(r => !r.xd || inP(r)).concat(back);
+  if (!c.xdOff.length) delete c.xdOff;
 }
 const telHref = t => 'tel:' + String(t || '').replace(/[^+\d]/g, '');
 function legalLine(c){
@@ -673,8 +709,40 @@ function syncExtras(){
   for (let i = CAT.length - 1; i >= 0; i--) if (CAT[i].x){ BYK.delete(CAT[i].k); CAT.splice(i, 1); }
   const src = S.view === 'admin' && S.draft ? S.draft : S.config, all = (src && src.extra) || {};
   const pool = (src && src.pool) || {};
-  CAT.forEach(p => { if (p.x) return; if (p.i0 === undefined) p.i0 = p.i || ''; const ov = pool[p.k] && pool[p.k].img; p.i = ov || p.i0; });
-  Object.entries(all).forEach(([k, e]) => { if (!e || !e.m || BYK.has(k)) return; const p = { b:e.b, c:e.c, m:e.m, t:e.t || '', u: e.u ?? null, i: e.i || '', x:true, k }; CAT.unshift(p); BYK.set(k, p); });
+  const imgs = (src && src.imgs) || {};
+  CAT.forEach(p => { if (p.x) return; if (p.i0 === undefined) p.i0 = p.i || ''; const ov = (pool[p.k] && pool[p.k].img) || imgSrc(imgs[p.k]); p.i = ov || p.i0; });
+  Object.entries(all).forEach(([k, e]) => { if (!e || !e.m || BYK.has(k)) return; const p = { b:e.b, c:e.c, m:e.m, t:e.t || '', u: e.u ?? null, i: imgSrc(imgs[k]) || e.i || '', x:true, k }; CAT.unshift(p); BYK.set(k, p); });
+}
+/* Produktbild-Verweis: data:-URL (Cloudflare / ohne Upload) oder Asset-ID (Claude-Artifact, hochauflösend) */
+const imgSrc = v => !v ? '' : String(v).startsWith('data:') ? v : dsIdOk(v) ? blobUrl(v) : '';
+const hasOwnImg = (c, k) => !!(((c.pool || {})[k] || {}).img || imgSrc((c.imgs || {})[k]));
+async function imgScaled(file, max, type, q){
+  const bmp = await createImageBitmap(file), f = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(bmp.width * f)); cv.height = Math.max(1, Math.round(bmp.height * f));
+  cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height); if (bmp.close) bmp.close();
+  return cv;
+}
+/* Speichert ein Produktbild: im Claude-Artifact als Asset (bis 1600 px, für Druck), sonst als data:-URL (480 px) in der Planung */
+async function storeImg(file){
+  if (!S.api && S.assets){
+    const cv = await imgScaled(file, 1600);
+    let blob = await new Promise(r => cv.toBlob(r, 'image/webp', 0.9));
+    if (!blob || blob.type !== 'image/webp') blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    const r = await S.assets.upload(blob); return r.id;
+  }
+  return imgToData(file);
+}
+function setImg(c, k, v){ c.imgs = c.imgs || {}; c.imgs[k] = v; if (c.pool[k]) delete c.pool[k].img; }
+/* Prüft, ob ein Bild freigestellt ist (transparente Ecken/Ränder) */
+async function imgAlpha(file){
+  try { const cv = await imgScaled(file, 64), x = cv.getContext('2d'), w = cv.width, h = cv.height, d = x.getImageData(0, 0, w, h).data;
+    const pts = [[0,0],[w-1,0],[0,h-1],[w-1,h-1],[w>>1,0],[w>>1,h-1],[0,h>>1],[w-1,h>>1]];
+    return pts.filter(([a,b]) => d[(b * w + a) * 4 + 3] < 200).length >= 4; } catch(e){ return null; }
+}
+async function inlineBlobs(html){
+  const re = new RegExp(location.origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/_blob/[A-Za-z0-9_-]+', 'g'), urls = [...new Set(html.match(re) || [])];
+  for (const u of urls){ try { const b = await (await fetch(u)).blob(); const d = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); }); html = html.split(u).join(d); } catch(e) {} }
+  return html;
 }
 async function imgToData(file){
   const bmp = await createImageBitmap(file), max = 480, f = Math.min(1, max / Math.max(bmp.width, bmp.height));
@@ -719,6 +787,7 @@ function xSave(){
   if (!S.xf.k && (BYK.has(k) || (S.draft.extra || {})[k])){ err.textContent = BYK.get(k) && !BYK.get(k).x ? 'Dieses Modell ist im Katalog vorhanden – bitte dort ins Aktionssortiment aufnehmen.' : 'Dieses Produkt wurde bereits angelegt.'; err.hidden = false; return; }
   S.draft.extra = S.draft.extra || {};
   S.draft.extra[k] = { b, c, m, t, u: num(f('xf-u')), i: S.xf.i || '' };
+  if (S.xf.iNew && S.draft.imgs) delete S.draft.imgs[k];
   const pe = S.draft.pool[k] || (S.draft.pool[k] = {});
   pe.ds = f('xf-ds').trim(); if (S.xf.dsId) pe.dsId = S.xf.dsId; else delete pe.dsId;
   const isNew = !S.xf.k; S.xf = null; syncExtras(); markDirty();
@@ -766,16 +835,27 @@ function rangeSpan(c, r){
   return { from, to: to < from ? from : to };
 }
 function rangeLabel(c, r){ if (r.full) return 'Gesamter Aktionszeitraum'; const x = rangeSpan(c, r); return x.from === x.to ? fmtShort(x.from) : fmtShort(x.from) + ' – ' + fmtShort(x.to); }
+/* Mehrere Aktionen am selben Tag: zusätzliche Tagesaktionen sind Ein-Tages-Einträge in c.ranges (xd:true, from = to = Tag).
+   Sie werden wie Tagesaktionen angezeigt (range = null), behalten aber ihren eigenen Slot „r-<id>“ für Warenkorb, Kontingent und Server. */
+const inPeriod = (c, d) => { const ds = periodDays(c); return !!d && d >= ds[0] && d <= ds[ds.length-1]; };
 function rangeDeal(c, r){
   if (!r || !r.k) return null; const p = BYK.get(r.k); if (!p) return null;
-  const pool = c.pool[r.k] || {}, x = rangeSpan(c, r);
-  return { day:x.from, from:x.from, to:x.to, range:r, rid:r.id, sk:'r-' + r.id, p, hek: r.hek != null ? r.hek : (pool.hek ?? null), price: r.price ?? null, qty: r.qty ?? null, uvp: p.u, note: r.note || '', label: rangeLabel(c, r) };
+  if (r.xd && !inPeriod(c, r.from)) return null;
+  const pool = c.pool[r.k] || {}, x = r.xd ? { from:r.from, to:r.from } : rangeSpan(c, r), one = !r.full && x.from === x.to;
+  return { day:x.from, from:x.from, to:x.to, range: one ? null : r, xr:r, oneDay:one, rid:r.id, sk:'r-' + r.id, p, hek: r.hek != null ? r.hek : (pool.hek ?? null), price: r.price ?? null, qty: r.qty ?? null, uvp: p.u, note: r.note || '', label: one ? fmtShort(x.from) : rangeLabel(c, r) };
 }
-function rangeDeals(c){ return (c.ranges || []).map(r => rangeDeal(c, r)).filter(Boolean).sort((a,b) => a.from.localeCompare(b.from) || (b.range.full ? 1 : 0) - (a.range.full ? 1 : 0)); }
+function rangeDeals(c){ return (c.ranges || []).map(r => rangeDeal(c, r)).filter(Boolean).sort((a,b) => a.from.localeCompare(b.from) || (b.xr.full ? 1 : 0) - (a.xr.full ? 1 : 0)); }
+/* echte Zeitraum-Aktionen (mehrere Tage, dürfen sich beliebig überschneiden) */
+function multiRangeDeals(c){ return rangeDeals(c).filter(d => d.range); }
+/* alle Tagesaktionen eines Tages: Hauptaktion + zusätzliche Aktionen */
+function dayDeals(c, day){ const m = dealFor(c, day); return (m ? [m] : []).concat(rangeDeals(c).filter(d => !d.range && d.day === day)); }
+/* alle Aktionen sortiert: Zeitraum-Aktionen, danach Tagesaktionen nach Datum */
+function allDeals(c){ const out = multiRangeDeals(c); periodDays(c).forEach(d => dayDeals(c, d).forEach(x => out.push(x))); return out; }
+const xdOf = (c, day) => (c.ranges || []).filter(r => r.xd && r.from === day);
 function rangeStatus(d){ const t = today(); return t < d.from ? 'future' : t > d.to ? 'past' : 'today'; }
 function dealStatus(d){ return d.range ? rangeStatus(d) : status(d.day); }
 function dealBySlot(c, sl){ if (String(sl).startsWith('r-')){ const r = (c.ranges || []).find(x => 'r-' + x.id === sl); return r ? rangeDeal(c, r) : null; } return dealFor(c, sl); }
-function slotLabel(sl){ if (String(sl).startsWith('r-')){ const d = S.config && dealBySlot(S.config, sl); return d ? (d.range.full ? 'Zeitraum ' + fmtShort(d.from) + '–' + fmtShort(d.to) : 'Zeitraum ' + d.label) : 'Zeitraum-Aktion'; } return fmtShort(sl); }
+function slotLabel(sl){ if (String(sl).startsWith('r-')){ const d = S.config && dealBySlot(S.config, sl); return d ? (!d.range ? fmtShort(d.day) : d.range.full ? 'Zeitraum ' + fmtShort(d.from) + '–' + fmtShort(d.to) : 'Zeitraum ' + d.label) : 'Zeitraum-Aktion'; } return fmtShort(sl); }
 function dealDateLabel(d){ return d.range ? (d.range.full ? fmtShort(d.from) + '–' + fmtShort(d.to) + ' (gesamt)' : d.label) : fmtShort(d.day); }
 const status = day => day < today() ? 'past' : day === today() ? 'today' : 'future';
 const thumb = (p, cls) => '<span class="thumb' + (cls ? ' ' + cls : '') + '">' + (p && p.i ? '<img src="' + p.i + '" alt="' + esc(p.b + ' ' + p.m) + '" loading="lazy">' : '') + '</span>';
@@ -816,7 +896,7 @@ function heroHTML(c, deal, opts){
   const rem = remainingFor(deal);
   if (st === 'today' && !(rem != null && rem <= 0) && deal.price != null){
     const inCart = (S.cart || []).find(x => x.day === slot && x.k === p.k);
-    act = '<div class="orderbox"><label class="f qtyf">Menge<span class="stepper"><button type="button" data-qstep="-1" aria-label="Weniger">−</button><input type="number" id="ord-qty" min="1"' + (rem != null ? ' max="' + rem + '"' : '') + ' value="' + (inCart ? inCart.qty : 1) + '" inputmode="numeric"><button type="button" data-qstep="1" aria-label="Mehr">+</button></span></label>' +
+    act = '<div class="orderbox"><label class="f qtyf">Menge<span class="stepper"><button type="button" data-qstep="-1" aria-label="Weniger">−</button><input type="number" data-qty-for="' + esc(slot) + '" min="1"' + (rem != null ? ' max="' + rem + '"' : '') + ' value="' + (inCart ? inCart.qty : 1) + '" inputmode="numeric"><button type="button" data-qstep="1" aria-label="Mehr">+</button></span></label>' +
       '<button type="button" class="btn primary" data-addcart="' + slot + '">' + (inCart ? 'Menge im Warenkorb ändern' : 'In den Warenkorb') + '</button></div>' +
       '<p class="small" style="margin:0">Oder bestellen per E-Mail <a href="mailto:' + esc(mail) + '?subject=' + subject + '&body=' + body + '">' + esc(mail) + '</a> bzw. Tel. <a href="' + telHref(c.orderPhone) + '">' + esc(c.orderPhone || DEF_PHONE) + '</a></p>';
   }
@@ -838,25 +918,36 @@ function heroHTML(c, deal, opts){
 }
 
 function doorHTML(c, day, idx){
-  const st = status(day), deal = dealFor(c, day);
+  const st = status(day), list = dayDeals(c, day), deal = list[0], n = list.length;
   const d = useWeekGrid(c) ? parseIso(day).d : idx + 1;
   const opened = st === 'past' || (st === 'today' && lsGet('door-open-' + day) === '1');
   let inside;
   if (st === 'future') inside = '<div class="face inside"></div>';
   else if (!deal) inside = '<div class="face inside"><span class="dno">' + d + '</span>Keine Aktion</div>';
-  else inside = '<div class="face inside"><span class="dno">' + d + '</span>' + imgTag(deal.p) +
-    '<div class="m">' + esc(deal.p.m) + '</div><div class="pl">Aktions-HEK</div><div class="p num">' + eur(deal.price) + '</div>' +
-    (st === 'today' ? '<div class="q">' + (deal.qty != null ? (remainingFor(deal) <= 0 ? 'Ausverkauft' : 'Nur mehr ' + remainingFor(deal) + ' Stk.') : '') + '</div>' : '') +
-    (st === 'past' ? '<div class="stamp">Aktion<br>abgelaufen</div>' : '') + '</div>';
+  else {
+    const prices = list.map(x => x.price).filter(v => v != null), minP = prices.length ? Math.min(...prices) : null, mixed = new Set(prices).size > 1;
+    const rem = n === 1 ? remainingFor(deal) : null;
+    inside = '<div class="face inside"><span class="dno">' + d + '</span>' + imgTag(deal.p) + (n > 1 ? '<span class="multi">+' + (n - 1) + '</span>' : '') +
+      '<div class="m">' + (n > 1 ? n + ' Aktionen' : esc(deal.p.m)) + '</div><div class="pl">Aktions-HEK' + (mixed ? ' ab' : '') + '</div><div class="p num">' + eur(n > 1 ? minP : deal.price) + '</div>' +
+      (st === 'today' ? '<div class="q">' + (n === 1 && deal.qty != null ? (rem <= 0 ? 'Ausverkauft' : 'Nur mehr ' + rem + ' Stk.') : '') + '</div>' : '') +
+      (st === 'past' ? '<div class="stamp">Aktion<br>abgelaufen</div>' : '') + '</div>';
+  }
   const cls = ['door', 'c' + ((d * 7 + 1) % 3), st, opened ? 'open' : '', (st !== 'future' && !deal) ? 'noact' : ''].join(' ');
-  const label = 'Türchen ' + d + ', ' + fmtLong(day) + (st === 'future' ? ', noch geschlossen' : st === 'past' ? ', Aktion abgelaufen' : ', heute');
+  const label = 'Türchen ' + d + ', ' + fmtLong(day) + (st === 'future' ? ', noch geschlossen' : st === 'past' ? ', Aktion abgelaufen' : ', heute') + (st !== 'future' && n > 1 ? ', ' + n + ' Aktionen' : '');
   return '<button type="button" class="' + cls + '" data-day="' + day + '" aria-label="' + esc(label) + '">' + inside +
     (st === 'today' && opened ? '<span class="ribbon">HEUTE</span>' : '') +
     '<div class="face flap"><span class="n">' + d + '</span><span class="d">' + WD[dowOf(day)] + ' ' + fmtShort(day) + '</span><span class="knob"></span></div></button>';
 }
+/* eine oder mehrere Tagesaktionen untereinander */
+function heroesHTML(c, list, day){
+  if (list.length === 1) return heroHTML(c, list[0]);
+  const st = status(day);
+  return '<div class="heroes"><div class="multihead"><h3>' + (st === 'today' ? 'Heute ' + list.length + ' Tagesaktionen' : list.length + ' Aktionen am ' + fmtLong(day)) + '</h3>' +
+    (st === 'today' ? '<span class="small">Alle gelten heute von 0:00 bis 23:59 Uhr – jede mit eigenem Kontingent.</span>' : '') + '</div>' + list.map(x => heroHTML(c, x)).join('') + '</div>';
+}
 
 function rangesHTML(c){
-  const list = rangeDeals(c); if (!list.length) return '';
+  const list = multiRangeDeals(c); if (!list.length) return '';
   const allFull = list.every(d => d.range.full);
   const cards = list.map(d => {
     const st = rangeStatus(d), rem = remainingFor(d), p = d.p;
@@ -866,7 +957,7 @@ function rangesHTML(c){
       '<span class="rl">Aktions-HEK</span><span class="rp num">' + eur(d.price) + '</span>' + 
       (st === 'today' ? stockText(rem) : st === 'past' ? '<span class="stock out">Aktion abgelaufen</span>' : '') + '</span></button>';
   }).join('');
-  return '<section class="ranges"><div class="rhead"><div><h3>' + (allFull ? 'Aktionen im gesamten Zeitraum' : 'Zeitraum-Aktionen') + '</h3><span class="small">Zusätzlich zu den Tagesaktionen – bestellbar an jedem Tag des angegebenen Zeitraums von 0:00 bis 23:59 Uhr, solange der Vorrat reicht.</span></div></div><div class="rlist">' + cards + '</div></section>';
+  return '<section class="ranges"><div class="rhead"><div><h3>' + (allFull ? 'Aktionen im gesamten Zeitraum' : 'Zeitraum-Aktionen') + '</h3><span class="small">Zusätzlich zu den Tagesaktionen und auch gleichzeitig mit anderen Zeitraum-Aktionen – bestellbar an jedem Tag des angegebenen Zeitraums von 0:00 bis 23:59 Uhr, solange der Vorrat reicht.</span></div></div><div class="rlist">' + cards + '</div></section>';
 }
 function openRange(sl){
   const deal = dealBySlot(S.config, sl); if (!deal) return;
@@ -884,10 +975,10 @@ function renderDealer(){
   } else if (t > last){
     hero = heroHTML(c, null, {eyebrow:'Beendet', title:'Der Aktionszeitraum ist vorbei', text:'Alle Türchen sind geöffnet. Die abgelaufenen Aktionen bleiben unten zur Übersicht sichtbar.'});
   } else {
-    const deal = dealFor(c, t);
-    hero = deal && lsGet('door-open-' + t) === '1' ? heroHTML(c, deal) :
-      deal ? heroHTML(c, null, {eyebrow:'Tagesaktion · ' + fmtLong(t), title:'Das heutige Türchen wartet', text:'Öffne Türchen ' + doorNo(c,t) + ' und sieh dir die Tagesaktion an.', extra:'<div class="actions"><button type="button" class="btn primary" data-openday="' + t + '">Türchen ' + doorNo(c,t) + ' öffnen</button></div>'}) :
-      heroHTML(c, null, rangeDeals(c).some(d => rangeStatus(d) === 'today') ? {eyebrow:fmtLong(t), title:'Heute keine Tagesaktion', text:'Die Zeitraum-Aktionen unten sind heute bestellbar.'} : {eyebrow:fmtLong(t), title:'Heute keine Aktion', text:'Morgen geht es weiter.'});
+    const list = dayDeals(c, t), deal = list[0];
+    hero = deal && lsGet('door-open-' + t) === '1' ? heroesHTML(c, list, t) :
+      deal ? heroHTML(c, null, {eyebrow:'Tagesaktion · ' + fmtLong(t), title:'Das heutige Türchen wartet', text:'Öffne Türchen ' + doorNo(c,t) + ' und sieh dir ' + (list.length > 1 ? 'die ' + list.length + ' heutigen Tagesaktionen' : 'die Tagesaktion') + ' an.', extra:'<div class="actions"><button type="button" class="btn primary" data-openday="' + t + '">Türchen ' + doorNo(c,t) + ' öffnen</button></div>'}) :
+      heroHTML(c, null, multiRangeDeals(c).some(d => rangeStatus(d) === 'today') ? {eyebrow:fmtLong(t), title:'Heute keine Tagesaktion', text:'Die Zeitraum-Aktionen unten sind heute bestellbar.'} : {eyebrow:fmtLong(t), title:'Heute keine Aktion', text:'Morgen geht es weiter.'});
   }
   const isMonth = useWeekGrid(c);
   let grid = '';
@@ -901,7 +992,7 @@ function renderDealer(){
   $('app').innerHTML = hero + rangesHTML(c) +
     '<div class="cal-head"><h3>' + esc(periodName) + '</h3><div class="legend"><span><i class="l-closed" style="background:var(--door)"></i>noch geschlossen</span><span><i style="background:var(--accent)"></i>heute</span><span><i style="background:var(--past)"></i>Aktion abgelaufen</span></div></div>' +
     '<div class="grid' + (isMonth ? ' month' : colsClass(c)) + '" id="doors">' + grid + '</div>' +
-    '<p class="small" style="margin-top:18px">Alle Preise als Händlereinkaufspreise (HEK) exkl. MwSt., solange der Vorrat reicht. ' + (rangeDeals(c).length ? 'Tagesaktionen sind ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar, Zeitraum-Aktionen vom ersten Tag 0:00 Uhr bis zum letzten Tag 23:59 Uhr.' : 'Jede Aktion gilt ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar.') + ' Druck- und Satzfehler vorbehalten.</p>' +
+    '<p class="small" style="margin-top:18px">Alle Preise als Händlereinkaufspreise (HEK) exkl. MwSt., solange der Vorrat reicht. ' + (multiRangeDeals(c).length ? 'Tagesaktionen sind ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar, Zeitraum-Aktionen vom ersten Tag 0:00 Uhr bis zum letzten Tag 23:59 Uhr.' : 'Jede Aktion gilt ausschließlich am angegebenen Tag von 0:00 bis 23:59 Uhr (MEZ) bestellbar.') + ' Druck- und Satzfehler vorbehalten.</p>' +
     '<p class="small legal">' + legalLine(c) + '</p>' +
     (ebOnly(c) ? ebFooterHTML(c) : '') +
     (c.theme !== 'xmas' ? '' : '<p class="xmas-foot">Frohe Weihnachten und gute Geschäfte<small>Ihr Beko Austria Team · elektrabregenz · Beko · Indesit</small></p>');
@@ -915,9 +1006,9 @@ function openDoor(day, btn){
     if (btn){ btn.classList.add('open'); setTimeout(render, 950); } else render();
     return;
   }
-  const deal = dealFor(S.config, day);
-  if (!deal){ toast('Am ' + fmtShort(day) + ' gab es keine Aktion'); return; }
-  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog" role="dialog" aria-modal="true" aria-label="Aktion ' + esc(fmtShort(day)) + '"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button>' + heroHTML(S.config, deal) + '</div></div>';
+  const list = dayDeals(S.config, day);
+  if (!list.length){ toast('Am ' + fmtShort(day) + ' gab es keine Aktion'); return; }
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog" role="dialog" aria-modal="true" aria-label="Aktion' + (list.length > 1 ? 'en' : '') + ' ' + esc(fmtShort(day)) + '"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button>' + heroesHTML(S.config, list, day) + '</div></div>';
   $('ov-x').focus();
 }
 
@@ -926,8 +1017,8 @@ function markDirty(){ S.dirty = true; renderSavebar(); }
 function renderSavebar(){
   const slot = $('savebar-slot');
   if (S.view !== 'admin'){ slot.innerHTML = ''; return; }
-  const pc = Object.keys(S.draft.pool).length, dc = periodDays(S.draft).filter(d => S.draft.days[d] && S.draft.days[d].k).length;
-  slot.innerHTML = '<div class="savebar"><div class="wrap"><span class="small"><b>' + pc + '</b> Geräte im Aktionssortiment · <b>' + dc + '</b> von ' + periodDays(S.draft).length + ' Tagen belegt' + ((S.draft.ranges || []).length ? ' · <b>' + S.draft.ranges.length + '</b> Zeitraum-Aktion' + (S.draft.ranges.length === 1 ? '' : 'en') : '') +
+  const pc = Object.keys(S.draft.pool).length, per = periodDays(S.draft), dd = per.map(d => dayDeals(S.draft, d).length), dc = dd.filter(Boolean).length, tc = dd.reduce((a,b) => a + b, 0), mc = multiRangeDeals(S.draft).length;
+  slot.innerHTML = '<div class="savebar"><div class="wrap"><span class="small"><b>' + pc + '</b> Geräte im Aktionssortiment · <b>' + dc + '</b> von ' + per.length + ' Tagen belegt' + (tc > dc ? ' (<b>' + tc + '</b> Tagesaktionen)' : '') + (mc ? ' · <b>' + mc + '</b> Zeitraum-Aktion' + (mc === 1 ? '' : 'en') : '') +
     (S.dirty ? ' · <span class="dirty">Nicht gespeicherte Änderungen</span>' : '') + '</span>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap">' + (S.api ? '<button type="button" class="btn" id="btn-logout">Abmelden</button>' : '') + '<button type="button" class="btn" id="btn-discard"' + (S.dirty ? '' : ' disabled') + '>Verwerfen</button><button type="button" class="btn primary" id="btn-save"' + (S.dirty ? '' : ' disabled') + '>Speichern &amp; veröffentlichen</button></span></div></div>';
 }
@@ -939,17 +1030,18 @@ function poolCard(p){
     '<div class="row">' +
     (on ? '<label class="f" style="grid-column:1/-1">Datenblatt-Link' + (dsUrl(S.draft, p.k) ? ' · <a href="' + esc(dsUrl(S.draft, p.k)) + '" target="_blank" rel="noopener">öffnen</a>' : ' · <span style="color:var(--warn)">fehlt</span>') + '<input type="text" id="ds-' + esc(p.k) + '" data-f="ds" value="' + esc(e.ds || '') + '" placeholder="' + esc(dsIdOk(e.dsId) ? 'PDF hochgeladen' : (S.draft.dsl || {})[p.k] ? 'aus Datenblatt-Liste' : dsIdOk((S.draft.dsu || {})[p.k]) ? 'PDF aus Sammel-Upload' : DS_MAP[p.k] ? 'automatisch hinterlegt' : 'https://… (PDF-Link)') + '"></label>' +
       (canUpload() ? '<div class="dsup"><label class="upl">PDF hochladen<input type="file" accept="application/pdf,.pdf" data-dsup></label>' + (dsIdOk(e.dsId) ? '<span>Upload ✓ <a href="' + esc(blobUrl(e.dsId)) + '" target="_blank" rel="noopener">öffnen</a>' + ((e.ds || '').trim() ? ' (Link hat Vorrang)' : '') + '</span><button type="button" class="linkbtn" data-dsrm>Upload entfernen</button>' : '<span class="small">eigenes Datenblatt</span>') + '</div>' : '') : '') +
-    (on && !p.x ? '<div class="dsup"><label class="upl">' + (e.img ? 'Foto ersetzen' : p.i0 ? 'Eigenes Foto' : 'Foto hochladen') + '<input type="file" accept="image/png,image/webp,image/jpeg" data-imgup></label>' + (e.img ? '<span>eigenes Foto ✓</span><button type="button" class="linkbtn" data-imgrm>' + (p.i0 ? 'Original wiederherstellen' : 'Foto entfernen') + '</button>' : p.i0 ? '<span class="small">Foto aus FH-App</span>' : '<span style="color:var(--warn)">kein Foto – bitte freigestellt hochladen (PNG/WebP)</span>') + '</div>' : '') +
+    (on && !p.x ? '<div class="dsup"><label class="upl">' + (hasOwnImg(S.draft, p.k) ? 'Foto ersetzen' : p.i0 ? 'Eigenes Foto' : 'Foto hochladen') + '<input type="file" accept="image/png,image/webp,image/jpeg" data-imgup></label>' + (hasOwnImg(S.draft, p.k) ? '<span>eigenes Foto ✓</span><button type="button" class="linkbtn" data-imgrm>' + (p.i0 ? 'Original wiederherstellen' : 'Foto entfernen') + '</button>' : p.i0 ? '<span class="small">Foto aus FH-App</span>' : '<span style="color:var(--warn)">kein Foto – bitte freigestellt hochladen (PNG/WebP)</span>') + '</div>' : '') +
     (() => { const cp = on ? cardPrice(p.k) : { v:null, n:0 };
       return '<label class="f">Aktions-HEK €<input type="number" step="0.01" min="0" inputmode="decimal" id="ap-' + esc(p.k) + '" data-f="price" value="' + (cp.v ?? '') + '"' + (on ? '' : ' disabled') + (cp.mixed ? ' placeholder="unterschiedlich"' : '') + '></label>' +
         '<label class="f">UVP €<input type="number" step="0.01" min="0" inputmode="decimal" id="uvp-' + esc(p.k) + '" data-f="uvp" value="' + (p.u ?? '') + '"' + (on && p.x ? '' : ' disabled') + (p.x ? '' : ' title="UVP kommt immer aus der Fachhandels-App"') + '></label>' +
         '<span class="small" style="grid-column:1/-1;margin-top:-4px">' + (p.x ? 'UVP: eigenes Produkt' : 'UVP aus der FH-App') + (on && cp.n ? ' · ' + (cp.mixed ? 'Aktions-HEK unterschiedlich (' + cp.list + ') in ' + cp.n + ' Aktionen – Eingabe gilt für alle' : 'Aktions-HEK gilt für ' + (cp.n === 1 ? 'die Aktion' : 'alle ' + cp.n + ' Aktionen')) : '') + '</span>'; })() +
     '<button type="button" class="toggle" data-toggle>' + (on ? '✓ Im Sortiment' : '+ Aufnehmen') + '</button></div>' + (on ? assignHTML(p) : '') + '</div>';
 }
+const onDay = (day, k) => (S.draft.days[day] || {}).k === k || xdOf(S.draft, day).some(r => r.k === k);
 function assignHTML(p){
-  const days = periodDays(S.draft), mine = days.filter(d => S.draft.days[d] && S.draft.days[d].k === p.k);
-  const opts = days.filter(d => !mine.includes(d)).map(d => { const o = S.draft.days[d] && BYK.get(S.draft.days[d].k);
-    return '<option value="' + d + '">' + WD[dowOf(d)] + ' ' + fmtShort(d) + (o ? ' – ersetzt ' + esc(o.m) : ' – frei') + (status(d) === 'past' ? ' (vorbei)' : '') + '</option>'; }).join('');
+  const days = periodDays(S.draft), mine = days.filter(d => onDay(d, p.k));
+  const opts = days.filter(d => !mine.includes(d)).map(d => { const n = dayDeals(S.draft, d).length;
+    return '<option value="' + d + '">' + WD[dowOf(d)] + ' ' + fmtShort(d) + (n ? ' – zusätzlich zu ' + (n === 1 ? esc(dayDeals(S.draft, d)[0].p.m) : n + ' Aktionen') : ' – frei') + (status(d) === 'past' ? ' (vorbei)' : '') + '</option>'; }).join('');
   return '<div class="assign"><span class="assign-l">Aktionstag' + (mine.length > 1 ? 'e' : '') + ' · bestellbar 0:00–23:59 Uhr</span>' +
     '<div class="assign-chips">' + (mine.length ? mine.map(d => '<button type="button" class="dchip" data-unassign="' + d + '" aria-label="Aktionstag ' + fmtShort(d) + ' entfernen">' + WD[dowOf(d)] + ' ' + fmtShort(d) + ' <b>×</b></button>').join('') : '<span class="small">noch keinem Tag zugeordnet</span>') + '</div>' +
     '<select data-assign aria-label="Aktionstag für ' + esc(p.m) + ' wählen"><option value="">+ Datum zuordnen …</option>' + opts + '</select></div>';
@@ -961,11 +1053,16 @@ function cardPrice(k){ const e = S.draft.pool[k] || {}, acts = prodActs(k), ps =
   if (acts.length) return ps.length === 1 ? { v: ps[0], n: acts.length } : { v: e.price ?? null, n: acts.length, mixed: true, list: ps.filter(x => x != null).map(x => eur(x)).join(' / ') };
   return { v: e.price ?? null, n: 0 }; }
 function refreshCard(k){ const el = document.querySelector('.pcard[data-k="' + CSS.escape(k) + '"]'); if (el) el.outerHTML = poolCard(BYK.get(k)); }
+/* Tag schon belegt → Gerät kommt als zusätzliche Tagesaktion dazu (nichts wird ersetzt) */
 function assignDay(day, k){
-  const prev = S.draft.days[day] || {}, hek = S.draft.pool[k] ? S.draft.pool[k].hek : null, oldK = prev.k;
-  S.draft.days[day] = prev.k === k ? prev : { k, hek:null, price: defPrice(k), qty: prev.qty ?? 5 };
-  markDirty(); refreshCard(k); if (oldK && oldK !== k) refreshCard(oldK); renderDays();
+  const prev = S.draft.days[day] || {}; let extra = false;
+  if (onDay(day, k)) return false;
+  if (!prev.k) S.draft.days[day] = { k, hek:null, price: defPrice(k), qty: prev.qty ?? 5 };
+  else { S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k, xd:true, full:false, from:day, to:day, hek:null, price: defPrice(k), qty:5 }); extra = true; }
+  markDirty(); refreshCard(k); renderDays();
+  return extra;
 }
+function replaceDay(day){ const g = document.querySelector('.dgroup[data-day="' + day + '"]'); if (g) g.outerHTML = dayRow(day); renderSavebar(); }
 function filteredCat(){
   const f = S.f, q = f.q.trim().toLowerCase();
   return CAT.filter(p => (f.brand === 'alle' || p.b === f.brand) && (f.cat === 'alle' || p.c === f.cat) &&
@@ -985,7 +1082,22 @@ function poolOptions(sel){
   if (sel && !S.draft.pool[sel] && BYK.get(sel)) h += '<option value="' + esc(sel) + '" selected>' + esc(BYK.get(sel).m) + ' (nicht mehr im Sortiment)</option>';
   return h;
 }
+function xdRow(r, i){
+  const st = status(r.from) === 'past' ? 'past' : '';
+  return '<div class="drow xd ' + st + '" data-rid="' + esc(r.id) + '"><div class="dt"><span class="xdl">+ Aktion ' + (i + 2) + '</span></div>' + thumb(r.k ? BYK.get(r.k) : null) +
+    '<label class="f prod">Gerät<select data-rf="k">' + poolOptions(r.k) + '</select></label>' +
+    '<label class="f">Aktions-HEK €<input type="number" step="0.01" min="0" inputmode="decimal" data-rf="price" value="' + (r.price ?? '') + '"></label>' +
+    '<label class="f">Menge Stk.<input type="number" step="1" min="0" inputmode="numeric" data-rf="qty" value="' + (r.qty ?? '') + '"></label>' +
+    '<button type="button" class="icon-btn" data-rdel aria-label="Zusätzliche Aktion am ' + fmtShort(r.from) + ' entfernen" title="Entfernen">×</button></div>';
+}
 function dayRow(day){
+  const xs = xdOf(S.draft, day), has = !!(S.draft.days[day] || {}).k || xs.length;
+  const over = multiRangeDeals(S.draft).filter(d => d.from <= day && d.to >= day);
+  const more = (has ? '<button type="button" class="linkbtn" data-xadd="' + day + '" style="font-size:13px">+ weitere Aktion an diesem Tag</button>' : '') +
+    (over.length ? '<span class="ovl">Läuft zusätzlich: ' + over.map(d => esc(d.p.m) + ' (' + esc(d.range.full ? 'gesamter Zeitraum' : d.label) + ')').join(', ') + '</span>' : '');
+  return '<div class="dgroup' + (xs.length ? ' multi' : '') + '" data-day="' + day + '">' + dayMainRow(day) + xs.map(xdRow).join('') + (more ? '<div class="dmore">' + more + '</div>' : '') + '</div>';
+}
+function dayMainRow(day){
   const d = S.draft.days[day] || {}, st = status(day), poolHek = d.k && S.draft.pool[d.k] ? S.draft.pool[d.k].hek : null;
   return '<div class="drow ' + st + '" data-day="' + day + '"><div class="dt">' + fmtShort(day) + '<small>' + WD[dowOf(day)] + (st === 'today' ? ' · heute' : st === 'past' ? ' · abgelaufen' : '') + '<br>0:00–23:59 Uhr</small></div>' + thumb(d.k ? BYK.get(d.k) : null) +
     '<label class="f prod">Gerät<select id="k-' + day + '" data-f="k">' + poolOptions(d.k) + '</select></label>' +
@@ -1008,7 +1120,7 @@ function rangeRow(r){
     (st ? ' · <span class="small">' + (st === 'today' ? 'läuft' : st === 'past' ? 'abgelaufen' : 'startet ' + fmtShort(d.from)) + ' · ' + (diffDays(x.from, x.to) + 1) + ' Tage</span>' : '') + '</label></div>';
 }
 function renderRanges(){
-  const el = $('rows-r'); if (!el) return; const list = S.draft.ranges || [];
+  const el = $('rows-r'); if (!el) return; const list = (S.draft.ranges || []).filter(r => !r.xd);
   el.innerHTML = list.length ? list.map(rangeRow).join('') : '<p class="small" style="margin:0">Noch keine Zeitraum-Aktion angelegt.</p>';
 }
 const rangeById = id => (S.draft.ranges || []).find(r => r.id === id);
@@ -1198,7 +1310,10 @@ function impApply(){
     const p = BYK.get(k); if (r.uvp != null && p.x && c.extra[k]) c.extra[k].u = r.uvp;
     const qty = r.qty == null ? null : Math.max(0, Math.round(r.qty));
     r.slots.forEach(sl => {
-      if (sl.day){ if (c.days[sl.day] && c.days[sl.day].k && c.days[sl.day].k !== k) nO++; c.days[sl.day] = { k, hek: regular, price, qty }; nD++; return; }
+      if (sl.day){ const pd = c.days[sl.day];
+        if (!pd || !pd.k || pd.k === k){ c.days[sl.day] = { k, hek: regular, price, qty }; nD++; return; }
+        const exd = c.ranges.find(x => x.xd && x.from === sl.day && x.k === k), dd = { k, xd:true, full:false, from:sl.day, to:sl.day, hek: regular, price, qty };
+        if (exd) Object.assign(exd, dd); else { c.ranges.push(Object.assign({ id: randId(4) }, dd)); nO++; } nD++; return; }
       const ex = c.ranges.find(x => x.k === k && (sl.full ? x.full : !x.full && x.from === sl.from && x.to === sl.to));
       const data = { k, full: !!sl.full, from: sl.full ? periodDays(c)[0] : sl.from, to: sl.full ? periodDays(c)[c.count-1] : sl.to, hek: regular, price, qty };
       if (ex) Object.assign(ex, data); else c.ranges.push(Object.assign({ id: randId(4) }, data));
@@ -1206,7 +1321,7 @@ function impApply(){
     });
   });
   S.imp = null; $('overlay-slot').innerHTML = ''; syncExtras(); markDirty(); renderAdmin();
-  toast(nR + ' Zeitraum- und ' + nD + ' Tagesaktionen übernommen' + (nN ? ', ' + nN + ' neue Produkte' : '') + (nO ? ' · ' + nO + ' belegte Tage überschrieben' : '') + ' – bitte prüfen und speichern');
+  toast(nR + ' Zeitraum- und ' + nD + ' Tagesaktionen übernommen' + (nN ? ', ' + nN + ' neue Produkte' : '') + (nO ? ' · ' + nO + ' davon zusätzlich an bereits belegten Tagen' : '') + ' – bitte prüfen und speichern');
 }
 /* ---------- Datenblätter gesammelt: Links per CSV/Excel, PDFs per Mehrfach-Upload ---------- */
 function dsPlace(k, url, uploadId){
@@ -1281,6 +1396,83 @@ async function dsiApply(){
   const n = todo.length; S.dsi = null; $('overlay-slot').innerHTML = ''; markDirty(); renderPoolList();
   toast(n + ' Datenblätter übernommen – bitte speichern');
 }
+/* ---------- Produktbilder gesammelt: Mehrfach-Upload, Ordner oder Drag & Drop ---------- */
+const IB_OK = f => /^image\/(png|webp|jpeg)$/.test(f.type) || /\.(png|webp|jpe?g)$/i.test(f.name || '');
+function ibMatch(name){
+  let base = String(name || '').split('/').pop().replace(/\.(png|webp|jpe?g)$/i, '').replace(/%20/g, ' ').trim();
+  const tries = [base];
+  let b = base.replace(/[_\s-]*(freigestellt|transparent|cutout|freisteller|produktbild|produktfoto|bild|foto|image|img|front|frontal|vorne|seite|side|open|offen|geschlossen|closed|perspektive|persp|main|haupt|web|print|hires|highres|lowres|final|neu|new|kopie|copy)\b/gi, '').replace(/\(\d+\)$/, '').trim();
+  tries.push(b);
+  for (let i = 0; i < 3; i++){ b = b.replace(/[_\s-]+[a-z0-9]{1,6}$/i, '').trim(); if (b) tries.push(b); }
+  tries.push(base.replace(/_/g, ' '));
+  for (const t of [...new Set(tries)].filter(Boolean)){ const m = impMatch(t, t); if (m) return { k: m.k, how: /EAN/.test(m.how) ? 'EAN/Artikelnr.' : 'Modell im Dateinamen' }; }
+  return null;
+}
+function ibStart(files){
+  const all = [...files].filter(f => !/^\./.test((f.name || '').split('/').pop()));
+  const imgs = all.filter(IB_OK);
+  if (!imgs.length){ toast('Keine Bilder gefunden – erwartet werden PNG, WebP oder JPG'); return; }
+  if (imgs.length > 300){ toast('Bitte höchstens 300 Bilder auf einmal'); return; }
+  const rows = imgs.sort((a,b) => (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name, 'de', { numeric:true })).map((f, i) => {
+    const m = ibMatch(f.name);
+    return { line: i + 1, code: f.webkitRelativePath || f.name, file: f, ok: f.size <= 20 * 1024 * 1024, k: m ? m.k : null, how: m ? m.how : '', choice: m ? m.k : 'skip', prev: URL.createObjectURL(f), alpha: undefined };
+  });
+  S.ib = { rows, addPool: false, skipped: all.length - imgs.length, busy: false };
+  ibDupes(); ibRender();
+  rows.forEach(r => imgAlpha(r.file).then(a => { r.alpha = a; if (S.ib && S.ib.rows === rows){ const cell = document.querySelector('[data-bi="' + rows.indexOf(r) + '"] .ibalpha'); if (cell) cell.outerHTML = ibAlphaHTML(r); } }));
+}
+function ibDupes(){
+  const seen = new Set(); S.ib.rows.forEach(r => { r.dup = false; if (r.choice === 'skip' || !r.ok) return; if (seen.has(r.choice)) r.dup = true; else seen.add(r.choice); });
+}
+const ibAlphaHTML = r => '<span class="ibalpha small">' + (r.alpha === undefined ? '…' : r.alpha ? '<span class="ist ok">freigestellt</span>' : r.alpha === false ? '<span class="ist new">Hintergrund nicht transparent</span>' : '') + '</span>';
+function ibRender(){
+  const B = S.ib; if (!B) return; const c = S.draft;
+  const todo = B.rows.filter(r => r.ok && r.choice !== 'skip' && !r.dup), n = todo.length, nNo = B.rows.filter(r => !r.k).length;
+  const nOut = todo.filter(r => !c.pool[r.choice]).length;
+  const rows = B.rows.map((r, i) => {
+    const p = r.choice !== 'skip' ? BYK.get(r.choice) : null, cur = p && p.i ? p.i : '';
+    const st = !r.ok ? '<span class="ist no">größer als 20 MB</span>' : r.choice === 'skip' ? '<span class="ist no">' + (r.k ? 'übersprungen' : 'nicht erkannt') + '</span>' : r.dup ? '<span class="ist no">weiteres Bild für dasselbe Gerät – übersprungen</span>'
+      : !cur ? '<span class="ist ok">neu</span>' : hasOwnImg(c, r.choice) ? '<span class="ist new">ersetzt eigenes Foto</span>' : '<span class="ist new">ersetzt Foto aus FH-App</span>';
+    return '<tr class="' + (r.choice === 'skip' || r.dup || !r.ok ? 'skip' : '') + '" data-bi="' + i + '"><td><span class="ibth"><img src="' + r.prev + '" alt=""></span></td>' +
+      '<td style="max-width:220px;overflow-wrap:anywhere"><b>' + esc(r.code) + '</b><br><span class="small">' + Math.round(r.file.size / 1024) + ' KB</span> ' + ibAlphaHTML(r) + '</td>' +
+      '<td><select data-ibc aria-label="Gerät">' + dsiOptions(r.choice) + '</select>' + (r.k && r.k === r.choice ? '<br><span class="small">erkannt über ' + esc(r.how) + (p && !c.pool[p.k] ? ' · nicht im Aktionssortiment' : '') + '</span>' : p && !c.pool[p.k] ? '<br><span class="small">nicht im Aktionssortiment</span>' : '') + '</td>' +
+      '<td>' + (cur ? '<span class="ibth"><img src="' + esc(cur) + '" alt="bisher"></span>' : '<span class="ibth none">kein Foto</span>') + '</td><td>' + st + '</td></tr>';
+  }).join('');
+  const mode = !S.api && S.assets ? 'Die Bilder werden in voller Qualität (bis 1600 px, für den Flyerdruck) gespeichert.' : S.api ? 'Die Bilder werden verkleinert (480 px) in der Planung gespeichert.' : 'Hinweis: In dieser Ansicht ist kein Datei-Upload möglich – Bilder werden verkleinert (480 px) in der Planung gespeichert.';
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov-ib"><div class="dialog impdlg" role="dialog" aria-modal="true" aria-label="Produktbilder übernehmen"><button type="button" class="x" id="ib-x" aria-label="Schließen">×</button><div class="impin">' +
+    '<h2 style="margin:0 0 4px">Produktbilder hochladen</h2><p class="small" style="margin:0 0 10px">' + B.rows.length + ' Bilder' + (B.skipped ? ' (' + B.skipped + ' andere Dateien ignoriert)' : '') + ' · ' + (B.rows.length - nNo) + ' automatisch zugeordnet' + (nNo ? ', ' + nNo + ' nicht erkannt – bei Bedarf das Gerät auswählen' : '') + '. ' + mode + ' Gilt für Kalender, Flyer, Freigabe und Bestellung – nach dem Speichern.</p>' +
+    '<div class="impopts" style="margin:0 0 10px"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="ib-pool"' + (B.addPool ? ' checked' : '') + '> Zugeordnete Geräte zusätzlich ins Aktionssortiment aufnehmen' + (nOut ? ' (' + nOut + ' noch nicht drin)' : '') + '</label></div>' +
+    '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Neu</th><th>Datei</th><th>Gerät</th><th>Bisher</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="warnline" id="ib-msg" hidden></p><div class="actions"><button type="button" class="btn primary" id="ib-go"' + (n ? '' : ' disabled') + '>' + n + ' Bild' + (n === 1 ? '' : 'er') + ' übernehmen</button><button type="button" class="btn" id="ib-cancel">Abbrechen</button></div></div></div></div>';
+}
+function ibClose(){ if (S.ib) S.ib.rows.forEach(r => { try { URL.revokeObjectURL(r.prev); } catch(e) {} }); S.ib = null; $('overlay-slot').innerHTML = ''; }
+async function ibApply(){
+  const B = S.ib, c = S.draft, todo = B.rows.filter(r => r.ok && r.choice !== 'skip' && !r.dup), msg = $('ib-msg'), go = $('ib-go');
+  if (!todo.length) return;
+  B.busy = true; go.disabled = true; $('ib-cancel').disabled = true; msg.hidden = false;
+  let done = 0, i = 0; const fail = [], res = new Map();
+  const work = async () => { while (i < todo.length){ const r = todo[i++];
+    try { res.set(r, await storeImg(r.file)); } catch(e){ fail.push(r); }
+    done++; msg.textContent = 'Lade hoch … ' + done + ' von ' + todo.length; } };
+  await Promise.all([work(), work(), work()]);
+  res.forEach((v, r) => { setImg(c, r.choice, v); if (B.addPool && !c.pool[r.choice]) c.pool[r.choice] = { hek:null }; });
+  if (S.api || !S.assets){ const size = JSON.stringify(c).length; if (size > 1.8 * 1024 * 1024){ res.forEach((v, r) => delete c.imgs[r.choice]); B.busy = false; go.disabled = false; $('ib-cancel').disabled = false; msg.textContent = 'Zu viele Bilder für eine Planung (' + Math.round(size / 1024) + ' KB, max. ca. 1.800 KB) – bitte in kleineren Gruppen oder nur Aktionsgeräte hochladen.'; return; } }
+  B.busy = false; syncExtras(); markDirty();
+  if (fail.length){ B.rows = fail; ibDupes(); ibRender(); const m = $('ib-msg'); m.hidden = false; m.textContent = res.size + ' übernommen, ' + fail.length + ' fehlgeschlagen – erneut versuchen oder abbrechen.'; renderPoolList(); renderDays(); return; }
+  ibClose(); renderPoolList(); renderDays();
+  toast(res.size + ' Produktbild' + (res.size === 1 ? '' : 'er') + ' übernommen' + (B.addPool ? ' und Geräte aufgenommen' : '') + ' – bitte speichern');
+}
+document.addEventListener('dragover', e => { const z = e.target.closest && e.target.closest('#ib-drop'); if (!z || S.view !== 'admin') return; e.preventDefault(); z.classList.add('drag'); });
+document.addEventListener('dragleave', e => { const z = e.target.closest && e.target.closest('#ib-drop'); if (z && !z.contains(e.relatedTarget)) z.classList.remove('drag'); });
+document.addEventListener('drop', async e => {
+  const z = e.target.closest && e.target.closest('#ib-drop'); if (!z || S.view !== 'admin') return; e.preventDefault(); z.classList.remove('drag');
+  const files = [], items = [...(e.dataTransfer.items || [])].map(it => it.webkitGetAsEntry ? it.webkitGetAsEntry() : null);
+  const walk = ent => new Promise(res => { if (!ent) return res();
+    if (ent.isFile) ent.file(f => { files.push(f); res(); }, () => res());
+    else if (ent.isDirectory){ const rd = ent.createReader(), all = []; const next = () => rd.readEntries(es => { if (!es.length) Promise.all(all.map(walk)).then(res); else { all.push(...es); next(); } }, () => res()); next(); } else res(); });
+  if (items.some(Boolean)) await Promise.all(items.map(walk)); else files.push(...(e.dataTransfer.files || []));
+  if (files.length) ibStart(files);
+});
 async function dslTemplate(){
   const lines = ['Code;Datenblatt', 'MBP 75150 BR;https://produkte.ebag.at/…/MBP%2075150%20BR_Datenblatt.pdf', '8690842696978;https://…/Datenblatt.pdf'];
   const r = await saveFile('Datenblatt_Links_Vorlage.csv', new Blob(['\uFEFF' + lines.join('\r\n')], { type:'text/csv' }));
@@ -1324,17 +1516,20 @@ function renderAdmin(){
     '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen. Den Aktions-HEK trägst du bei der Tagesaktion bzw. Zeitraum-Aktion ein. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div>' +
     '<div class="impopts" style="margin:0 0 12px"><b>Datenblätter gesammelt:</b><label class="btn upl" style="padding:7px 11px">Links importieren (CSV/Excel)<input type="file" id="dsl-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt"></label>' +
     (canUpload() ? '<label class="btn upl" style="padding:7px 11px">Mehrere PDFs hochladen<input type="file" id="dsp-files" accept="application/pdf,.pdf" multiple></label>' : '') +
-    '<button type="button" class="linkbtn" id="dsl-tpl">Vorlage Links</button><span class="small">Zuordnung über Modell, EAN/Artikelnr. oder Dateiname (z. B. „MBP 75150 BR_Datenblatt.pdf“)</span></div><div id="xform"></div>' +
+    '<button type="button" class="linkbtn" id="dsl-tpl">Vorlage Links</button><span class="small">Zuordnung über Modell, EAN/Artikelnr. oder Dateiname (z. B. „MBP 75150 BR_Datenblatt.pdf“)</span></div>' +
+    '<div class="impopts ibdrop" id="ib-drop" style="margin:0 0 12px"><b>Produktbilder gesammelt:</b><label class="btn upl" style="padding:7px 11px">Mehrere Bilder hochladen<input type="file" id="ib-files" accept="image/png,image/webp,image/jpeg,.png,.webp,.jpg,.jpeg" multiple></label>' +
+    '<label class="btn upl" style="padding:7px 11px">Ganzen Ordner<input type="file" id="ib-dir" webkitdirectory multiple></label>' +
+    '<span class="small">oder Bilder hierher ziehen · Zuordnung über den Dateinamen (Modell oder EAN, z. B. „BBIE12300XD.png“, „8690842696978_front.png“) · freigestellt als PNG/WebP</span></div><div id="xform"></div>' +
     '<div class="filters">' + ['alle'].concat(BRANDS).map(b => '<button type="button" class="chip" data-brand="' + b + '" aria-pressed="' + (S.f.brand === b) + '">' + (b === 'alle' ? 'Alle Marken' : b) + '</button>').join('') +
     '<select id="f-cat" aria-label="Kategorie"><option value="alle">Alle Kategorien</option>' + cats.map(x => '<option' + (S.f.cat === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
     '<input type="text" id="f-q" placeholder="Modell suchen" value="' + esc(S.f.q) + '" aria-label="Modell suchen">' +
     '<button type="button" class="chip" id="f-only" aria-pressed="' + S.f.only + '">Nur aufgenommene</button></div>' +
     '<div class="plist" id="plist"></div></section>' +
 
-    '<section class="section"><div class="section-head"><div><h3>Zeitraum-Aktionen</h3><span class="small">Ein Gerät gilt über mehrere Tage oder den gesamten Aktionszeitraum – zusätzlich zu den Tagesaktionen. Händler sehen es während des ganzen Zeitraums. Menge = Kontingent für den ganzen Zeitraum.</span></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Zeitraum-Aktionen</h3><span class="small">Ein Gerät gilt über mehrere Tage oder den gesamten Aktionszeitraum – zusätzlich zu den Tagesaktionen. Zeitraum-Aktionen dürfen sich beliebig überschneiden (auch mit Tagesaktionen). Händler sehen sie während des ganzen Zeitraums. Menge = Kontingent für den ganzen Zeitraum.</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn upl" style="padding:8px 12px">Liste importieren (Excel/CSV)<input type="file" id="imp-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt"></label><button type="button" class="linkbtn" id="imp-tpl">Vorlage</button><button type="button" class="btn" id="btn-radd">+ Zeitraum-Aktion</button></span></div><div class="rows-r" id="rows-r"></div></section>' +
 
-    '<section class="section"><div class="section-head"><div><h3>Tagesbelegung</h3><span class="small">Pro Tag ein Gerät aus dem Aktionssortiment wählen.</span></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Tagesbelegung</h3><span class="small">Pro Tag ein oder mehrere Geräte aus dem Aktionssortiment – mit „+ weitere Aktion an diesem Tag“ laufen mehrere Tagesaktionen gleichzeitig, jede mit eigenem Aktions-HEK und Kontingent.</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="btn-auto">Leere Tage automatisch füllen</button><button type="button" class="btn" id="btn-example">Beispielbelegung</button><button type="button" class="btn" id="btn-clearall">Alle Tage leeren</button></span></div>' +
     '<div id="clear-confirm"></div><div class="days" id="days"></div></section></div>';
   renderPoolList(); renderDays(); renderSavebar();
@@ -1350,7 +1545,7 @@ function autoFill(){
   let n = 0, filled = 0;
   periodDays(S.draft).forEach(day => {
     const d = S.draft.days[day];
-    if (d && d.k) return;
+    if ((d && d.k) || xdOf(S.draft, day).length) return;
     const k = seq[n++ % seq.length], hek = S.draft.pool[k].hek;
     S.draft.days[day] = { k, hek: null, price: defPrice(k), qty: 5 }; filled++;
   });
@@ -1397,7 +1592,7 @@ document.addEventListener('click', e => {
   const door = t.closest('.door[data-day]'); if (door && S.view === 'kalender'){ openDoor(door.dataset.day, door); return; }
   const rcd = t.closest('[data-range]'); if (rcd && S.view === 'kalender'){ openRange(rcd.dataset.range); return; }
   if (S.view !== 'admin') return;
-  const pre = t.closest('[data-preset]'); if (pre){ Object.assign(S.draft, PRESETS[pre.dataset.preset].make(S.draft)); if (isSeason(S.draft)) S.f.brand = S.draft.theme === 'eb' ? 'elektrabregenz' : 'Beko'; markDirty(); renderHeader(); renderAdmin(); toast('Vorlage „' + PRESETS[pre.dataset.preset].label + '“ übernommen'); return; }
+  const pre = t.closest('[data-preset]'); if (pre){ Object.assign(S.draft, PRESETS[pre.dataset.preset].make(S.draft)); parkXd(S.draft); if (isSeason(S.draft)) S.f.brand = S.draft.theme === 'eb' ? 'elektrabregenz' : 'Beko'; markDirty(); renderHeader(); renderAdmin(); toast('Vorlage „' + PRESETS[pre.dataset.preset].label + '“ übernommen'); return; }
   const brand = t.closest('[data-brand]'); if (brand){ S.f.brand = brand.dataset.brand; renderAdmin(); return; }
   if (t.id === 'f-only'){ S.f.only = !S.f.only; t.setAttribute('aria-pressed', S.f.only); renderPoolList(); return; }
   if (t.closest('[data-toggle]')){
@@ -1405,29 +1600,37 @@ document.addEventListener('click', e => {
     if (S.draft.pool[k]) delete S.draft.pool[k]; else S.draft.pool[k] = { hek: null };
     card.outerHTML = poolCard(p); markDirty(); renderDays(); return;
   }
-  const ua = t.closest('[data-unassign]'); if (ua){ const day = ua.dataset.unassign, k = (S.draft.days[day] || {}).k; delete S.draft.days[day]; markDirty(); if (k) refreshCard(k); renderDays(); return; }
-  const clr = t.closest('[data-clear]'); if (clr){ const day = clr.closest('.drow').dataset.day; const ck = (S.draft.days[day] || {}).k; delete S.draft.days[day]; if (ck) setTimeout(() => refreshCard(ck)); markDirty(); clr.closest('.drow').outerHTML = dayRow(day); return; }
+  const ua = t.closest('[data-unassign]'); if (ua){ const day = ua.dataset.unassign, k = ua.closest('.pcard').dataset.k;
+    if ((S.draft.days[day] || {}).k === k) delete S.draft.days[day]; else S.draft.ranges = (S.draft.ranges || []).filter(r => !(r.xd && r.from === day && r.k === k));
+    markDirty(); refreshCard(k); renderDays(); return; }
+  const clr = t.closest('[data-clear]'); if (clr){ const day = clr.closest('.drow').dataset.day; const ck = (S.draft.days[day] || {}).k; delete S.draft.days[day]; if (ck) setTimeout(() => refreshCard(ck)); markDirty(); replaceDay(day); return; }
+  const xa = t.closest('[data-xadd]'); if (xa){ const day = xa.dataset.xadd; S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k:'', xd:true, full:false, from:day, to:day, hek:null, price:null, qty:5 }); markDirty(); replaceDay(day);
+    const sel = document.querySelector('.dgroup[data-day="' + day + '"] .drow.xd:last-of-type select'); if (sel) sel.focus(); return; }
   if (t.id === 'btn-xnew'){ $('xform').innerHTML = xFormHTML(null); $('xf-m') && $('xf-m').focus(); return; }
   if (t.id === 'xf-cancel'){ S.xf = null; $('xform').innerHTML = ''; return; }
   if (t.id === 'xf-save'){ xSave(); return; }
   if (t.id === 'xf-del'){ if (S.xf && S.xf.k) xDelete(S.xf.k); return; }
   const xe = t.closest('[data-xedit]'); if (xe){ const k = xe.closest('.pcard').dataset.k; $('xform').innerHTML = xFormHTML(k); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
   const ur = t.closest('[data-uvpreset]'); if (ur){ const k = ur.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.uvp; markDirty(); refreshCard(k); toast('UVP wieder aus der FH-App'); } return; }
-  const ir = t.closest('[data-imgrm]'); if (ir){ const k = ir.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.img; markDirty(); syncExtras(); refreshCard(k); renderDays(); toast('Foto zurückgesetzt'); } return; }
+  const ir = t.closest('[data-imgrm]'); if (ir){ const k = ir.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.img; if (S.draft.imgs) delete S.draft.imgs[k]; markDirty(); syncExtras(); refreshCard(k); renderDays(); toast('Foto zurückgesetzt'); } return; }
   const dr = t.closest('[data-dsrm]'); if (dr){ const k = dr.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.dsId; markDirty(); refreshCard(k); toast('Upload entfernt'); } return; }
   if (t.id === 'imp-tpl'){ impTemplate(); return; }
   if (t.id === 'dsl-tpl'){ dslTemplate(); return; }
   if (t.id === 'dsi-x' || t.id === 'dsi-cancel' || t.id === 'ov-dsi'){ S.dsi = null; $('overlay-slot').innerHTML = ''; return; }
   if (t.id === 'dsi-go'){ dsiApply(); return; }
+  if (t.id === 'ib-x' || t.id === 'ib-cancel' || t.id === 'ov-ib'){ if (S.ib && S.ib.busy) return; ibClose(); return; }
+  if (t.id === 'ib-go'){ ibApply(); return; }
+  if (t.id === 'ib-all-skip'){ S.ib.rows.forEach(r => { if (!r.k) r.choice = 'skip'; }); ibRender(); return; }
   if (t.id === 'imp-x' || t.id === 'imp-cancel' || t.id === 'ov-imp'){ S.imp = null; $('overlay-slot').innerHTML = ''; return; }
   if (t.id === 'imp-go'){ impApply(); return; }
   if (t.id === 'btn-radd'){ const a = periodDays(S.draft); S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k:'', full:true, from:a[0], to:a[a.length-1], hek:null, price:null, qty:null }); markDirty(); renderRanges(); const sel = document.querySelector('#rows-r .rrow:last-child select'); if (sel) sel.focus(); return; }
-  const rdl = t.closest('[data-rdel]'); if (rdl){ const id = rdl.closest('.rrow').dataset.rid; S.draft.ranges = (S.draft.ranges || []).filter(r => r.id !== id); markDirty(); renderRanges(); return; }
+  const rdl = t.closest('[data-rdel]'); if (rdl){ const id = rdl.closest('[data-rid]').dataset.rid, r = rangeById(id); S.draft.ranges = (S.draft.ranges || []).filter(r => r.id !== id); markDirty();
+    if (r && r.xd){ replaceDay(r.from); if (r.k) refreshCard(r.k); } else { renderRanges(); renderDays(); } return; }
   if (t.id === 'btn-auto'){ autoFill(); return; }
   if (t.id === 'btn-example'){ const keep = { start:S.draft.start, count:S.draft.count, theme:S.draft.theme, motif:S.draft.motif, title:S.draft.title, orderEmail:S.draft.orderEmail, orderPhone:S.draft.orderPhone, orderFax:S.draft.orderFax, impressum:S.draft.impressum, shopUrl:S.draft.shopUrl, approval:S.draft.approval, ranges:S.draft.ranges };
     S.draft = Object.assign(exampleConfig(Object.assign(defaultConfig(), keep)), keep); markDirty(); renderAdmin(); return; }
   if (t.id === 'btn-clearall'){ $('clear-confirm').innerHTML = '<p class="warnline">Alle Tagesbelegungen dieses Zeitraums entfernen? <button type="button" class="btn" id="btn-clear-yes">Ja, leeren</button> <button type="button" class="btn" id="btn-clear-no">Abbrechen</button></p>'; return; }
-  if (t.id === 'btn-clear-yes'){ periodDays(S.draft).forEach(d => delete S.draft.days[d]); markDirty(); renderAdmin(); return; }
+  if (t.id === 'btn-clear-yes'){ periodDays(S.draft).forEach(d => delete S.draft.days[d]); S.draft.ranges = (S.draft.ranges || []).filter(r => !(r.xd && inPeriod(S.draft, r.from))); markDirty(); renderAdmin(); return; }
   if (t.id === 'btn-clear-no'){ $('clear-confirm').innerHTML = ''; return; }
   if (t.id === 'btn-save'){ save(); return; }
   if (t.id === 'btn-logout'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } ssSet('kal-admin', null); S.pw = null; S.canEdit = false; S.view = 'kalender'; try { history.replaceState(null, '', '/'); } catch(e) {} render(); toast('Abgemeldet'); return; }
@@ -1437,7 +1640,7 @@ document.addEventListener('change', async e => {
   if (S.view !== 'admin') return;
   const t = e.target;
   if (t.id === 'xf-img' && t.files && t.files[0]){
-    try { S.xf.i = await imgToData(t.files[0]); $('xf-prev').innerHTML = '<img src="' + S.xf.i + '" alt="Vorschau">'; } catch(x){ toast('Bild konnte nicht gelesen werden'); }
+    try { S.xf.i = await imgToData(t.files[0]); S.xf.iNew = true; $('xf-prev').innerHTML = '<img src="' + S.xf.i + '" alt="Vorschau">'; } catch(x){ toast('Bild konnte nicht gelesen werden'); }
     return;
   }
   if (t.id === 'xf-pdf' && t.files && t.files[0]){
@@ -1449,6 +1652,9 @@ document.addEventListener('change', async e => {
   if (t.id === 'imp-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; impStart(f); return; }
   if (t.id === 'dsl-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; dslStart(f); return; }
   if (t.id === 'dsp-files' && t.files && t.files.length){ const fs = [...t.files]; t.value = ''; dspStart(fs); return; }
+  if ((t.id === 'ib-files' || t.id === 'ib-dir') && t.files && t.files.length){ const fs = [...t.files]; t.value = ''; ibStart(fs); return; }
+  if (S.ib && t.matches('[data-ibc]')){ const r = S.ib.rows[+t.closest('[data-bi]').dataset.bi]; r.choice = t.value; ibDupes(); ibRender(); return; }
+  if (S.ib && t.id === 'ib-pool'){ S.ib.addPool = t.checked; return; }
   if (S.dsi && t.matches('[data-dc]')){ const r = S.dsi.rows[+t.closest('[data-di]').dataset.di]; r.choice = t.value; dsiRender(); return; }
   if (S.imp && t.closest('#ov-imp')){
     if (t.name === 'imp-hek'){ S.imp.hekIs = t.value; impRender(); return; }
@@ -1461,7 +1667,8 @@ document.addEventListener('change', async e => {
   }
   if (t.matches('[data-imgup]') && t.files && t.files[0]){
     const k = t.closest('.pcard').dataset.k, pe = S.draft.pool[k];
-    try { const u = await imgToData(t.files[0]); if (pe){ pe.img = u; markDirty(); syncExtras(); refreshCard(k); renderDays(); toast('Foto übernommen – Kalender, Flyer und Listen nach dem Speichern'); } }
+    const lab = t.closest('.upl'); if (lab) lab.firstChild.textContent = 'Wird hochgeladen …';
+    try { const u = await storeImg(t.files[0]); if (pe){ setImg(S.draft, k, u); markDirty(); syncExtras(); refreshCard(k); renderDays(); toast('Foto übernommen – Kalender, Flyer und Listen nach dem Speichern'); } }
     catch(x){ toast('Bild konnte nicht gelesen werden'); }
     return;
   }
@@ -1520,7 +1727,7 @@ document.addEventListener('input', e => {
     if (t.dataset.f === 'uvp'){ if (p && p.x && S.draft.extra[p.k]){ S.draft.extra[p.k].u = num(t.value); p.u = num(t.value); } else return; }
     else if (t.dataset.f === 'price'){ const v = num(t.value); e2.price = v; prodActs(card.dataset.k).forEach(a => a.price = v); }
     else e2[t.dataset.f] = t.dataset.f === 'ds' ? t.value.trim() : num(t.value); markDirty(); } return; }
-  const rr = t.closest('.rrow');
+  const rr = t.closest('.rrow, .drow.xd');
   if (rr && t.type === 'number' && t.dataset.rf){ const r = rangeById(rr.dataset.rid); if (!r) return; const v = num(t.value);
     r[t.dataset.rf] = t.dataset.rf === 'qty' ? (v == null ? null : Math.max(0, Math.round(v))) : v; markDirty(); return; }
   const row = t.closest('.drow');
@@ -1539,31 +1746,34 @@ document.addEventListener('change', e => {
   if (S.view !== 'admin') return;
   const t = e.target;
   if (t.id === 'f-cat'){ S.f.cat = t.value; renderPoolList(); return; }
-  if (t.id === 'cfg-start'){ if (/^\d{4}-\d{2}-\d{2}$/.test(t.value)){ S.draft.start = t.value; markDirty(); renderAdmin(); } return; }
-  if (t.id === 'cfg-count'){ const n = parseInt(t.value,10); if (n >= 1){ S.draft.count = Math.min(MAXDAYS, n); markDirty(); renderAdmin(); } else toast('Bitte mindestens 1 Tag'); return; }
+  if (t.id === 'cfg-start'){ if (/^\d{4}-\d{2}-\d{2}$/.test(t.value)){ S.draft.start = t.value; parkXd(S.draft); markDirty(); renderAdmin(); } return; }
+  if (t.id === 'cfg-count'){ const n = parseInt(t.value,10); if (n >= 1){ S.draft.count = Math.min(MAXDAYS, n); parkXd(S.draft); markDirty(); renderAdmin(); } else toast('Bitte mindestens 1 Tag'); return; }
   if (t.id === 'cfg-theme'){ const was = isSeason(S.draft); S.draft.theme = t.value; markDirty(); renderHeader(); if (was !== isSeason(S.draft)) renderAdmin(); return; }
   if (t.id === 'cfg-motif'){ S.draft.motif = t.value; markDirty(); renderHeader(); return; }
   if (t.id === 'cfg-sim'){ S.sim = t.value || null; renderDays(); renderHeader(); toast(S.sim ? 'Ansicht zeigt jetzt den ' + fmtShort(S.sim) : 'Testdatum entfernt'); return; }
-  if (t.type === 'number' && ((t.closest('.rrow') && t.dataset.rf === 'price') || (t.closest('.drow') && t.dataset.f === 'price'))){ const k = t.closest('.rrow') ? (rangeById(t.closest('.rrow').dataset.rid) || {}).k : (S.draft.days[t.closest('.drow').dataset.day] || {}).k; if (k) refreshCard(k); return; }
-  const rr = t.closest('.rrow');
+  if (t.type === 'number' && ((t.closest('[data-rid]') && t.dataset.rf === 'price') || (t.closest('.drow') && t.dataset.f === 'price'))){ const k = t.closest('[data-rid]') ? (rangeById(t.closest('[data-rid]').dataset.rid) || {}).k : (S.draft.days[t.closest('.drow').dataset.day] || {}).k; if (k) refreshCard(k); return; }
+  const rr = t.closest('.rrow, .drow.xd');
   if (rr && t.dataset.rf && t.type !== 'number'){
     const r = rangeById(rr.dataset.rid); if (!r) return; const f = t.dataset.rf, days = periodDays(S.draft), a = days[0], b = days[days.length-1];
+    if (r.xd && f === 'k'){ const oldK = r.k; if (t.value && t.value !== oldK && onDay(r.from, t.value)){ toast(BYK.get(t.value).m + ' läuft an diesem Tag bereits'); t.value = oldK || ''; return; }
+      r.k = t.value; if (t.value && r.price == null) r.price = defPrice(t.value); markDirty(); replaceDay(r.from); if (oldK) refreshCard(oldK); if (t.value) refreshCard(t.value); return; }
     if (f === 'k'){ r.k = t.value; if (t.value && r.price == null) r.price = defPrice(t.value); if (t.value && r.qty == null) r.qty = 10; }
     else if (f === 'full'){ r.full = t.checked; if (!r.full){ const x = rangeSpan(S.draft, Object.assign({}, r, { full:true })); r.from = r.from && r.from >= a && r.from <= b ? r.from : x.from; r.to = r.to && r.to >= a && r.to <= b ? r.to : x.to; } }
     else if (f === 'from' || f === 'to'){ if (!/^\d{4}-\d{2}-\d{2}$/.test(t.value)) return; let v = t.value < a ? a : t.value > b ? b : t.value; r[f] = v;
       if (r.from && r.to && r.from > r.to){ if (f === 'from') r.to = r.from; else r.from = r.to; } if (r.from === a && r.to === b) r.full = true; }
-    markDirty(); rr.outerHTML = rangeRow(r); return;
+    markDirty(); rr.outerHTML = rangeRow(r); renderDays(); return;
   }
   if (t.dataset && t.dataset.f === 'price' && t.closest('.pcard')){ renderDays(); return; }
-  if (t.matches('[data-assign]') && t.value){ const k = t.closest('.pcard').dataset.k, day = t.value; assignDay(day, k); toast(BYK.get(k).m + ' → Aktionstag ' + fmtShort(day)); return; }
+  if (t.matches('[data-assign]') && t.value){ const k = t.closest('.pcard').dataset.k, day = t.value; const extra = assignDay(day, k); toast(BYK.get(k).m + ' → Aktionstag ' + fmtShort(day) + (extra ? ' (zusätzliche Tagesaktion)' : '')); return; }
   const row = t.closest('.drow');
   if (row && t.dataset.f === 'k'){
     const oldK = (S.draft.days[row.dataset.day] || {}).k;
     const day = row.dataset.day;
+    if (t.value && xdOf(S.draft, day).some(r => r.k === t.value)){ toast(BYK.get(t.value).m + ' läuft an diesem Tag bereits'); t.value = oldK || ''; return; }
     if (!t.value){ delete S.draft.days[day]; }
     else { const prev = S.draft.days[day] || {}; const hek = S.draft.pool[t.value] ? S.draft.pool[t.value].hek : null;
       S.draft.days[day] = { k:t.value, hek:null, price: defPrice(t.value) ?? prev.price ?? null, qty: prev.qty ?? 5 }; }
-    markDirty(); row.outerHTML = dayRow(day); if (oldK) refreshCard(oldK); if (t.value) refreshCard(t.value); return;
+    markDirty(); replaceDay(day); if (oldK) refreshCard(oldK); if (t.value) refreshCard(t.value); return;
   }
 });
 
@@ -1692,13 +1902,13 @@ const FLY_DS_CSS = `
 .ebf img{height:9mm;display:block;margin:0 auto}
 .ebf b{display:block;font-size:12pt;margin-top:.8mm}
 `;
-function flyWhen(c){ return rangeDeals(c).length ? 'am angegebenen Tag bzw. im angegebenen Zeitraum' : 'am angegebenen Tag'; }
+function flyWhen(c){ return multiRangeDeals(c).length ? 'am angegebenen Tag bzw. im angegebenen Zeitraum' : 'am angegebenen Tag'; }
 function flyTheme(c){ return S.fo.theme === 'auto' ? c.theme : S.fo.theme; }
 function flyDraftMark(c){ return S.fo.draft == null ? (!!c.example || !apStatus(c).done) : S.fo.draft; }
 function flyIntro(c){
   if (S.fo.intro) return S.fo.intro;
   return c.count === 1 ? 'Ein Top-Gerät zum Sonder-HEK – nur am ' + fmtLong(c.start) + ' von 0:00 bis 23:59 Uhr bestellbar, solange das Kontingent reicht.'
-    : c.count + ' Tage – jeden Tag ein neues Aktionsgerät zum Sonder-HEK. Jede Tagesaktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr, solange das Kontingent reicht.' + (rangeDeals(c).length ? (rangeDeals(c).length === 1 ? ' Dazu eine Aktion, die über mehrere Tage gilt.' : ' Dazu ' + rangeDeals(c).length + ' Aktionen, die über mehrere Tage gelten.') : '');
+    : c.count + ' Tage – ' + (periodDays(c).some(d => dayDeals(c, d).length > 1) ? 'jeden Tag neue Aktionsgeräte' : 'jeden Tag ein neues Aktionsgerät') + ' zum Sonder-HEK. Jede Tagesaktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr, solange das Kontingent reicht.' + ((n => n ? (n === 1 ? ' Dazu eine Aktion, die über mehrere Tage gilt.' : ' Dazu ' + n + ' Aktionen, die über mehrere Tage gelten.') : '')(multiRangeDeals(c).length));
 }
 function flyEur(n){ return n == null || isNaN(n) ? '' : Number(n).toLocaleString('de-AT',{maximumFractionDigits:2, minimumFractionDigits: Number(n)%1 ? 2 : 0}) + ' €'; }
 function flyLogos(){
@@ -1725,7 +1935,7 @@ function flyerDoc(c, opt){
   opt = opt || {}; S.fo.curMode = opt.mode || S.fo.mode;
   if (flyTheme(c) === 'beko' || flyTheme(c) === 'eb') return flyerDocSeason(c, opt, flyTheme(c));
   const th = flyTheme(c), mail = c.orderEmail || 'order.austria@beko.com';
-  const deals = rangeDeals(c).concat(periodDays(c).map(day => dealFor(c, day)).filter(Boolean));
+  const deals = allDeals(c);
   const nDays = deals.filter(d => !d.range).length;
   const logos = flyLogos(), title = c.title || 'Aktionskalender', per = periodLabel(c);
   const mailA = '<a href="mailto:' + esc(mail) + '">' + esc(mail) + '</a>';
@@ -1751,7 +1961,7 @@ function flyerDoc(c, opt){
   } else {
     const rows = []; let cur = [];
     deals.forEach((d, i) => {
-      const hero = th === 'black' && deals.length <= 11 && !d.range && d.day === blackFriday(+d.day.slice(0,4));
+      const hero = th === 'black' && deals.length <= 11 && !d.range && d.day === blackFriday(+d.day.slice(0,4)) && d === deals.find(x => !x.range && x.day === d.day);
       if (hero){ if (cur.length) rows.push(cur); rows.push([{ hero:true, html: flyTile(c, d, i, 'hero') }]); cur = []; return; }
       cur.push({ html: flyTile(c, d, i) }); if (cur.length === 4){ rows.push(cur); cur = []; }
     });
@@ -1872,7 +2082,7 @@ body.eb .foot .ct{font-size:7.8pt}
 `;
 function flyerDocSeason(c, opt, th){
   S.fo.curMode = opt.mode || S.fo.mode;
-  const deals = rangeDeals(c).concat(periodDays(c).map(day => dealFor(c, day)).filter(Boolean));
+  const deals = allDeals(c);
   const title = c.title || MOTIF_TITLE[c.motif] || 'Aktionen', per = periodLabel(c);
   const img = (SEASON_IMG[th] || {})[c.motif] || '';
   const mail = c.orderEmail || 'order.austria@beko.com', phone = c.orderPhone || DEF_PHONE, fax = c.orderFax || '';
@@ -1949,7 +2159,7 @@ function renderFlyer(){
 function refreshFlyer(){ const fr = $('fly-frame'); if (fr) fr.srcdoc = flyerDoc(S.config); }
 window.addEventListener('resize', () => { if (S.view === 'flyer') fitFlyer(); });
 async function flyDownload(){
-  const c = S.config, html = flyerDoc(c), name = flyFileName(c);
+  const c = S.config, name = flyFileName(c), html = await inlineBlobs(flyerDoc(c));
   let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch(e) {}
   if (dl){
     try { await dl.save({ filename: name, data: html }); toast('Flyer gespeichert – im Browser öffnen und als PDF drucken'); }
@@ -2070,7 +2280,7 @@ function fnv(str){ let h = 0x811c9dc5; for (let i = 0; i < str.length; i++){ h ^
 function planDeals(c){ return periodDays(c).map(d => dealFor(c, d)).filter(Boolean).concat(rangeDeals(c)); }
 function dealsForKey(c, key){ const all = planDeals(c); return key.startsWith('pm:') ? all.filter(d => catOf(d.p) === key.slice(3)) : all; }
 function keyHash(c, key){
-  return fnv(JSON.stringify([c.start, c.count, dealsForKey(c, key).map(d => [d.range ? d.sk + ':' + d.from + ':' + d.to : d.day, d.p.k, d.hek, d.price, d.qty, d.uvp])]));
+  return fnv(JSON.stringify([c.start, c.count, dealsForKey(c, key).map(d => [d.sk ? d.sk + ':' + d.from + ':' + d.to : d.day, d.p.k, d.hek, d.price, d.qty, d.uvp])]));
 }
 const identOf = p => S.api ? p.pid : p.uid;
 function evalKey(c, key){
@@ -2169,7 +2379,7 @@ async function personSearch(key, q){
 
 /* --- Ansicht „Freigabe“ --- */
 function dealsTable(c, key){
-  const ds = dealsForKey(c, key); let inv = 0, vol = 0;
+  const ds = dealsForKey(c, key).slice().sort((a,b) => (a.from || a.day).localeCompare(b.from || b.day) || (a.range ? -1 : 0) - (b.range ? -1 : 0)); let inv = 0, vol = 0;
   const rows = ds.map(d => { const v = d.price != null && d.qty != null ? d.price * d.qty : null; if (v != null) vol += v;
     return '<tr><td>' + esc(dealDateLabel(d)) + '</td><td><div class="withpic">' + thumb(d.p, 'sm') + '<div><b>' + esc(d.p.m) + '</b><br><span class="small">' + esc(d.p.b) + ' · ' + esc(catOf(d.p)) + '</span></div></div></td><td class="num">' + eur(d.uvp) + '</td><td class="num">' + eur(d.price) + '</td><td class="num">' + (d.qty ?? '–') + '</td><td class="num">' + (v != null ? eur(v) : '–') + '</td></tr>'; }).join('');
   return '<div class="tblwrap"><table class="aptbl deals"><thead><tr><th>Tag / Zeitraum</th><th>Gerät</th><th>UVP</th><th>Aktions-HEK</th><th>Stk.</th><th>Volumen</th></tr></thead><tbody>' + rows + '</tbody>' +
@@ -2290,7 +2500,7 @@ const CUST_FIELDS = [
 ];
 function cartLoad(){ try { const v = JSON.parse(localStorage.getItem('kal-cart') || '[]'); S.cart = Array.isArray(v) ? v : []; } catch(e) { S.cart = []; } cartPrune(); }
 function cartSave(){ try { localStorage.setItem('kal-cart', JSON.stringify(S.cart)); } catch(e) {} }
-function cartPrune(){ const t = today(); const before = S.cart.length; S.cart = S.cart.filter(x => { const d = S.config && dealBySlot(S.config, x.day); return !!d && d.p.k === x.k && (d.range ? rangeStatus(d) === 'today' : x.day === t); }); if (S.cart.length !== before) cartSave(); }
+function cartPrune(){ const t = today(); const before = S.cart.length; S.cart = S.cart.filter(x => { const d = S.config && dealBySlot(S.config, x.day); return !!d && d.p.k === x.k && dealStatus(d) === 'today'; }); if (S.cart.length !== before) cartSave(); }
 function custLoad(){ try { return JSON.parse(localStorage.getItem('kal-kunde') || '{}') || {}; } catch(e) { return {}; } }
 function custSave(v){ try { const keep = Object.assign({}, v); delete keep.notiz; localStorage.setItem('kal-kunde', JSON.stringify(keep)); } catch(e) {} }
 function cartItems(){ return S.cart.map(x => { const d = dealBySlot(S.config, x.day); return d ? Object.assign({}, x, { deal:d, line: (d.price || 0) * x.qty }) : null; }).filter(Boolean); }
@@ -2301,15 +2511,16 @@ function renderCartFab(){
   if (!fab){ fab = document.createElement('button'); fab.type = 'button'; fab.id = 'cart-fab'; fab.className = 'cartfab'; document.body.appendChild(fab); }
   fab.innerHTML = 'Warenkorb <b>' + n + '</b>';
 }
-function addToCart(day){
+function addToCart(day, btn){
   const deal = dealBySlot(S.config, day); if (!deal || dealStatus(deal) !== 'today'){ toast('Diese Aktion ist nicht mehr bestellbar'); return; }
-  const rem = remainingFor(deal); let q = Math.round(num(($('ord-qty') || {}).value) || 1);
+  const box = btn && btn.closest('.orderbox'), inp = (box && box.querySelector('input[data-qty-for]')) || document.querySelector('input[data-qty-for="' + CSS.escape(day) + '"]');
+  const rem = remainingFor(deal); let q = Math.round(num((inp || {}).value) || 1);
   if (q < 1) q = 1; if (rem != null && q > rem){ q = rem; toast('Nur mehr ' + rem + ' Stück verfügbar'); }
   if (rem != null && rem <= 0){ toast('Leider ausverkauft'); return; }
   const ex = S.cart.find(x => x.day === day && x.k === deal.p.k);
   if (ex) ex.qty = q; else S.cart.push({ day, k: deal.p.k, qty: q });
   cartSave(); renderCartFab(); toast(deal.p.m + ' · ' + q + ' Stk. im Warenkorb');
-  const b = document.querySelector('[data-addcart]'); if (b) b.textContent = 'Menge im Warenkorb ändern';
+  document.querySelectorAll('[data-addcart="' + CSS.escape(day) + '"]').forEach(b => b.textContent = 'Menge im Warenkorb ändern');
 }
 function cartDialog(){
   cartPrune(); const items = cartItems(), c = S.config, cu = custLoad();
@@ -2387,8 +2598,8 @@ function renderOrders(){
   const c = S.config, mail = c.orderEmail || 'order.austria@beko.com';
   const byDay = {}; list.forEach(o => o.items.forEach(x => { byDay[x.day] = (byDay[x.day] || 0) + x.qty; }));
   const tot = list.reduce((a,o) => a + (o.total || 0), 0);
-  const sumRows = periodDays(c).map(d => { const deal = dealFor(c, d); if (!deal) return ''; const sold = byDay[d] || 0; return '<tr><td>' + fmtShort(d) + '</td><td><div class="withpic">' + thumb(deal.p, 'sm') + '<div>' + esc(deal.p.m) + '</div></div></td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('') +
-    rangeDeals(c).map(deal => { const sold = byDay[deal.sk] || 0; return '<tr><td>' + esc(dealDateLabel(deal)) + '</td><td><div class="withpic">' + thumb(deal.p, 'sm') + '<div>' + esc(deal.p.m) + '</div></div></td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('');
+  const sumRows = periodDays(c).map(d => dayDeals(c, d).map(deal => { const sold = byDay[deal.sk || d] || 0; return '<tr><td>' + fmtShort(d) + '</td><td><div class="withpic">' + thumb(deal.p, 'sm') + '<div>' + esc(deal.p.m) + '</div></div></td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('')).join('') +
+    multiRangeDeals(c).map(deal => { const sold = byDay[deal.sk] || 0; return '<tr><td>' + esc(dealDateLabel(deal)) + '</td><td><div class="withpic">' + thumb(deal.p, 'sm') + '<div>' + esc(deal.p.m) + '</div></div></td><td class="num">' + (deal.qty ?? '–') + '</td><td class="num">' + sold + '</td><td class="num">' + (deal.qty != null ? Math.max(0, deal.qty - sold) : '–') + '</td></tr>'; }).join('');
   const rows = list.map(o => '<tr><td>' + esc(fmtAt(o.at)) + '<br><span class="small">' + esc(o.no) + '</span></td><td><b>' + esc(o.customer.firma) + '</b>' + (o.customer.kdnr ? ' · ' + esc(o.customer.kdnr) : '') + '<br><span class="small">' + esc(o.customer.name) + ' · <a href="mailto:' + esc(o.customer.email) + '">' + esc(o.customer.email) + '</a> · <a href="' + telHref(o.customer.tel) + '">' + esc(o.customer.tel) + '</a></span>' + (o.customer.notiz ? '<br><span class="small">„' + esc(o.customer.notiz) + '“</span>' : '') + '</td>' +
     '<td>' + o.items.map(x => '<div class="withpic" style="margin:2px 0">' + thumb(BYK.get(x.k), 'sm') + '<div>' + x.qty + ' × ' + esc(x.model) + ' <span class="small">(' + esc(x.aktion || slotLabel(x.day)) + ')</span></div></div>').join('') + '</td><td class="num">' + eur(o.total) + '</td><td>' + (o.mail === 'sent' ? '<span class="apb ok">versendet</span>' : o.mail === 'failed' ? '<span class="apb rej">Mail fehlgeschlagen</span>' : S.api ? '<span class="apb open">ohne Mail</span>' : '<span class="apb open">gespeichert</span>') + '</td></tr>').join('');
   $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Bestellungen</h2><span class="small">' + list.length + ' Bestellungen · ' + eur(tot) + ' exkl. MwSt. · Empfänger: ' + esc(mail) + '</span></div>' +
@@ -2410,8 +2621,8 @@ document.addEventListener('click', e => {
   const t = e.target;
   if (t.closest('#cart-fab')){ cartDialog(); return; }
   if (t.id === 'ov-x2'){ $('overlay-slot').innerHTML = ''; return; }
-  const ac = t.closest('[data-addcart]'); if (ac){ addToCart(ac.dataset.addcart); return; }
-  const qs = t.closest('[data-qstep]'); if (qs){ const inp = $('ord-qty'); if (inp){ const mx = inp.max ? +inp.max : 999; inp.value = Math.min(mx, Math.max(1, (+inp.value || 1) + (+qs.dataset.qstep))); } return; }
+  const ac = t.closest('[data-addcart]'); if (ac){ addToCart(ac.dataset.addcart, ac); return; }
+  const qs = t.closest('[data-qstep]'); if (qs){ const inp = qs.closest('.stepper').querySelector('input'); if (inp){ const mx = inp.max ? +inp.max : 999; inp.value = Math.min(mx, Math.max(1, (+inp.value || 1) + (+qs.dataset.qstep))); } return; }
   const cq = t.closest('[data-cq]'); if (cq){ const [day, k] = cq.dataset.ci.split(/\|(.*)/s); const it = S.cart.find(x => x.day === day && x.k === k); if (it){ const rem = remainingFor(dealBySlot(S.config, day)); it.qty = Math.max(1, it.qty + (+cq.dataset.cq)); if (rem != null) it.qty = Math.min(it.qty, rem); cartSave(); const keep = {}; CUST_FIELDS.forEach(([f]) => { const el = $('cu-' + f); if (el) keep[f] = el.value; }); custSave(Object.assign(custLoad(), keep)); cartDialog(); renderCartFab(); } return; }
   const cd = t.closest('[data-cdel]'); if (cd){ const [day, k] = cd.dataset.cdel.split(/\|(.*)/s); S.cart = S.cart.filter(x => !(x.day === day && x.k === k)); cartSave(); renderCartFab(); cartDialog(); return; }
   if (t.id === 'ord-reload'){ S.orders = null; renderOrders(); return; }

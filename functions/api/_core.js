@@ -36,6 +36,7 @@ const eur = n => '€ ' + Number(n || 0).toLocaleString('de-AT', { minimumFracti
 function period(c){ const count = Math.max(1, Math.min(62, parseInt(c.count, 10) || 1)); return { a: c.start, b: addDays(c.start, count - 1) }; }
 function rangeSpan(c, r){
   const { a, b } = period(c);
+  if (r.xd) return { from: r.from, to: r.from };
   const from = r.full || !r.from || r.from < a || r.from > b ? a : r.from;
   const to = r.full || !r.to || r.to > b || r.to < a ? b : r.to;
   return { from, to: to < from ? from : to };
@@ -45,17 +46,21 @@ function productOf(c, k){
   if (x) return { brand: x.b || '', model: x.m || '', type: x.t || '' };
   const i = k.indexOf('|'); return { brand: k.slice(0, i), model: k.slice(i + 1), type: '' };
 }
-/* Liefert die heute bestellbare Aktion für einen Warenkorb-Eintrag oder einen Fehlertext */
+/* Liefert die heute bestellbare Aktion für einen Warenkorb-Eintrag oder einen Fehlertext.
+   Slot „JJJJ-MM-TT“ = Hauptaktion des Tages, Slot „r-<id>“ = Zeitraum-Aktion oder zusätzliche Tagesaktion (xd) */
 function dealForSlot(c, slot, k, t){
   if (!c || !c.start) return { error:'Keine Planung vorhanden' };
   const pool = (c.pool || {})[k] || {};
   if (/^r-[\w-]{1,40}$/.test(slot)){
     const r = (c.ranges || []).find(x => x && 'r-' + x.id === slot);
     if (!r || r.k !== k) return { error:'Diese Aktion gibt es nicht mehr' };
+    const { a, b } = period(c);
+    if (r.xd && (!r.from || r.from < a || r.from > b)) return { error:'Diese Aktion gibt es nicht mehr' };
     const s = rangeSpan(c, r);
-    if (t < s.from || t > s.to) return { error:'Diese Aktion ist heute nicht bestellbar' };
+    if (t < s.from || t > s.to) return { error: r.xd ? 'Die Aktion vom ' + fmtShort(s.from) + ' ist heute nicht bestellbar' : 'Diese Aktion ist heute nicht bestellbar' };
     if (r.price == null) return { error:'Für diese Aktion ist kein Preis hinterlegt' };
-    return { price: +r.price, qty: r.qty == null ? null : +r.qty, label: r.full ? 'Zeitraum ' + fmtShort(s.from) + '–' + fmtShort(s.to) : 'Zeitraum ' + (s.from === s.to ? fmtShort(s.from) : fmtShort(s.from) + ' – ' + fmtShort(s.to)), hek: r.hek != null ? r.hek : pool.hek };
+    const label = r.xd || (!r.full && s.from === s.to) ? fmtShort(s.from) : r.full ? 'Zeitraum ' + fmtShort(s.from) + '–' + fmtShort(s.to) : 'Zeitraum ' + fmtShort(s.from) + ' – ' + fmtShort(s.to);
+    return { price: +r.price, qty: r.qty == null ? null : +r.qty, label, hek: r.hek != null ? r.hek : pool.hek };
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(slot)) return { error:'Ungültige Aktion' };
   const { a, b } = period(c);
