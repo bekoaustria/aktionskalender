@@ -1047,6 +1047,7 @@ function assignHTML(p){
     '<select data-assign aria-label="Aktionstag für ' + esc(p.m) + ' wählen"><option value="">+ Datum zuordnen …</option>' + opts + '</select></div>';
 }
 /* Aktions-HEK je Gerät: Vorgabe für neue Zuordnungen, Änderung gilt für alle Aktionen des Geräts */
+function defQty(k){ const e = S.draft.pool[k] || {}; return e.qty != null ? e.qty : 5; }
 function defPrice(k){ const e = S.draft.pool[k] || {}; return e.price != null ? e.price : e.hek != null ? Math.round(e.hek * 0.9) : null; }
 function prodActs(k){ const c = S.draft; return periodDays(c).map(d => c.days[d]).filter(d => d && d.k === k).concat((c.ranges || []).filter(r => r.k === k)); }
 function cardPrice(k){ const e = S.draft.pool[k] || {}, acts = prodActs(k), ps = [...new Set(acts.map(a => a.price))];
@@ -1057,8 +1058,8 @@ function refreshCard(k){ const el = document.querySelector('.pcard[data-k="' + C
 function assignDay(day, k){
   const prev = S.draft.days[day] || {}; let extra = false;
   if (onDay(day, k)) return false;
-  if (!prev.k) S.draft.days[day] = { k, hek:null, price: defPrice(k), qty: prev.qty ?? 5 };
-  else { S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k, xd:true, full:false, from:day, to:day, hek:null, price: defPrice(k), qty:5 }); extra = true; }
+  if (!prev.k) S.draft.days[day] = { k, hek:null, price: defPrice(k), qty: defQty(k) };
+  else { S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k, xd:true, full:false, from:day, to:day, hek:null, price: defPrice(k), qty: defQty(k) }); extra = true; }
   markDirty(); refreshCard(k); renderDays();
   return extra;
 }
@@ -1130,7 +1131,7 @@ const normM = v => String(v ?? '').toUpperCase().replace(/[\s\-\/.]/g, '');
 const IMP_COLS = [
   ['ds', /^datenblatt|^produktdatenblatt|^link|^url|^pdf/],
   ['name', /bezeichnung|beschreibung|kurztext|produktname|^name$|^produkt$|^artikeltext/],
-  ['ahek', /aktion.*(hek|preis|ek)|sonderpreis|sonderhek|^ahek|^promo|^deal|^bf(hek|preis|ek)|blackfriday|^nettoaktion/],
+  ['ahek', /^(?=.*(aktion|^akt|promo|sonder|deal|^bf|blackfriday|angebot|^ahek))(?=.*(hek|preis|ek|netto|eur)).*/],
   ['code', /^(code|artikel|artikelnr|artikelnummer|artnr|material|materialnr|materialnummer|sap|sapnr|sapnummer|modell|model|modellnummer|ean|sku|produktcode|typennummer)$/],
   ['uvp', /^uvp|unverbindl|listenpreis|^vk/],
   ['hek', /^hek|händlereinkauf|haendlereinkauf|^ek$|^ekpreis|einkaufspreis|^nettopreis|^preis$|^netto$/],
@@ -1236,11 +1237,14 @@ function impParse(rows){
     if (!r || !r.some(v => v !== '' && v != null)) return;
     const code = String(g(r, 'code')).trim(), name = String(g(r, 'name')).trim();
     if (!code && !name) return;
-    out.push({ line: hi + i + 2, code, name, uvp: impNum(g(r, 'uvp')), hek: impNum(g(r, 'hek')), ahek: impNum(g(r, 'ahek')), qty: impNum(g(r, 'qty')), tage: g(r, 'tage'), von: g(r, 'von'), bis: g(r, 'bis'), ds: (s => /^https?:\/\//i.test(s) ? s : '')(String(g(r, 'ds')).trim()) });
+    out.push({ raw: r, line: hi + i + 2, code, name, uvp: impNum(g(r, 'uvp')), hek: impNum(g(r, 'hek')), ahek: impNum(g(r, 'ahek')), qty: impNum(g(r, 'qty')), tage: g(r, 'tage'), von: g(r, 'von'), bis: g(r, 'bis'), ds: (s => /^https?:\/\//i.test(s) ? s : '')(String(g(r, 'ds')).trim()) });
   });
-  const names = {}; Object.entries(map).forEach(([key, j]) => names[key] = String((rows[hi] || [])[j] ?? '').trim()); return { rows: out, map, names };
+  const names = {}; Object.entries(map).forEach(([key, j]) => names[key] = String((rows[hi] || [])[j] ?? '').trim()); return { rows: out, map, names, heads: (rows[hi] || []).map(v => String(v ?? '').trim()) };
 }
-async function impStart(file){
+/* Aktions-HEK einer Zeile aus der gewählten Spalte */
+const impPrice = r => S.imp && S.imp.pcolIdx != null && S.imp.pcolIdx >= 0 ? impNum((r.raw || [])[S.imp.pcolIdx]) : null;
+const impNoDate = r => (r.tage == null || r.tage === '') && (r.von == null || r.von === '') && (r.bis == null || r.bis === '');
+async function impStart(file, from){
   try {
     const rows = await impRead(file), res = impParse(rows);
     if (res.error){ toast(res.error); return; }
@@ -1252,7 +1256,9 @@ async function impStart(file){
       if (it.err) it.choice = m ? m.k : 'skip';
       return it;
     });
-    S.imp = { file: file.name, rows: list, hasA: res.map.ahek != null, hasH: res.map.hek != null, pcol: res.map.ahek != null ? res.names.ahek : res.map.hek != null ? res.names.hek : '', hekIs: 'aktion', brand: S.f.brand !== 'alle' ? S.f.brand : BRANDS[0], replace: false };
+    const pIdx = res.map.ahek != null ? res.map.ahek : res.map.hek != null ? res.map.hek : -1;
+    S.imp = { file: file.name, rows: list, heads: res.heads, pcolIdx: pIdx, hasDates: res.map.tage != null || res.map.von != null || res.map.bis != null,
+      noDate: from === 'range' ? 'range' : 'pool', updAll: true, brand: S.f.brand !== 'alle' ? S.f.brand : BRANDS[0], replace: false };
     impRender();
   } catch(e){ toast('Die Datei konnte nicht gelesen werden'); }
 }
@@ -1264,22 +1270,26 @@ function impOptions(sel){
 function impRender(){
   const I = S.imp, c = S.draft; if (!I) return;
   const nOk = I.rows.filter(r => r.choice !== 'skip' && r.choice !== 'new' && !r.err).length, nNew = I.rows.filter(r => r.choice === 'new' && !r.err).length, nSkip = I.rows.length - nOk - nNew;
-  const priceOf = r => I.hasA ? r.ahek : r.hek, nPrice = I.rows.filter(r => r.choice !== 'skip' && !r.err && priceOf(r) != null).length;
+  const priceOf = impPrice, nPrice = I.rows.filter(r => r.choice !== 'skip' && !r.err && priceOf(r) != null).length;
   const pLab = 'Aktions-HEK';
   const rows = I.rows.map((r, i) => {
     const p = r.choice !== 'new' && r.choice !== 'skip' ? BYK.get(r.choice) : null;
     const st = r.err ? '<span class="ist no">Fehler</span>' : r.choice === 'skip' ? '<span class="ist no">wird übersprungen</span>' : r.choice === 'new' ? '<span class="ist new">neu</span>' : '<span class="ist ok">✓ ' + esc(r.k === r.choice ? r.how : 'manuell') + '</span>';
-    const price = I.hasA ? r.ahek : r.hek;
+    const price = impPrice(r);
     return '<tr class="' + (r.choice === 'skip' ? 'skip ' : '') + (r.err ? 'err' : '') + '" data-ir="' + i + '"><td class="small">' + r.line + '</td><td>' + st + '<div class="sub"><select data-ic aria-label="Zuordnung Zeile ' + r.line + '">' + impOptions(r.choice) + '</select></div>' +
       (r.choice === 'new' ? '<div class="sub"><select data-inb aria-label="Marke">' + BRANDS.map(b => '<option' + ((r.nb || I.brand) === b ? ' selected' : '') + '>' + b + '</option>').join('') + '</select><select data-inc aria-label="Kategorie"><option value="">Kategorie …</option>' + xCats().map(x => '<option' + (r.nc === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></div>' : '') + '</td>' +
       '<td><div class="withpic">' + thumb(p, 'sm') + '<div><b>' + esc(r.code) + '</b>' + (p && normM(p.m) !== normM(r.code) ? '<br><span class="small">→ ' + esc(p.b + ' ' + p.m) + '</span>' : '') + '</div></div></td><td>' + esc(r.name) + (r.ds ? '<br><a class="small" href="' + esc(r.ds) + '" target="_blank" rel="noopener">Datenblatt ✓</a>' : '') + '</td>' +
       '<td class="num">' + (p && !p.x ? eur(p.u) + (r.uvp != null && r.uvp !== p.u ? '<br><span class="small">Liste: ' + eur(r.uvp) + '</span>' : '') : eur(r.uvp)) + '</td>' +
       '<td class="num">' + (price != null ? '<b>' + eur(price) + '</b>' : r.choice === 'skip' || r.err ? '–' : '<span class="ist no">fehlt</span>') + '</td><td class="num">' + (r.qty ?? '–') + '</td>' +
-      '<td>' + (r.err ? esc(r.err) : esc(r.slots.map(slotText).join(', '))) + '</td></tr>';
+      '<td>' + (r.err ? esc(r.err) : impNoDate(r) && I.noDate === 'pool' ? '<span class="small">nur Aktionssortiment</span>' : esc(r.slots.map(slotText).join(', '))) + '</td></tr>';
   }).join('');
   $('overlay-slot').innerHTML = '<div class="overlay" id="ov-imp"><div class="dialog impdlg" role="dialog" aria-modal="true" aria-label="Liste importieren"><button type="button" class="x" id="imp-x" aria-label="Schließen">×</button><div class="impin">' +
-    '<h2 style="margin:0 0 4px">Liste importieren</h2><p class="small" style="margin:0">' + esc(I.file) + ' · ' + I.rows.length + ' Zeilen · Aktionszeitraum ' + esc(periodLabel(c)) + '. Ohne Angabe von Aktionstagen gilt ein Produkt im gesamten Aktionszeitraum.</p>' +
-    '<div class="impopts">' + (I.pcol ? '<span><b>Aktions-HEK aus Spalte „' + esc(I.pcol) + '“</b> · ' + nPrice + ' von ' + (nOk + nNew) + ' Produkten mit Preis</span>' : '<span class="ist no">Keine Spalte für den Aktions-HEK gefunden (erwartet: „Aktions-HEK“ oder „HEK“)</span>') +
+    '<h2 style="margin:0 0 4px">Gesamt-Upload: Liste übernehmen</h2><p class="small" style="margin:0">' + esc(I.file) + ' · ' + I.rows.length + ' Zeilen · Aktionszeitraum ' + esc(periodLabel(c)) + (S.impPdfs && S.impPdfs.length ? ' · danach ' + S.impPdfs.length + ' Datenblatt-PDF' + (S.impPdfs.length === 1 ? '' : 's') : '') + '</p>' +
+    '<div class="impopts"><label><b>Aktions-HEK aus Spalte</b> <select id="imp-pcol"><option value="-1">– keine –</option>' + (I.heads || []).map((hd, j) => hd ? '<option value="' + j + '"' + (j === I.pcolIdx ? ' selected' : '') + '>' + esc(hd) + '</option>' : '').join('') + '</select></label>' +
+      (I.pcolIdx >= 0 ? '<span>' + nPrice + ' von ' + (nOk + nNew) + ' Produkten mit Aktions-HEK</span>' : '<span class="ist no">Bitte die Spalte mit dem Aktions-HEK wählen</span>') + '</div>' +
+    '<div class="impopts"><span><b>Zeilen ohne Aktionstage:</b></span><label><input type="radio" name="imp-nodate" value="pool"' + (I.noDate === 'pool' ? ' checked' : '') + '>nur ins Aktionssortiment (Aktions-HEK und Menge werden beim Zuordnen zu einem Tag übernommen)</label>' +
+      '<label><input type="radio" name="imp-nodate" value="range"' + (I.noDate === 'range' ? ' checked' : '') + '>als Aktion über den gesamten Zeitraum</label></div>' +
+    '<div class="impopts"><label><input type="checkbox" id="imp-updall"' + (I.updAll ? ' checked' : '') + '>Aktions-HEK auch in bereits geplanten Aktionen dieser Geräte aktualisieren</label>' +
     '<label><input type="checkbox" id="imp-replace"' + (I.replace ? ' checked' : '') + '>Bisherige Zeitraum-Aktionen ersetzen (sonst ergänzen/aktualisieren)</label></div>' +
     '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Zeile</th><th>Zuordnung</th><th>Code</th><th>Bezeichnung</th><th style="text-align:right">UVP</th>' + '<th style="text-align:right">' + pLab + '</th><th style="text-align:right">Menge</th><th>Aktionstage</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
     '<p class="small">' + nOk + ' aus dem Katalog erkannt · ' + nNew + ' neu als eigenes Produkt (Bild und Datenblatt danach beim Produkt ergänzen) · ' + nSkip + ' werden nicht übernommen. Die UVP kommt immer aus der FH-App; die UVP aus der Liste wird nur bei neuen eigenen Produkten verwendet.</p>' +
@@ -1291,7 +1301,7 @@ function impApply(){
   if (miss){ err.textContent = 'Zeile ' + miss.line + ': bitte die Kategorie für das neue Produkt wählen.'; err.hidden = false; return; }
   c.extra = c.extra || {}; c.codes = c.codes || {}; c.ranges = c.ranges || [];
   if (I.replace) c.ranges = [];
-  let nR = 0, nD = 0, nN = 0, nO = 0;
+  let nR = 0, nD = 0, nN = 0, nO = 0, nP = 0, nU = 0;
   I.rows.forEach(r => {
     if (r.err || r.choice === 'skip') return;
     let k = r.choice;
@@ -1302,13 +1312,16 @@ function impApply(){
     }
     if (!BYK.get(k)) return;
     if (r.code) c.codes[normM(r.code)] = k;
-    const regular = null, price = I.hasA ? r.ahek : r.hek;
+    const regular = null, price = impPrice(r);
     const pe = c.pool[k] || (c.pool[k] = { hek:null });
     if (regular != null) pe.hek = regular;
-    if (price != null) pe.price = price;
+    if (price != null){ pe.price = price; if (I.updAll){ const acts = prodActs(k); acts.forEach(a => a.price = price); nU += acts.length; } }
     if (r.ds) pe.ds = r.ds;
     const p = BYK.get(k); if (r.uvp != null && p.x && c.extra[k]) c.extra[k].u = r.uvp;
     const qty = r.qty == null ? null : Math.max(0, Math.round(r.qty));
+    if (qty != null) pe.qty = qty;
+    nP++;
+    if (impNoDate(r) && I.noDate === 'pool') return;
     r.slots.forEach(sl => {
       if (sl.day){ const pd = c.days[sl.day];
         if (!pd || !pd.k || pd.k === k){ c.days[sl.day] = { k, hek: regular, price, qty }; nD++; return; }
@@ -1321,7 +1334,8 @@ function impApply(){
     });
   });
   S.imp = null; $('overlay-slot').innerHTML = ''; syncExtras(); markDirty(); renderAdmin();
-  toast(nR + ' Zeitraum- und ' + nD + ' Tagesaktionen übernommen' + (nN ? ', ' + nN + ' neue Produkte' : '') + (nO ? ' · ' + nO + ' davon zusätzlich an bereits belegten Tagen' : '') + ' – bitte prüfen und speichern');
+  toast(nP + ' Geräte mit Aktions-HEK im Sortiment' + (nD || nR ? ' · ' + nD + ' Tages- und ' + nR + ' Zeitraum-Aktionen' : '') + (nU ? ' · ' + nU + ' geplante Aktionen aktualisiert' : '') + (nN ? ' · ' + nN + ' neue Produkte' : '') + (nO ? ' · ' + nO + ' zusätzlich an belegten Tagen' : '') + ' – bitte prüfen und speichern');
+  impNextPdfs();
 }
 /* ---------- Datenblätter gesammelt: Links per CSV/Excel, PDFs per Mehrfach-Upload ---------- */
 function dsPlace(k, url, uploadId){
@@ -1354,6 +1368,18 @@ async function dslStart(file){
     S.dsi = { mode:'link', file: file.name, rows: list }; dsiRender();
   } catch(e){ toast('Die Datei konnte nicht gelesen werden'); }
 }
+/* Gesamt-Upload: eine Liste (Excel/CSV) und/oder Datenblatt-PDFs in einem Schritt; Fotos bleiben separat */
+const IS_LIST = f => /\.(xlsx|xlsm|xls|ods|csv|txt)$/i.test(f.name || '');
+const IS_PDF = f => /\.pdf$/i.test(f.name || '') || f.type === 'application/pdf';
+function allStart(files){
+  files = [...files]; const lists = files.filter(IS_LIST), pdfs = files.filter(IS_PDF), other = files.length - lists.length - pdfs.length;
+  if (other) toast(other + ' Datei' + (other === 1 ? '' : 'en') + ' ignoriert – Fotos bitte über „Produktbilder gesammelt“');
+  if (lists.length > 1) toast('Bitte nur eine Liste auf einmal – verwendet wird „' + lists[0].name + '“');
+  if (pdfs.length && !canUpload()){ toast('Datenblatt-PDFs können hier nicht hochgeladen werden – bitte Links in der Liste angeben'); pdfs.length = 0; }
+  S.impPdfs = pdfs;
+  if (lists.length) impStart(lists[0], 'pool'); else impNextPdfs();
+}
+function impNextPdfs(){ const p = S.impPdfs; S.impPdfs = null; if (p && p.length) dspStart(p); }
 function dspStart(files){
   const list = [...files].map((f, i) => {
     const base = f.name.replace(/\.pdf$/i, '').replace(/%20/g, ' ').replace(/[_\s-]*(produkt)?(datenblatt|datasheet|neu|new)\b/gi, '').replace(/_/g, ' ').trim();
@@ -1462,6 +1488,9 @@ async function ibApply(){
   ibClose(); renderPoolList(); renderDays();
   toast(res.size + ' Produktbild' + (res.size === 1 ? '' : 'er') + ' übernommen' + (B.addPool ? ' und Geräte aufgenommen' : '') + ' – bitte speichern');
 }
+document.addEventListener('dragover', e => { const z = e.target.closest && e.target.closest('#all-drop'); if (!z || S.view !== 'admin') return; e.preventDefault(); z.classList.add('drag'); });
+document.addEventListener('dragleave', e => { const z = e.target.closest && e.target.closest('#all-drop'); if (z && !z.contains(e.relatedTarget)) z.classList.remove('drag'); });
+document.addEventListener('drop', e => { const z = e.target.closest && e.target.closest('#all-drop'); if (!z || S.view !== 'admin') return; e.preventDefault(); z.classList.remove('drag'); const fs = [...(e.dataTransfer.files || [])]; if (fs.length) allStart(fs); });
 document.addEventListener('dragover', e => { const z = e.target.closest && e.target.closest('#ib-drop'); if (!z || S.view !== 'admin') return; e.preventDefault(); z.classList.add('drag'); });
 document.addEventListener('dragleave', e => { const z = e.target.closest && e.target.closest('#ib-drop'); if (z && !z.contains(e.relatedTarget)) z.classList.remove('drag'); });
 document.addEventListener('drop', async e => {
@@ -1479,7 +1508,7 @@ async function dslTemplate(){
   if (r === 'saved') toast('Vorlage gespeichert – Code (Modell, EAN oder Artikelnr.) und Link je Zeile');
 }
 async function impTemplate(){
-  const lines = ['Code;Bezeichnung;UVP;HEK;Menge;Aktionstage', 'BBIE12300XD;Multifunktions-Backofen;499;329;10;', 'MBD 76170 BRB;Multidampfbackofen;1829;1190;;', 'IM 964 MY TIME AT;Waschmaschine 9 kg;419;259;5;01.12.–07.12.', 'GIV 6A580 X;Geschirrspüler vollintegriert;879;549;3;05.12.'];
+  const lines = ['Code;Bezeichnung;Aktions-HEK;Menge;Datenblatt;Aktionstage', 'BBIE12300XD;Multifunktions-Backofen;329;10;;', 'MBD 76170 BRB;Multidampfbackofen;1190;5;https://…/Datenblatt.pdf;', 'IM 964 MY TIME AT;Waschmaschine 9 kg;259;5;;01.12.–07.12.', 'GIV 6A580 X;Geschirrspüler vollintegriert;549;3;;05.12.'];
   const r = await saveFile('Aktionsliste_Vorlage.csv', new Blob(['\uFEFF' + lines.join('\r\n')], { type:'text/csv' }));
   if (r === 'saved') toast('Vorlage gespeichert – in Excel öffnen, ausfüllen und als .xlsx oder .csv hochladen');
 }
@@ -1514,9 +1543,10 @@ function renderAdmin(){
 
     approvalPeopleHTML(c) +
     '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen. Den Aktions-HEK trägst du bei der Tagesaktion bzw. Zeitraum-Aktion ein. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div>' +
-    '<div class="impopts" style="margin:0 0 12px"><b>Datenblätter gesammelt:</b><label class="btn upl" style="padding:7px 11px">Links importieren (CSV/Excel)<input type="file" id="dsl-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt"></label>' +
-    (canUpload() ? '<label class="btn upl" style="padding:7px 11px">Mehrere PDFs hochladen<input type="file" id="dsp-files" accept="application/pdf,.pdf" multiple></label>' : '') +
-    '<button type="button" class="linkbtn" id="dsl-tpl">Vorlage Links</button><span class="small">Zuordnung über Modell, EAN/Artikelnr. oder Dateiname (z. B. „MBP 75150 BR_Datenblatt.pdf“)</span></div>' +
+    '<div class="impopts ibdrop" id="all-drop" style="margin:0 0 12px"><b>Gesamt-Upload:</b><label class="btn primary upl" style="padding:7px 11px">Liste' + (canUpload() ? ' + Datenblätter' : '') + ' hochladen<input type="file" id="all-files" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt' + (canUpload() ? ',application/pdf,.pdf' : '') + '" multiple></label>' +
+    '<button type="button" class="linkbtn" id="imp-tpl">Vorlage</button>' +
+    '<span class="small">Eine Excel-/CSV-Liste mit Code (Modell, EAN oder Artikelnr.), Aktions-HEK, Menge, optional Datenblatt-Link und Aktionstage' + (canUpload() ? ' – dazu beliebig viele Datenblatt-PDFs (Zuordnung über den Dateinamen)' : '') + '. Auch per Drag &amp; Drop. Fotos separat darunter.</span>' +
+    '<span class="small" style="flex-basis:100%">Nur Datenblätter: <label class="linkbtn" style="cursor:pointer">Link-Liste<input type="file" id="dsl-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt" hidden></label>' + (canUpload() ? ' · <label class="linkbtn" style="cursor:pointer">PDFs<input type="file" id="dsp-files" accept="application/pdf,.pdf" multiple hidden></label>' : '') + ' · <button type="button" class="linkbtn" id="dsl-tpl" style="font-size:12.5px">Vorlage Links</button></span></div>' +
     '<div class="impopts ibdrop" id="ib-drop" style="margin:0 0 12px"><b>Produktbilder gesammelt:</b><label class="btn upl" style="padding:7px 11px">Mehrere Bilder hochladen<input type="file" id="ib-files" accept="image/png,image/webp,image/jpeg,.png,.webp,.jpg,.jpeg" multiple></label>' +
     '<label class="btn upl" style="padding:7px 11px">Ganzen Ordner<input type="file" id="ib-dir" webkitdirectory multiple></label>' +
     '<span class="small">oder Bilder hierher ziehen · Zuordnung über den Dateinamen (Modell oder EAN, z. B. „BBIE12300XD.png“, „8690842696978_front.png“) · freigestellt als PNG/WebP</span></div><div id="xform"></div>' +
@@ -1527,7 +1557,7 @@ function renderAdmin(){
     '<div class="plist" id="plist"></div></section>' +
 
     '<section class="section"><div class="section-head"><div><h3>Zeitraum-Aktionen</h3><span class="small">Ein Gerät gilt über mehrere Tage oder den gesamten Aktionszeitraum – zusätzlich zu den Tagesaktionen. Zeitraum-Aktionen dürfen sich beliebig überschneiden (auch mit Tagesaktionen). Händler sehen sie während des ganzen Zeitraums. Menge = Kontingent für den ganzen Zeitraum.</span></div>' +
-    '<span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn upl" style="padding:8px 12px">Liste importieren (Excel/CSV)<input type="file" id="imp-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt"></label><button type="button" class="linkbtn" id="imp-tpl">Vorlage</button><button type="button" class="btn" id="btn-radd">+ Zeitraum-Aktion</button></span></div><div class="rows-r" id="rows-r"></div></section>' +
+    '<span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn upl" style="padding:8px 12px">Liste importieren (Excel/CSV)<input type="file" id="imp-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt"></label><button type="button" class="btn" id="btn-radd">+ Zeitraum-Aktion</button></span></div><div class="rows-r" id="rows-r"></div></section>' +
 
     '<section class="section"><div class="section-head"><div><h3>Tagesbelegung</h3><span class="small">Pro Tag ein oder mehrere Geräte aus dem Aktionssortiment – mit „+ weitere Aktion an diesem Tag“ laufen mehrere Tagesaktionen gleichzeitig, jede mit eigenem Aktions-HEK und Kontingent.</span></div>' +
     '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="btn-auto">Leere Tage automatisch füllen</button><button type="button" class="btn" id="btn-example">Beispielbelegung</button><button type="button" class="btn" id="btn-clearall">Alle Tage leeren</button></span></div>' +
@@ -1547,7 +1577,7 @@ function autoFill(){
     const d = S.draft.days[day];
     if ((d && d.k) || xdOf(S.draft, day).length) return;
     const k = seq[n++ % seq.length], hek = S.draft.pool[k].hek;
-    S.draft.days[day] = { k, hek: null, price: defPrice(k), qty: 5 }; filled++;
+    S.draft.days[day] = { k, hek: null, price: defPrice(k), qty: defQty(k) }; filled++;
   });
   markDirty(); renderDays(); renderSavebar(); toast(filled + ' Tage gefüllt');
 }
@@ -1621,7 +1651,7 @@ document.addEventListener('click', e => {
   if (t.id === 'ib-x' || t.id === 'ib-cancel' || t.id === 'ov-ib'){ if (S.ib && S.ib.busy) return; ibClose(); return; }
   if (t.id === 'ib-go'){ ibApply(); return; }
   if (t.id === 'ib-all-skip'){ S.ib.rows.forEach(r => { if (!r.k) r.choice = 'skip'; }); ibRender(); return; }
-  if (t.id === 'imp-x' || t.id === 'imp-cancel' || t.id === 'ov-imp'){ S.imp = null; $('overlay-slot').innerHTML = ''; return; }
+  if (t.id === 'imp-x' || t.id === 'imp-cancel' || t.id === 'ov-imp'){ S.imp = null; $('overlay-slot').innerHTML = ''; impNextPdfs(); return; }
   if (t.id === 'imp-go'){ impApply(); return; }
   if (t.id === 'btn-radd'){ const a = periodDays(S.draft); S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k:'', full:true, from:a[0], to:a[a.length-1], hek:null, price:null, qty:null }); markDirty(); renderRanges(); const sel = document.querySelector('#rows-r .rrow:last-child select'); if (sel) sel.focus(); return; }
   const rdl = t.closest('[data-rdel]'); if (rdl){ const id = rdl.closest('[data-rid]').dataset.rid, r = rangeById(id); S.draft.ranges = (S.draft.ranges || []).filter(r => r.id !== id); markDirty();
@@ -1649,7 +1679,8 @@ document.addEventListener('change', async e => {
     catch(x){ st.textContent = 'Upload fehlgeschlagen: ' + ((x && x.message) || 'unbekannter Fehler'); }
     return;
   }
-  if (t.id === 'imp-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; impStart(f); return; }
+  if (t.id === 'imp-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; S.impPdfs = null; impStart(f, 'range'); return; }
+  if (t.id === 'all-files' && t.files && t.files.length){ const fs = [...t.files]; t.value = ''; allStart(fs); return; }
   if (t.id === 'dsl-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; dslStart(f); return; }
   if (t.id === 'dsp-files' && t.files && t.files.length){ const fs = [...t.files]; t.value = ''; dspStart(fs); return; }
   if ((t.id === 'ib-files' || t.id === 'ib-dir') && t.files && t.files.length){ const fs = [...t.files]; t.value = ''; ibStart(fs); return; }
@@ -1657,7 +1688,9 @@ document.addEventListener('change', async e => {
   if (S.ib && t.id === 'ib-pool'){ S.ib.addPool = t.checked; return; }
   if (S.dsi && t.matches('[data-dc]')){ const r = S.dsi.rows[+t.closest('[data-di]').dataset.di]; r.choice = t.value; dsiRender(); return; }
   if (S.imp && t.closest('#ov-imp')){
-    if (t.name === 'imp-hek'){ S.imp.hekIs = t.value; impRender(); return; }
+    if (t.id === 'imp-pcol'){ S.imp.pcolIdx = +t.value; impRender(); return; }
+    if (t.name === 'imp-nodate'){ S.imp.noDate = t.value; impRender(); return; }
+    if (t.id === 'imp-updall'){ S.imp.updAll = t.checked; return; }
     if (t.id === 'imp-replace'){ S.imp.replace = t.checked; return; }
     const tr = t.closest('[data-ir]'); if (!tr) return; const r = S.imp.rows[+tr.dataset.ir];
     if (t.matches('[data-ic]')){ r.choice = t.value; if (r.choice === 'new' && !r.nc) r.nc = impGuessCat(r.name); impRender(); return; }
@@ -1756,8 +1789,8 @@ document.addEventListener('change', e => {
   if (rr && t.dataset.rf && t.type !== 'number'){
     const r = rangeById(rr.dataset.rid); if (!r) return; const f = t.dataset.rf, days = periodDays(S.draft), a = days[0], b = days[days.length-1];
     if (r.xd && f === 'k'){ const oldK = r.k; if (t.value && t.value !== oldK && onDay(r.from, t.value)){ toast(BYK.get(t.value).m + ' läuft an diesem Tag bereits'); t.value = oldK || ''; return; }
-      r.k = t.value; if (t.value && r.price == null) r.price = defPrice(t.value); markDirty(); replaceDay(r.from); if (oldK) refreshCard(oldK); if (t.value) refreshCard(t.value); return; }
-    if (f === 'k'){ r.k = t.value; if (t.value && r.price == null) r.price = defPrice(t.value); if (t.value && r.qty == null) r.qty = 10; }
+      r.k = t.value; if (t.value){ r.price = defPrice(t.value) ?? r.price; if ((S.draft.pool[t.value] || {}).qty != null) r.qty = S.draft.pool[t.value].qty; } markDirty(); replaceDay(r.from); if (oldK) refreshCard(oldK); if (t.value) refreshCard(t.value); return; }
+    if (f === 'k'){ r.k = t.value; if (t.value && r.price == null) r.price = defPrice(t.value); if (t.value && r.qty == null) r.qty = (S.draft.pool[t.value] || {}).qty ?? 10; }
     else if (f === 'full'){ r.full = t.checked; if (!r.full){ const x = rangeSpan(S.draft, Object.assign({}, r, { full:true })); r.from = r.from && r.from >= a && r.from <= b ? r.from : x.from; r.to = r.to && r.to >= a && r.to <= b ? r.to : x.to; } }
     else if (f === 'from' || f === 'to'){ if (!/^\d{4}-\d{2}-\d{2}$/.test(t.value)) return; let v = t.value < a ? a : t.value > b ? b : t.value; r[f] = v;
       if (r.from && r.to && r.from > r.to){ if (f === 'from') r.to = r.from; else r.from = r.to; } if (r.from === a && r.to === b) r.full = true; }
@@ -1772,7 +1805,7 @@ document.addEventListener('change', e => {
     if (t.value && xdOf(S.draft, day).some(r => r.k === t.value)){ toast(BYK.get(t.value).m + ' läuft an diesem Tag bereits'); t.value = oldK || ''; return; }
     if (!t.value){ delete S.draft.days[day]; }
     else { const prev = S.draft.days[day] || {}; const hek = S.draft.pool[t.value] ? S.draft.pool[t.value].hek : null;
-      S.draft.days[day] = { k:t.value, hek:null, price: defPrice(t.value) ?? prev.price ?? null, qty: prev.qty ?? 5 }; }
+      S.draft.days[day] = { k:t.value, hek:null, price: defPrice(t.value) ?? prev.price ?? null, qty: (S.draft.pool[t.value] || {}).qty ?? prev.qty ?? 5 }; }
     markDirty(); replaceDay(day); if (oldK) refreshCard(oldK); if (t.value) refreshCard(t.value); return;
   }
 });
