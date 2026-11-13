@@ -165,6 +165,8 @@ input[type=text],input[type=number],input[type=email],input[type=date],input[typ
 .assign-chips{display:flex;flex-wrap:wrap;gap:6px}
 .dchip{border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:var(--ink);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700}
 .dchip b{color:var(--accent);margin-left:2px}
+.rform{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.rform .f{margin:0}
 .toggle{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
 .pcard.on .toggle{background:var(--ok);border-color:var(--ok);color:#fff}
 .days{display:flex;flex-direction:column;gap:6px}
@@ -1065,9 +1067,15 @@ function assignHTML(p){
   const days = periodDays(S.draft), mine = days.filter(d => onDay(d, p.k));
   const opts = days.filter(d => !mine.includes(d)).map(d => { const n = dayDeals(S.draft, d).length;
     return '<option value="' + d + '">' + WD[dowOf(d)] + ' ' + fmtShort(d) + (n ? ' – zusätzlich zu ' + (n === 1 ? esc(dayDeals(S.draft, d)[0].p.m) : n + ' Aktionen') : ' – frei') + (status(d) === 'past' ? ' (vorbei)' : '') + '</option>'; }).join('');
-  return '<div class="assign"><span class="assign-l">Aktionstag' + (mine.length > 1 ? 'e' : '') + ' · bestellbar 0:00–23:59 Uhr</span>' +
-    '<div class="assign-chips">' + (mine.length ? mine.map(d => '<button type="button" class="dchip" data-unassign="' + d + '" aria-label="Aktionstag ' + fmtShort(d) + ' entfernen">' + WD[dowOf(d)] + ' ' + fmtShort(d) + ' <b>×</b></button>').join('') : '<span class="small">noch keinem Tag zugeordnet</span>') + '</div>' +
-    '<select data-assign aria-label="Aktionstag für ' + esc(p.m) + ' wählen"><option value="">+ Datum zuordnen …</option>' + opts + '</select></div>';
+  const a = days[0], b = days[days.length-1], rs = (S.draft.ranges || []).filter(r => !r.xd && r.k === p.k), hasFull = rs.some(r => r.full);
+  const rchips = rs.map(r => '<button type="button" class="dchip rchip" data-runassign="' + esc(r.id) + '" aria-label="Zeitraum-Aktion ' + esc(rangeLabel(S.draft, r)) + ' entfernen">' + (r.full ? 'Gesamter Zeitraum' : 'Zeitraum ' + esc(rangeLabel(S.draft, r))) + ' <b>×</b></button>').join('');
+  const rf = S.rform && S.rform.k === p.k ? '<div class="rform"><label class="f">Von<input type="date" id="rf-from" min="' + a + '" max="' + b + '" value="' + esc(S.rform.from) + '"></label><label class="f">Bis<input type="date" id="rf-to" min="' + a + '" max="' + b + '" value="' + esc(S.rform.to) + '"></label>' +
+    '<button type="button" class="btn primary" id="rf-ok" style="padding:7px 12px">Übernehmen</button><button type="button" class="btn" id="rf-cancel" style="padding:7px 12px">Abbrechen</button><span class="small" style="flex-basis:100%">Gilt als Zeitraum-Aktion: bestellbar vom ersten Tag 0:00 bis zum letzten Tag 23:59 Uhr, Menge = Kontingent für den ganzen Zeitraum.</span></div>' : '';
+  return '<div class="assign"><span class="assign-l">Aktionstag' + (mine.length + rs.length > 1 ? 'e' : '') + ' · bestellbar 0:00–23:59 Uhr</span>' +
+    '<div class="assign-chips">' + (mine.length || rs.length ? rchips + mine.map(d => '<button type="button" class="dchip" data-unassign="' + d + '" aria-label="Aktionstag ' + fmtShort(d) + ' entfernen">' + WD[dowOf(d)] + ' ' + fmtShort(d) + ' <b>×</b></button>').join('') : '<span class="small">noch keinem Tag zugeordnet</span>') + '</div>' +
+    '<select data-assign aria-label="Aktionstag für ' + esc(p.m) + ' wählen"><option value="">+ Datum zuordnen …</option>' +
+    '<optgroup label="Mehrere Tage">' + (hasFull ? '' : '<option value="__full">Gesamter Aktionszeitraum (' + fmtShort(a) + ' – ' + fmtShort(b) + b.slice(0,4) + ')</option>') + (a !== b ? '<option value="__range">Von – bis wählen …</option>' : '') + '</optgroup>' +
+    '<optgroup label="Einzelner Tag">' + opts + '</optgroup></select>' + rf + '</div>';
 }
 /* Aktions-HEK je Gerät: Vorgabe für neue Zuordnungen, Änderung gilt für alle Aktionen des Geräts */
 function defQty(k){ const e = S.draft.pool[k] || {}; return e.qty != null ? e.qty : 5; }
@@ -1085,6 +1093,16 @@ function assignDay(day, k){
   else { S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k, xd:true, full:false, from:day, to:day, hek:null, price: defPrice(k), qty: defQty(k) }); extra = true; }
   markDirty(); refreshCard(k); renderDays();
   return extra;
+}
+/* Gerät über den gesamten Aktionszeitraum oder von–bis (Zeitraum-Aktion) */
+function assignRange(k, from, to){
+  const ds = periodDays(S.draft), full = !from || !to || (from <= ds[0] && to >= ds[ds.length-1]);
+  S.draft.ranges = S.draft.ranges || [];
+  if (full && S.draft.ranges.some(r => !r.xd && r.k === k && r.full)){ toast('Gerät läuft bereits über den gesamten Zeitraum'); refreshCard(k); return; }
+  if (!full && from === to){ S.rform = null; const extra = assignDay(from, k); toast(BYK.get(k).m + ' → Aktionstag ' + fmtShort(from) + (extra ? ' (zusätzliche Tagesaktion)' : '')); return; }
+  S.draft.ranges.push({ id: randId(4), k, full, from: full ? ds[0] : from, to: full ? ds[ds.length-1] : to, hek:null, price: defPrice(k), qty: defQty(k) });
+  S.rform = null; markDirty(); refreshCard(k); renderRanges();
+  toast(BYK.get(k).m + ' → ' + (full ? 'gesamter Aktionszeitraum' : 'Zeitraum ' + fmtShort(from) + ' – ' + fmtShort(to)) + ' · Aktions-HEK und Menge unter „Zeitraum-Aktionen“');
 }
 function replaceDay(day){ const g = document.querySelector('.dgroup[data-day="' + day + '"]'); if (g) g.outerHTML = dayRow(day); renderSavebar(); }
 function filteredCat(){
@@ -1655,6 +1673,12 @@ document.addEventListener('click', e => {
     if (S.draft.pool[k]) delete S.draft.pool[k]; else S.draft.pool[k] = { hek: null };
     card.outerHTML = poolCard(p); markDirty(); renderDays(); return;
   }
+  if (t.id === 'rf-cancel'){ const k = S.rform && S.rform.k; S.rform = null; if (k) refreshCard(k); return; }
+  if (t.id === 'rf-ok'){ const k = S.rform && S.rform.k; if (!k) return; const f = $('rf-from').value, to = $('rf-to').value, ds = periodDays(S.draft);
+    if (!f || !to){ toast('Bitte Von und Bis wählen'); return; } if (to < f){ toast('„Bis“ liegt vor „Von“'); return; }
+    if (f < ds[0] || to > ds[ds.length-1]){ toast('Bitte innerhalb des Aktionszeitraums ' + fmtShort(ds[0]) + ' – ' + fmtShort(ds[ds.length-1]) + ' wählen'); return; }
+    assignRange(k, f, to); return; }
+  const ru = t.closest('[data-runassign]'); if (ru){ const k = ru.closest('.pcard').dataset.k; S.draft.ranges = (S.draft.ranges || []).filter(r => r.id !== ru.dataset.runassign); markDirty(); refreshCard(k); renderRanges(); toast('Zeitraum-Aktion entfernt'); return; }
   const ua = t.closest('[data-unassign]'); if (ua){ const day = ua.dataset.unassign, k = ua.closest('.pcard').dataset.k;
     if ((S.draft.days[day] || {}).k === k) delete S.draft.days[day]; else S.draft.ranges = (S.draft.ranges || []).filter(r => !(r.xd && r.from === day && r.k === k));
     markDirty(); refreshCard(k); renderDays(); return; }
@@ -1825,6 +1849,8 @@ document.addEventListener('change', e => {
     markDirty(); rr.outerHTML = rangeRow(r); renderDays(); return;
   }
   if (t.dataset && t.dataset.f === 'price' && t.closest('.pcard')){ renderDays(); return; }
+  if (t.matches('[data-assign]') && t.value === '__full'){ const k = t.closest('.pcard').dataset.k; assignRange(k, null, null); return; }
+  if (t.matches('[data-assign]') && t.value === '__range'){ const k = t.closest('.pcard').dataset.k, ds = periodDays(S.draft); S.rform = { k, from: ds[0], to: ds[ds.length-1] }; refreshCard(k); const f = $('rf-from'); if (f) f.focus(); return; }
   if (t.matches('[data-assign]') && t.value){ const k = t.closest('.pcard').dataset.k, day = t.value; const extra = assignDay(day, k); toast(BYK.get(k).m + ' → Aktionstag ' + fmtShort(day) + (extra ? ' (zusätzliche Tagesaktion)' : '')); return; }
   const row = t.closest('.drow');
   if (row && t.dataset.f === 'k'){
