@@ -1,3 +1,4 @@
+/* Aktionskalender – Serverlogik inkl. Konten & Zugangsschutz (Stand 13.11.2026) */
 /* Aktionskalender – Serverlogik (Cloudflare Pages / Workers, KV-Bindung KALENDER)
    Endpunkte: /api/config /api/auth /api/whoami /api/approvals /api/approve /api/order /api/orders /api/file */
 const MAX_CONFIG = 5 * 1024 * 1024;
@@ -200,7 +201,8 @@ async function apiOrder(req, env){
   const b = await readJson(req, 65536);
   if (!b || !Array.isArray(b.items) || !b.items.length || b.items.length > 30) return err('Der Warenkorb ist leer');
   const raw = b.customer || {}, cu = {};
-  ['firma','kdnr','name','email','tel','adresse','notiz'].forEach(f => cu[f] = String(raw[f] || '').trim().slice(0, f === 'notiz' ? 1000 : 300));
+  ['firma','kdnr','name','email','tel','adresse','notiz','konto'].forEach(f => cu[f] = String(raw[f] || '').trim().slice(0, f === 'notiz' ? 1000 : 300));
+  if (!cu.konto) delete cu.konto;
   if (!cu.firma || !cu.name || !cu.tel || !/^\S+@\S+\.\S+$/.test(cu.email)) return err('Bitte Firma, Ansprechpartner:in, E-Mail und Telefon angeben');
   const c = await kvJson(env, 'config', null), t = todayVienna(), sold = await kvJson(env, 'sold', {});
   const items = [], want = {};
@@ -264,4 +266,249 @@ async function handleApi(req, env){
   } catch(e){ return err('Serverfehler', 500); }
 }
 
-export { handleApi };
+/* ===================================================================================
+   Konten & Zugangsschutz (Stand 13.11.2026)
+   - Kunden: Auswahl aus Liste (Firma), Erstanmeldung nur mit persönlichem Einladungs-Link
+     + Startpasswort (INITIAL_PASSWORD, Standard „bekoblackweeks“), danach sofort eigenes Passwort.
+   - Team (Verwaltung = Admin/Editor): ADMIN_USERS (Standard: Harald Kasperowski, Pinar Top,
+     Margit Anglmaier). Erstanmeldung mit Einladungs-Link + Startpasswort oder mit ADMIN_PASSWORD.
+   - Kalender, Freigabe-Übersicht und Bestellen nur angemeldet (Freigabe-Links funktionieren weiter).
+   - Datenblätter /api/file/<id> bleiben öffentlich (QR-Codes im Flyer).
+   KV-Schlüssel: users, sess:<token>, tk:<ticket>, rlog:<ip>, last:<konto-id>
+   =================================================================================== */
+const COOKIE = 'ak_s';
+const SESSION_TTL = 14 * 86400;
+const TICKET_TTL = 15 * 60;
+const MAX_FAILS = 10;
+const DEFAULT_TEAM = 'Harald Kasperowski <harald.kasperowski@beko.com>, Pinar Top <pinar.top@beko.com>, Margit Anglmaier <margit.anglmaier@beko.com>';
+const b64u = buf => { let s = ''; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const rnd = (n = 24) => b64u(crypto.getRandomValues(new Uint8Array(n)));
+const clip = (v, n) => String(v ?? '').trim().slice(0, n);
+const lc = v => String(v || '').trim().toLowerCase();
+const nowIso = () => new Date().toISOString();
+const initialPw = env => String(env.INITIAL_PASSWORD || 'bekoblackweeks');
+async function pbkdf2(pw, salt){
+  const key = await crypto.subtle.importKey('raw', enc.encode(String(pw)), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt: enc.encode(salt), iterations: 100000 }, key, 256);
+  return b64u(bits);
+}
+function teamList(env){
+  return String(env.ADMIN_USERS || DEFAULT_TEAM).split(/[,;\n]+/).map(s => s.trim()).filter(Boolean).map(s => {
+    const m = s.match(/^(.*?)<([^>]+)>$/), email = lc(m ? m[2] : s);
+    let name = m ? m[1].trim() : '';
+    if (!name) name = email.split('@')[0].split(/[._-]+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+    return { email, name };
+  }).filter(x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x.email));
+}
+async function loadAccounts(env){
+  let u = null; try { u = await env.KALENDER.get('users', 'json'); } catch(e) {}
+  u = u && typeof u === 'object' ? u : {};
+  const customers = Array.isArray(u.customers) ? u.customers : [];
+  const old = new Map((Array.isArray(u.team) ? u.team : []).map(a => [a.email, a]));
+  let dirty = false;
+  const team = teamList(env).map(t => {
+    const prev = old.get(t.email); if (!prev) dirty = true;
+    return Object.assign({ mustChange: true, invite: rnd(18), pv: 1, created: nowIso() }, prev || {}, { id: 'team:' + t.email, role: 'admin', email: t.email, name: t.name });
+  });
+  const acc = { customers, team };
+  if (dirty || team.length !== old.size) await saveAccounts(env, acc);
+  return acc;
+}
+const saveAccounts = (env, acc) => env.KALENDER.put('users', JSON.stringify({ customers: acc.customers, team: acc.team }));
+const findAcc = (acc, id) => id ? (acc.team.find(a => a.id === id) || acc.customers.find(a => a.id === id) || null) : null;
+const labelOf = a => a.role === 'admin' ? a.name : a.firma + (a.ort ? ', ' + a.ort : '');
+const pubUser = a => a.role === 'admin' ? { id: a.id, role: 'admin', label: a.name, name: a.name, email: a.email }
+  : { id: a.id, role: 'kunde', label: labelOf(a), firma: a.firma, ort: a.ort || '', kdnr: a.kdnr || '', name: a.name || '', email: a.email || '', tel: a.tel || '' };
+function adminView(a, last){
+  return Object.assign(a.role === 'admin' ? { id: a.id, role: 'admin', name: a.name, email: a.email }
+    : { id: a.id, role: 'kunde', firma: a.firma, ort: a.ort || '', kdnr: a.kdnr || '', name: a.name || '', email: a.email || '', tel: a.tel || '', active: a.active !== false },
+    { status: a.active === false ? 'gesperrt' : a.mustChange ? 'eingeladen' : 'aktiv', invite: a.mustChange && a.active !== false ? a.invite : null, created: a.created || null, changed: a.changed || null, lastLogin: last[a.id] || null });
+}
+function cookieOf(req){ const m = (req.headers.get('cookie') || '').match(/(?:^|;\s*)ak_s=([A-Za-z0-9_-]{20,})/); return m ? m[1] : null; }
+const setCookie = (tok, ttl) => COOKIE + '=' + tok + '; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=' + ttl;
+async function newSession(env, a){
+  const tok = rnd(32);
+  await env.KALENDER.put('sess:' + tok, JSON.stringify({ id: a.id, pv: a.pv || 1, at: Date.now() }), { expirationTtl: SESSION_TTL });
+  try { await env.KALENDER.put('last:' + a.id, '', { metadata: { at: nowIso() } }); } catch(e) {}
+  return tok;
+}
+async function currentUser(req, env){
+  const tok = cookieOf(req); if (!tok) return null;
+  let s = null; try { s = await env.KALENDER.get('sess:' + tok, 'json'); } catch(e) {}
+  if (!s) return null;
+  const acc = await loadAccounts(env), a = findAcc(acc, s.id);
+  if (!a || a.active === false || a.mustChange || (a.pv || 1) !== s.pv) return null;
+  return { a, acc, tok };
+}
+const ipOf = req => req.headers.get('cf-connecting-ip') || 'x';
+async function blocked(env, req){ return +(await env.KALENDER.get('rlog:' + ipOf(req)) || 0) >= MAX_FAILS; }
+async function failed(env, req){ const k = 'rlog:' + ipOf(req), n = +(await env.KALENDER.get(k) || 0); await env.KALENDER.put(k, String(n + 1), { expirationTtl: 900 }); }
+function pwProblem(pw, env){
+  pw = String(pw || '');
+  if (pw.length < 8) return 'Das neue Passwort braucht mindestens 8 Zeichen.';
+  if (pw.length > 200) return 'Das neue Passwort ist zu lang.';
+  if (safeEqual(pw, initialPw(env)) || (env.ADMIN_PASSWORD && safeEqual(pw, env.ADMIN_PASSWORD))) return 'Bitte ein eigenes Passwort wählen – nicht das Startpasswort.';
+  if (!/[A-Za-zÄÖÜäöüß]/.test(pw) || !/\d/.test(pw)) return 'Bitte Buchstaben und mindestens eine Ziffer verwenden.';
+  return null;
+}
+async function approverOk(env, t){
+  if (!t || !/^[a-f0-9]{16,64}$/i.test(t)) return false;
+  const c = await kvJson(env, 'config', null); return !!personByToken(c, t);
+}
+
+/* ---------- /api/session/* ---------- */
+async function apiSession(req, env, sub){
+  const m = req.method;
+  if (sub === 'me' && m === 'GET'){
+    const cu = await currentUser(req, env);
+    return json({ server: 'konten', user: cu ? pubUser(cu.a) : null });
+  }
+  if (sub === 'users' && m === 'GET'){
+    const acc = await loadAccounts(env);
+    const customers = acc.customers.filter(a => a.active !== false).map(a => ({ id: a.id, label: labelOf(a) })).sort((x, y) => x.label.localeCompare(y.label, 'de'));
+    return json({ customers, team: acc.team.map(a => ({ id: a.id, label: a.name })) });
+  }
+  if (sub === 'invite' && m === 'GET'){
+    const t = new URL(req.url).searchParams.get('t') || '';
+    if (/^[A-Za-z0-9_-]{16,64}$/.test(t)){
+      const acc = await loadAccounts(env);
+      const a = [...acc.team, ...acc.customers].find(x => x.mustChange && x.active !== false && x.invite && safeEqual(x.invite, t));
+      if (a) return json({ id: a.id, label: labelOf(a), role: a.role });
+    }
+    await sleep(300); return err('Dieser Einladungs-Link ist nicht mehr gültig. Wurde das Passwort schon festgelegt? Dann bitte normal anmelden.', 404);
+  }
+  if (sub === 'login' && m === 'POST'){
+    if (await blocked(env, req)) return err('Zu viele Fehlversuche – bitte in 15 Minuten erneut versuchen.', 429);
+    const b = await readJson(req, 4096) || {};
+    await sleep(350);
+    const acc = await loadAccounts(env), a = findAcc(acc, String(b.id || '')), pw = String(b.password || '');
+    const bad = async (msg, extra) => { await failed(env, req); return err(msg || 'Benutzer oder Passwort stimmt nicht.', 401, extra); };
+    if (!a || a.active === false) return bad();
+    if (a.mustChange){
+      const viaInvite = !!a.invite && !!b.invite && safeEqual(a.invite, String(b.invite)) && safeEqual(pw, initialPw(env));
+      const viaAdminPw = a.role === 'admin' && !!env.ADMIN_PASSWORD && safeEqual(pw, env.ADMIN_PASSWORD);
+      if (!viaInvite && !viaAdminPw){
+        if (safeEqual(pw, initialPw(env))) return bad('Für die Erstanmeldung bitte den persönlichen Link aus der Einladungs-E-Mail öffnen.', { needInvite: true });
+        return bad();
+      }
+      const ticket = rnd(24);
+      await env.KALENDER.put('tk:' + ticket, JSON.stringify({ id: a.id }), { expirationTtl: TICKET_TTL });
+      return json({ mustChange: true, ticket, user: pubUser(a) });
+    }
+    if (!a.hash || !a.salt || !safeEqual(await pbkdf2(pw, a.salt), a.hash)) return bad();
+    const tok = await newSession(env, a);
+    return json({ user: pubUser(a) }, 200, { 'set-cookie': setCookie(tok, SESSION_TTL) });
+  }
+  if (sub === 'change' && m === 'POST'){
+    const b = await readJson(req, 4096) || {};
+    let acc, a, oldTok = null;
+    if (b.ticket){
+      if (!/^[A-Za-z0-9_-]{20,64}$/.test(String(b.ticket))) return err('Ungültige Anfrage', 400);
+      const t = await kvJson(env, 'tk:' + b.ticket, null);
+      if (!t) return err('Die Zeit für die Passwortänderung ist abgelaufen – bitte erneut über den Einladungs-Link anmelden.', 401);
+      acc = await loadAccounts(env); a = findAcc(acc, t.id);
+    } else {
+      if (await blocked(env, req)) return err('Zu viele Fehlversuche – bitte in 15 Minuten erneut versuchen.', 429);
+      const cu = await currentUser(req, env); if (!cu) return err('Bitte zuerst anmelden.', 401);
+      acc = cu.acc; a = cu.a; oldTok = cu.tok;
+      await sleep(250);
+      if (!a.hash || !safeEqual(await pbkdf2(String(b.old || ''), a.salt), a.hash)){ await failed(env, req); return err('Das bisherige Passwort stimmt nicht.', 401); }
+    }
+    if (!a || a.active === false) return err('Dieser Zugang ist nicht aktiv.', 401);
+    const prob = pwProblem(b.password, env); if (prob) return err(prob, 400);
+    a.salt = rnd(16); a.hash = await pbkdf2(String(b.password), a.salt);
+    a.mustChange = false; a.invite = null; a.pv = (a.pv || 1) + 1; a.changed = nowIso();
+    await saveAccounts(env, acc);
+    if (b.ticket) await env.KALENDER.delete('tk:' + b.ticket);
+    if (oldTok) await env.KALENDER.delete('sess:' + oldTok);
+    const tok = await newSession(env, a);
+    return json({ user: pubUser(a) }, 200, { 'set-cookie': setCookie(tok, SESSION_TTL) });
+  }
+  if (sub === 'logout' && m === 'POST'){
+    const tok = cookieOf(req); if (tok) await env.KALENDER.delete('sess:' + tok);
+    return json({ ok: true }, 200, { 'set-cookie': COOKIE + '=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0' });
+  }
+  return err('Nicht gefunden', 404);
+}
+
+/* ---------- /api/users (nur Verwaltung) ---------- */
+async function lastLogins(env){
+  const out = {};
+  try { let cur; do { const r = await env.KALENDER.list({ prefix: 'last:', cursor: cur }); r.keys.forEach(k => { if (k.metadata && k.metadata.at) out[k.name.slice(5)] = k.metadata.at; }); cur = r.list_complete ? null : r.cursor; } while (cur); } catch(e) {}
+  return out;
+}
+async function usersPayload(env, acc, me){
+  const last = await lastLogins(env);
+  return json({ initial: initialPw(env), me: me.id, customers: acc.customers.map(a => adminView(a, last)), team: acc.team.map(a => adminView(a, last)) });
+}
+async function apiUsers(req, env){
+  const cu = await currentUser(req, env);
+  if (!cu || cu.a.role !== 'admin') return err('Nur für die Verwaltung.', 401);
+  const acc = cu.acc;
+  if (req.method === 'GET') return usersPayload(env, acc, cu.a);
+  if (req.method === 'PUT'){
+    const b = await readJson(req, 2 * 1024 * 1024);
+    if (!b || !Array.isArray(b.customers)) return err('Ungültige Daten');
+    if (b.customers.length > 5000) return err('Höchstens 5000 Kunden-Zugänge');
+    const byId = new Map(acc.customers.map(a => [a.id, a])), out = [], seen = new Set();
+    for (const r of b.customers){
+      const firma = clip(r && r.firma, 120); if (!firma) return err('Jeder Kunde braucht einen Firmennamen.');
+      const base = r.id && byId.get(r.id); if (base && seen.has(base.id)) continue;
+      const rec = base || { id: 'k:' + rnd(9), role: 'kunde', mustChange: true, invite: rnd(18), pv: 1, created: nowIso() };
+      const wasActive = rec.active !== false;
+      Object.assign(rec, { firma, ort: clip(r.ort, 80), kdnr: clip(r.kdnr, 40), name: clip(r.name, 120), email: clip(r.email, 160), tel: clip(r.tel, 60), active: r.active !== false });
+      if (base && wasActive && rec.active === false) rec.pv = (rec.pv || 1) + 1;   // Sperren beendet offene Sitzungen
+      seen.add(rec.id); out.push(rec);
+    }
+    acc.customers = out; await saveAccounts(env, acc);
+    return usersPayload(env, acc, cu.a);
+  }
+  if (req.method === 'POST'){
+    const b = await readJson(req, 4096) || {};
+    if (b.action === 'reset'){
+      const a = findAcc(acc, String(b.id || '')); if (!a) return err('Zugang nicht gefunden', 404);
+      if (a.id === cu.a.id) return err('Das eigene Passwort bitte über „Passwort ändern“ ändern.');
+      Object.assign(a, { mustChange: true, hash: null, salt: null, invite: rnd(18), pv: (a.pv || 1) + 1, changed: nowIso() });
+      await saveAccounts(env, acc);
+      return usersPayload(env, acc, cu.a);
+    }
+    return err('Unbekannte Aktion');
+  }
+  return err('Methode nicht erlaubt', 405);
+}
+
+/* ---------- Zugangsschutz vor der bisherigen Serverlogik ---------- */
+async function handleRequest(req, env){
+  if (!env.KALENDER) return err('KV-Bindung KALENDER fehlt – in Cloudflare unter Einstellungen → Bindungen anlegen und neu deployen', 500);
+  const path = new URL(req.url).pathname.replace(/\/+$/, ''), m = req.method.toUpperCase();
+  try {
+    if (path.startsWith('/api/session/')) return await apiSession(req, env, path.slice(13));
+    if (path === '/api/users') return await apiUsers(req, env);
+    // Datenblätter bleiben öffentlich (QR-Codes im Flyer)
+    if (/^\/api\/file\/[^/]+$/.test(path) && (m === 'GET' || m === 'HEAD')) return handleApi(req, env);
+    const hd = new Headers(req.headers); hd.delete('authorization');
+    // Freigabe-Links funktionieren wie bisher ohne Anmeldung
+    if (path === '/api/whoami' || path === '/api/approve') return handleApi(new Request(req, { headers: hd }), env);
+    const cu = await currentUser(req, env), role = cu ? cu.a.role : null;
+    if (role === 'admin' && env.ADMIN_PASSWORD) hd.set('authorization', 'Bearer ' + env.ADMIN_PASSWORD);
+    const pass = () => handleApi(new Request(req, { headers: hd }), env);
+    if (path === '/api/auth') return role === 'admin' ? json({ ok: true }) : err('Bitte als Verwaltung anmelden.', 401, { login: true });
+    if ((path === '/api/config' || path === '/api/approvals') && m === 'GET'){
+      if (role || await approverOk(env, req.headers.get('x-ak-token'))) return pass();
+      return err('Bitte anmelden.', 401, { login: true });
+    }
+    if (path === '/api/order' && m === 'POST'){
+      if (!role) return err('Bitte anmelden, um zu bestellen.', 401, { login: true });
+      const b = await readJson(req, 65536); if (!b || typeof b !== 'object') return err('Ungültige Bestellung');
+      const c0 = b.customer && typeof b.customer === 'object' ? b.customer : {};
+      b.customer = Object.assign({}, c0, role === 'kunde' ? { firma: cu.a.firma, kdnr: cu.a.kdnr || '' } : {}, { konto: cu.a.id });
+      hd.set('content-type', 'application/json'); hd.delete('content-length');
+      return handleApi(new Request(req.url, { method: 'POST', headers: hd, body: JSON.stringify(b) }), env);
+    }
+    // Speichern, Datenblatt-Upload, Bestellliste: nur Verwaltung
+    if (role !== 'admin') return err('Nur für die Verwaltung.', 401, { login: true });
+    return pass();
+  } catch(e){ return err('Serverfehler', 500); }
+}
+
+export { handleRequest, handleApi };

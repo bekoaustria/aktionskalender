@@ -532,6 +532,23 @@ body.black .cartin h2{font-family:var(--f-cond);font-weight:400;text-transform:u
 .aptbl td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .aptbl td.num,.aptbl.deals th:nth-child(n+3){text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .aptbl tfoot td{font-weight:700;border-bottom:0}
+.acclog{max-width:470px;margin:10px auto}
+.acclog h3{font-family:var(--f-display);font-size:22px;margin:0 0 8px}
+.accform{display:flex;flex-direction:column;gap:12px}
+.accform .btn{justify-content:center}
+.accinfo{background:color-mix(in srgb,var(--gold) 20%,var(--surface));border:1px solid color-mix(in srgb,var(--gold) 45%,var(--line));border-radius:10px;padding:9px 12px;margin:0 0 14px;font-size:14px}
+.accfoot{margin:14px 0 0;line-height:1.6}.accfoot a{color:inherit}
+.userchip{margin-top:12px;display:inline-flex;gap:14px;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.14);border-radius:8px;padding:6px 10px;font-size:13px}
+.userchip .linkbtn{color:inherit;font-size:13px}
+.acctools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.acctools input[type=text]{max-width:240px}
+.acctbl input[type=text],.acctbl input[type=email],.acctbl input[type=tel]{min-width:110px;padding:6px 8px;font-size:13px}
+.acctbl td{vertical-align:middle}
+.acctbl .acts{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;white-space:nowrap}
+.acctbl .acts a,.acctbl .acts .linkbtn{font-size:13px}
+.acctbl .acts a{color:var(--accent);font-weight:700}
+.acctbl tr.off td{opacity:.55}
+.accpaste{margin:0 0 12px}.accpaste textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:8px;font:13px/1.4 ui-monospace,Consolas,monospace;box-sizing:border-box}
 @media (max-width:640px){.prow{grid-template-columns:1fr}.prow-a{grid-column:1}.prow-a input{max-width:none;flex:1 1 140px}}
 </style>
 
@@ -1663,7 +1680,7 @@ document.addEventListener('click', e => {
   if (t.id === 'btn-clear-yes'){ periodDays(S.draft).forEach(d => delete S.draft.days[d]); S.draft.ranges = (S.draft.ranges || []).filter(r => !(r.xd && inPeriod(S.draft, r.from))); markDirty(); renderAdmin(); return; }
   if (t.id === 'btn-clear-no'){ $('clear-confirm').innerHTML = ''; return; }
   if (t.id === 'btn-save'){ save(); return; }
-  if (t.id === 'btn-logout'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } ssSet('kal-admin', null); S.pw = null; S.canEdit = false; S.view = 'kalender'; try { history.replaceState(null, '', '/'); } catch(e) {} render(); toast('Abgemeldet'); return; }
+  if (t.id === 'btn-logout'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } if (S.accounts){ accLogout(); return; } ssSet('kal-admin', null); S.pw = null; S.canEdit = false; S.view = 'kalender'; try { history.replaceState(null, '', '/'); } catch(e) {} render(); toast('Abgemeldet'); return; }
   if (t.id === 'btn-discard'){ S.draft = clone(S.config); S.dirty = false; renderAdmin(); return; }
 });
 document.addEventListener('change', async e => {
@@ -1717,7 +1734,9 @@ const ssSet = (k,v) => { try { v == null ? sessionStorage.removeItem(k) : sessio
 const wantsAdmin = () => /^\/admin\/?$/.test(location.pathname) || location.hash === '#admin';
 async function apiLoad(){
   if (!/^https?:$/.test(location.protocol)) return undefined;
-  try { const r = await fetch('/api/config', { cache:'no-store', headers: S.pw ? { authorization:'Bearer ' + S.pw } : {} }); if (!r.ok) return undefined;
+  try { const r = await fetch('/api/config', { cache:'no-store', headers: Object.assign(S.pw && !S.accounts ? { authorization:'Bearer ' + S.pw } : {}, tokHdr()) });
+    if (r.status === 401 && S.accounts && S.loaded && !S.dirty){ location.reload(); return undefined; }
+    if (!r.ok) return undefined;
     const j = await r.json(); if (j && j.sold) S.sold = j.sold; return j && 'config' in j ? j.config : undefined; } catch(e) { return undefined; }
 }
 async function apiAuth(pw){
@@ -1735,6 +1754,7 @@ async function poll(){
   if ((changed && S.view === 'kalender') || (S.view === 'approval' && !S.ap.sel && (changed || before !== JSON.stringify(S.ap.docs)))) render();
 }
 function renderLogin(){
+  if (S.accounts){ renderAccountLogin('team'); return; }
   $('app').innerHTML = '<section class="section" style="max-width:420px;margin:10px auto"><h3 style="font-family:var(--f-display);margin:0 0 6px">Verwaltung</h3>' +
     '<p class="small" style="margin-top:0">Bitte mit dem Verwaltungs-Passwort anmelden.</p>' +
     '<form id="login" style="display:flex;flex-direction:column;gap:10px"><label class="f">Passwort<input type="password" id="pw" autocomplete="current-password" required></label>' +
@@ -2487,7 +2507,7 @@ async function submitDecision(key, status){
 }
 async function apLoadApprovals(){
   if (!S.api) return;
-  try { const r = await fetch('/api/approvals', { cache:'no-store' }); if (r.ok){ const j = await r.json(); S.ap.docs = (j && j.byPid) || {}; S.ap.loaded = true; } } catch(e) {}
+  try { const r = await fetch('/api/approvals', { cache:'no-store', headers: tokHdr() }); if (r.ok){ const j = await r.json(); S.ap.docs = (j && j.byPid) || {}; S.ap.loaded = true; } } catch(e) {}
 }
 async function apWhoami(){
   if (!S.api) return;
@@ -2556,13 +2576,13 @@ function addToCart(day, btn){
   document.querySelectorAll('[data-addcart="' + CSS.escape(day) + '"]').forEach(b => b.textContent = 'Menge im Warenkorb ändern');
 }
 function cartDialog(){
-  cartPrune(); const items = cartItems(), c = S.config, cu = custLoad();
+  cartPrune(); const items = cartItems(), c = S.config, cu = acctCust(custLoad());
   if (!items.length){ $('overlay-slot').innerHTML = ''; renderCartFab(); toast('Der Warenkorb ist leer'); return; }
   const total = items.reduce((a,x) => a + x.line, 0);
   const rows = items.map(x => { const rem = remainingFor(x.deal); return '<tr><td><div class="withpic">' + thumb(x.deal.p, 'sm') + '<div><b>' + esc(x.deal.p.m) + '</b><br><span class="small">' + esc(x.deal.p.b) + ' · Aktion ' + esc(slotLabel(x.day)) + '</span></div></div></td>' +
     '<td><span class="stepper sm"><button type="button" data-cq="-1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Weniger">−</button><span class="num">' + x.qty + '</span><button type="button" data-cq="1" data-ci="' + x.day + '|' + esc(x.k) + '" aria-label="Mehr"' + (rem != null && x.qty >= rem ? ' disabled' : '') + '>+</button></span></td>' +
     '<td class="num">' + eur(x.deal.price) + '</td><td class="num"><b>' + eur(x.line) + '</b></td><td><button type="button" class="pc-x" data-cdel="' + x.day + '|' + esc(x.k) + '" aria-label="Entfernen">×</button></td></tr>'; }).join('');
-  const fields = CUST_FIELDS.map(([k,l,req,type,ac]) => '<label class="f"' + (k === 'adresse' || k === 'notiz' ? ' style="grid-column:1/-1"' : '') + '>' + esc(l) + (req ? ' *' : '') + '<input type="' + type + '" id="cu-' + k + '" name="' + k + '"' + (ac ? ' autocomplete="' + ac + '"' : '') + (req ? ' required' : '') + ' value="' + esc(cu[k] || '') + '"></label>').join('');
+  const fields = CUST_FIELDS.map(([k,l,req,type,ac]) => '<label class="f"' + (k === 'adresse' || k === 'notiz' ? ' style="grid-column:1/-1"' : '') + '>' + esc(l) + (req ? ' *' : '') + '<input type="' + type + '" id="cu-' + k + '" name="' + k + '"' + (ac ? ' autocomplete="' + ac + '"' : '') + (req ? ' required' : '') + (lockedField(k) ? ' readonly title="aus Ihrem Zugang"' : '') + ' value="' + esc(cu[k] || '') + '"></label>').join('');
   $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog cartdlg" role="dialog" aria-modal="true" aria-label="Warenkorb"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button>' +
     '<div class="cartin"><h2 style="margin:0 0 4px">Warenkorb</h2><p class="small" style="margin:0 0 10px">Bestellbar nur am Aktionstag bzw. im Aktionszeitraum bis 23:59 Uhr, solange der Vorrat reicht. Preise = Aktions-HEK exkl. MwSt.</p>' +
     '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Gerät</th><th>Menge</th><th style="text-align:right">Aktions-HEK</th><th style="text-align:right">Summe</th><th></th></tr></thead><tbody>' + rows + '</tbody>' +
@@ -2687,7 +2707,8 @@ function renderHeader(){
   if (S.sim) notes.push('Testansicht für den ' + fmtLong(S.sim));
   if (S.config.example && S.view !== 'admin') notes.push('Beispieldaten – Preise noch nicht freigegeben');
   if (S.demo && S.view !== 'admin') notes.push('Vorschau mit Beispieldaten');
-  $('h-notice').innerHTML = notes.map(n => '<span class="notice">' + esc(n) + '</span> ').join('');
+  $('h-notice').innerHTML = notes.map(n => '<span class="notice">' + esc(n) + '</span> ').join('') +
+    (S.accounts && S.me ? '<span class="userchip"><span>' + (S.me.role === 'admin' ? 'Beko-Team: ' : 'Angemeldet: ') + '<b>' + esc(S.me.label) + '</b></span><button type="button" class="linkbtn" id="acc-pwbtn">Passwort ändern</button><button type="button" class="linkbtn" id="acc-out">Abmelden</button></span>' : '');
   const apv = isApprover() || (S.api && !!S.ap.token);
   $('tabs').hidden = !(S.canEdit || apv); $('tab-adm').hidden = !S.canEdit; $('tab-fly').hidden = !S.canEdit; $('tab-ord').hidden = !S.canEdit;
   $('tab-ord').setAttribute('aria-pressed', S.view === 'orders');
@@ -2727,11 +2748,244 @@ setInterval(() => {
   const d = realToday(); if (d !== lastDay){ lastDay = d; if (S.view === 'kalender') render(); }
 }, 1000);
 
+/* ---------- Konten: Anmeldung für Kunden und Beko-Team (Cloudflare) ---------- */
+S.accounts = false; S.me = null; S.invite = null; S.acc = { list:null, draft:null, dirty:false, busy:false, err:null, q:'', paste:false };
+const tokHdr = () => { const t = ssGet('kal-token'); return t ? { 'x-ak-token': t } : {}; };
+async function sessCall(path, body){
+  try { const r = await fetch('/api/session/' + path, body === undefined ? { cache:'no-store' } : { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({})); return { ok: r.ok, status: r.status, j }; }
+  catch(e){ return { ok:false, status:0, j:{ error:'Keine Verbindung – bitte erneut versuchen.' } }; }
+}
+async function sessMe(){
+  if (!/^https?:$/.test(location.protocol)) return undefined;
+  try { const r = await fetch('/api/session/me', { cache:'no-store' }); if (!r.ok) return undefined; const j = await r.json(); return j && j.server === 'konten' ? j : undefined; } catch(e) { return undefined; }
+}
+async function readInvite(){
+  const q = new URLSearchParams(location.search).get('einladung');
+  if (q){ ssSet('kal-invite', q); try { history.replaceState(null, '', location.pathname); } catch(e) {} }
+  const t = q || ssGet('kal-invite'); if (!t) return null;
+  const r = await sessCall('invite?t=' + encodeURIComponent(t));
+  if (r.ok && r.j.id) return Object.assign({ token: t }, r.j);
+  ssSet('kal-invite', null); S.inviteErr = r.j.error || 'Dieser Einladungs-Link ist nicht mehr gültig.'; return null;
+}
+function loginShell(title, sub){
+  if (!S.config) S.config = defaultConfig(); if (!S.draft) S.draft = clone(S.config);
+  renderHeader(); $('h-title').textContent = title; $('h-sub').textContent = sub; $('tabs').hidden = true; $('h-notice').innerHTML = '';
+  const sb = $('savebar-slot'); if (sb) sb.innerHTML = '';
+}
+const PW_RULE = 'Mindestens 8 Zeichen, mit Buchstaben und mindestens einer Ziffer. Das Startpasswort ist nicht erlaubt.';
+const pwFields = withOld => (withOld ? '<label class="f">Bisheriges Passwort<input type="password" id="acc-old" autocomplete="current-password" required></label>' : '') +
+  '<label class="f">Neues Passwort<input type="password" id="acc-new" autocomplete="new-password" minlength="8" required></label>' +
+  '<label class="f">Neues Passwort wiederholen<input type="password" id="acc-new2" autocomplete="new-password" minlength="8" required></label>';
+async function renderAccountLogin(mode){
+  const team = mode === 'team';
+  loginShell(team ? 'Verwaltung' : 'Aktionskalender Fachhandel', team ? 'Anmeldung für das Beko-Team: Verwaltung, Flyer, Freigabe und Bestellungen.' : 'Exklusive Aktionen für unsere Fachhandelspartner – bitte mit Ihrem Zugang anmelden.');
+  $('app').innerHTML = '<section class="section acclog"><p class="small" style="margin:0">Wird geladen …</p></section>';
+  const r = await sessCall('users'), L = (r.j && r.j[team ? 'team' : 'customers']) || [];
+  const inv = S.invite, pre = inv && inv.role === (team ? 'admin' : 'kunde') ? inv.id : '';
+  const opts = '<option value="">' + (team ? 'Name wählen …' : 'Firma wählen …') + '</option>' + L.map(x => '<option value="' + esc(x.id) + '"' + (x.id === pre ? ' selected' : '') + '>' + esc(x.label) + '</option>').join('');
+  $('app').innerHTML = '<section class="section acclog"><h3>' + (team ? 'Anmeldung Beko-Team' : 'Anmeldung Fachhandel') + '</h3>' +
+    (pre ? '<p class="accinfo">Willkommen, <b>' + esc(inv.label) + '</b>! Bitte mit dem <b>Startpasswort</b> aus der Einladung anmelden. Danach legen Sie sofort Ihr eigenes Passwort fest.</p>' : '') +
+    (S.inviteErr ? '<p class="accinfo">' + esc(S.inviteErr) + '</p>' : '') +
+    '<form id="acc-login" class="accform" novalidate><label class="f">' + (team ? 'Benutzer' : 'Benutzer (Firma)') + '<select id="acc-id" required>' + opts + '</select></label>' +
+    '<label class="f">Passwort<input type="password" id="acc-pw" autocomplete="current-password" required></label>' +
+    '<button type="submit" class="btn primary" id="acc-btn">Anmelden</button><p class="warnline" id="acc-err" hidden></p></form>' +
+    '<p class="small accfoot">' + (team ? '<a href="/">Zur Anmeldung für Händler</a>'
+      : 'Noch kein Zugang oder Passwort vergessen? Bitte bei Beko melden: <a href="' + telHref(DEF_PHONE) + '">' + esc(DEF_PHONE) + '</a> · <a href="mailto:order.austria@beko.com">order.austria@beko.com</a><br><a href="/admin">Anmeldung Beko-Team</a>') + '</p></section>';
+  const f = pre ? $('acc-pw') : $('acc-id'); if (f) f.focus();
+}
+function renderPwChange(ticket, user){
+  S.pwTicket = ticket;
+  $('app').innerHTML = '<section class="section acclog"><h3>Eigenes Passwort festlegen</h3><p class="accinfo"><b>' + esc(user.label) + '</b> – bitte jetzt Ihr persönliches Passwort festlegen. Erst danach geht es weiter' + (user.role === 'admin' ? ' zur Verwaltung.' : ' zum Kalender.') + '</p>' +
+    '<form id="acc-change" class="accform" novalidate>' + pwFields(false) + '<button type="submit" class="btn primary">Passwort speichern und weiter</button><p class="warnline" id="acc-err" hidden></p></form><p class="small accfoot">' + PW_RULE + '</p></section>';
+  $('acc-new').focus();
+}
+function pwDialog(){
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog cartdlg" role="dialog" aria-modal="true" aria-label="Passwort ändern" style="max-width:460px"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button><div class="cartin">' +
+    '<h2 style="margin:0 0 12px">Passwort ändern</h2><form id="acc-pwdlg" class="accform" novalidate>' + pwFields(true) + '<button type="submit" class="btn primary">Passwort speichern</button><p class="warnline" id="acc-err" hidden></p></form><p class="small" style="margin-bottom:0">' + PW_RULE + '</p></div></div></div>';
+  $('acc-old').focus();
+}
+function afterLogin(){ ssSet('kal-invite', null); try { location.replace(location.pathname); } catch(e) { location.reload(); } }
+async function accLogout(){
+  await sessCall('logout', {}); ssSet('kal-admin', null); ssSet('kal-invite', null);
+  try { localStorage.removeItem('kal-kunde'); localStorage.removeItem('kal-cart'); } catch(e) {}
+  location.replace('/');
+}
+document.addEventListener('submit', async e => {
+  const id = e.target.id; if (id !== 'acc-login' && id !== 'acc-change' && id !== 'acc-pwdlg') return;
+  e.preventDefault(); const er = $('acc-err'), show = m => { er.textContent = m; er.hidden = false; };
+  if (id === 'acc-login'){
+    const btn = $('acc-btn'), uid = $('acc-id').value, pw = $('acc-pw').value;
+    if (!uid) return show('Bitte zuerst den Benutzer auswählen.'); if (!pw) return show('Bitte das Passwort eingeben.');
+    btn.disabled = true; btn.textContent = 'Prüfe …'; er.hidden = true;
+    const r = await sessCall('login', { id: uid, password: pw, invite: S.invite && S.invite.id === uid ? S.invite.token : undefined });
+    if (r.ok && r.j.mustChange){ renderPwChange(r.j.ticket, r.j.user); return; }
+    if (r.ok && r.j.user){ afterLogin(); return; }
+    btn.disabled = false; btn.textContent = 'Anmelden'; show(r.j.error || 'Anmeldung nicht möglich.'); $('acc-pw').select(); return;
+  }
+  const n1 = $('acc-new').value, n2 = $('acc-new2').value;
+  if (id === 'acc-pwdlg' && !$('acc-old').value) return show('Bitte das bisherige Passwort eingeben.');
+  if (n1.length < 8 || !/\d/.test(n1) || !/[A-Za-zÄÖÜäöüß]/.test(n1)) return show(PW_RULE);
+  if (n1 !== n2) return show('Die beiden neuen Passwörter stimmen nicht überein.');
+  const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true; er.hidden = true;
+  const r = await sessCall('change', id === 'acc-change' ? { ticket: S.pwTicket, password: n1 } : { old: $('acc-old').value, password: n1 });
+  if (r.ok){ if (id === 'acc-change') afterLogin(); else { $('overlay-slot').innerHTML = ''; toast('Passwort geändert'); } return; }
+  btn.disabled = false; show(r.j.error || 'Speichern nicht möglich.');
+});
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.id === 'acc-pwbtn'){ pwDialog(); return; }
+  if (t.id === 'acc-out'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } accLogout(); return; }
+});
+async function accBoot(){
+  const raw = await apiLoad();
+  if (raw === undefined){ renderAccountLogin(wantsAdmin() ? 'team' : 'kunde'); return; }
+  S.config = cfgFrom(raw); S.draft = clone(S.config); S.loaded = true; cartLoad();
+  if (S.me && S.me.role === 'admin'){ S.pw = 'session'; S.canEdit = true; if (wantsAdmin()) S.view = 'admin'; }
+  await apLoadApprovals();
+  if (S.ap.token && !wantsAdmin()) S.view = 'approval';
+  render();
+  setInterval(poll, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+}
+/* Warenkorb: Firma + Kundennummer kommen aus dem Zugang */
+const lockedField = k => !!(S.accounts && S.me && S.me.role === 'kunde' && (k === 'firma' || k === 'kdnr'));
+function acctCust(cu){
+  const a = S.accounts && S.me && S.me.role === 'kunde' ? S.me : null; if (!a) return cu;
+  const o = Object.assign({}, cu, { firma: a.firma, kdnr: a.kdnr || '' });
+  ['name','email','tel'].forEach(k => { if (!o[k] && a[k]) o[k] = a[k]; }); return o;
+}
+
+/* Verwaltung → Zugänge: Kunden & Beko-Team */
+const ACC_F = [['firma','Firma *','text','organization'],['ort','Ort','text',''],['kdnr','Kundennr.','text',''],['name','Ansprechpartner:in','text','name'],['email','E-Mail','email','email'],['tel','Telefon','tel','tel']];
+async function accLoad(){
+  try { const r = await fetch('/api/users', { cache:'no-store' }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Zugänge konnten nicht geladen werden');
+    S.acc.list = j; S.acc.draft = clone(j.customers || []); S.acc.dirty = false; S.acc.err = null; }
+  catch(e){ S.acc.err = (e && e.message) || 'Zugänge konnten nicht geladen werden'; }
+}
+const accLabel = a => a.role === 'admin' ? a.name : (a.firma || '') + (a.ort ? ', ' + a.ort : '');
+const inviteLink = a => location.origin + (a.role === 'admin' ? '/admin' : '/') + '?einladung=' + encodeURIComponent(a.invite || '');
+function inviteMail(a){
+  const c = S.config || {}, title = c.title || 'Aktionskalender', kunde = a.role !== 'admin', pw = (S.acc.list || {}).initial || 'bekoblackweeks';
+  const body = kunde
+    ? 'Guten Tag' + (a.name ? ' ' + a.name : '') + ',\n\nab sofort haben Sie Zugang zu unserem ' + title + ' mit exklusiven Aktionen für den Fachhandel – online ansehen und direkt bestellen.\n\n' +
+      '1. Persönlichen Link öffnen: ' + inviteLink(a) + '\n2. Benutzer: ' + accLabel(a) + ' (ist bereits ausgewählt)\n3. Startpasswort: ' + pw + '\n4. Danach legen Sie sofort Ihr eigenes Passwort fest (mind. 8 Zeichen, Buchstaben und Ziffer).\n\n' +
+      'Künftig melden Sie sich unter ' + location.origin + '/ mit Ihrer Firma und Ihrem eigenen Passwort an. Der Link gilt nur für Sie und nur für die Erstanmeldung.\n\n' +
+      'Bei Fragen: Tel. ' + (c.orderPhone || DEF_PHONE) + ' · ' + (c.orderEmail || 'order.austria@beko.com') + '\n\nFreundliche Grüße\nBeko Austria AG'
+    : 'Hallo ' + String(a.name || '').split(' ')[0] + ',\n\ndu hast jetzt Zugang zur Verwaltung des ' + title + ' (Planung, Flyer, Freigabe, Bestellungen, Zugänge).\n\n' +
+      '1. Persönlichen Link öffnen: ' + inviteLink(a) + '\n2. Benutzer: ' + a.name + ' (ist bereits ausgewählt)\n3. Startpasswort: ' + pw + '\n4. Danach sofort ein eigenes Passwort festlegen (mind. 8 Zeichen, Buchstaben und Ziffer).\n\nKünftig: ' + location.origin + '/admin\n\nLG';
+  return 'mailto:' + String(a.email || '').replace(/[^\w.@+-]/g, '') + '?subject=' + encodeURIComponent('Ihr Zugang: ' + title) + '&body=' + encodeURIComponent(body);
+}
+const accBadge = s => s === 'aktiv' ? '<span class="apb ok">aktiv</span>' : s === 'gesperrt' ? '<span class="apb rej">gesperrt</span>' : s === 'neu' ? '<span class="apb wait">neu</span>' : '<span class="apb open">eingeladen</span>';
+function accActs(a, saved){
+  if (!saved) return '<span class="small">nach dem Speichern einladen</span>';
+  if (a.role !== 'admin' && a.active === false) return '';
+  if (a.status === 'eingeladen' && a.invite) return '<a href="' + esc(inviteMail(a)) + '"' + (a.email ? '' : ' title="Keine E-Mail-Adresse hinterlegt"') + '>Einladung per E-Mail</a><button type="button" class="linkbtn" data-acopy="' + esc(a.id) + '">Link kopieren</button>';
+  if (S.acc.list && a.id === S.acc.list.me) return '<span class="small">das sind Sie</span>';
+  return '<button type="button" class="linkbtn" data-areset="' + esc(a.id) + '">Passwort zurücksetzen</button>';
+}
+const fmtLast = v => v ? fmtAt(v) : '–';
+function accRows(){
+  const q = S.acc.q.trim().toLowerCase(), saved = new Map(((S.acc.list || {}).customers || []).map(a => [a.id, a]));
+  return S.acc.draft.map((a, i) => ({ a, i })).filter(({ a }) => !q || ACC_F.some(([f]) => String(a[f] || '').toLowerCase().includes(q))).map(({ a, i }) => {
+    const s = a.id ? saved.get(a.id) : null, st = !s ? 'neu' : (a.active === false ? 'gesperrt' : s.status);
+    return '<tr class="' + (a.active === false ? 'off' : '') + '" data-ai="' + i + '">' + ACC_F.map(([f,l,type,ac]) => '<td><input type="' + type + '" data-af="' + f + '" aria-label="' + esc(l) + '" value="' + esc(a[f] || '') + '"' + (ac ? ' autocomplete="off"' : '') + '></td>').join('') +
+      '<td>' + accBadge(st) + '<br><span class="small">' + (s ? 'zuletzt ' + esc(fmtLast(s.lastLogin)) : '') + '</span></td>' +
+      '<td><div class="acts">' + accActs(Object.assign({}, s || a, { active: a.active }), !!s) + '<label class="small" style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" data-aactive' + (a.active === false ? '' : ' checked') + '> aktiv</label><button type="button" class="pc-x" data-adel aria-label="Zugang entfernen" title="Entfernen">×</button></div></td></tr>';
+  }).join('') || '<tr><td colspan="9" class="small">' + (S.acc.draft.length ? 'Kein Treffer.' : 'Noch keine Kunden-Zugänge. Mit „+ Kunde“ anlegen oder eine Liste aus Excel einfügen.') + '</td></tr>';
+}
+function accSyncBar(){ const s = $('acc-save'), d = $('acc-discard'), n = $('acc-state'); if (s) s.disabled = !S.acc.dirty; if (d) d.disabled = !S.acc.dirty; if (n) n.textContent = S.acc.dirty ? 'Ungespeicherte Änderungen bei den Zugängen' : ''; }
+function accMount(){
+  const host = document.querySelector('#app .admin'); if (!host) return;
+  let sec = $('acc-sec'); if (!sec){ sec = document.createElement('section'); sec.className = 'section'; sec.id = 'acc-sec'; host.appendChild(sec); }
+  const head = '<div class="section-head"><div><h3>Zugänge: Kunden &amp; Beko-Team</h3><span class="small">Händler wählen beim Anmelden ihre Firma aus der Liste. Erstanmeldung nur über den persönlichen Link mit dem Startpasswort – danach muss sofort ein eigenes Passwort festgelegt werden. Kunden sehen nur Kalender und Bestellung, keine Verwaltung.</span></div></div>';
+  if (!S.accounts){ sec.innerHTML = head + '<p class="small" style="margin:0">Die Anmeldung mit Kunden-Zugängen läuft in der Cloudflare-Version. In dieser Claude-Version regelt das Teilen des Artifacts den Zugriff: Verwaltung nur für Personen mit Bearbeitungsrecht.</p>'; return; }
+  if (!S.acc.list){ sec.innerHTML = head + '<p class="small" style="margin:0">' + (S.acc.err ? esc(S.acc.err) + ' <button type="button" class="linkbtn" id="acc-retry">Erneut laden</button>' : 'Wird geladen …') + '</p>';
+    if (!S.acc.err && !S.acc.busy){ S.acc.busy = true; accLoad().then(() => { S.acc.busy = false; if (S.view === 'admin') accMount(); }); } return; }
+  const L = S.acc.list, team = L.team || [];
+  sec.innerHTML = head +
+    '<p class="small" style="margin:0 0 12px">Startpasswort: <b>' + esc(L.initial) + '</b> · Kunden-Anmeldung: <b>' + esc(location.origin) + '/</b> · Team: <b>' + esc(location.origin) + '/admin</b></p>' +
+    '<h4 class="aph">Kunden (' + S.acc.draft.length + ')</h4>' +
+    '<div class="acctools"><input type="text" id="acc-q" placeholder="Suchen …" value="' + esc(S.acc.q) + '"><button type="button" class="btn" id="acc-add">+ Kunde</button><button type="button" class="btn" id="acc-pastebtn">Liste aus Excel einfügen</button>' +
+    '<span style="flex:1"></span><span class="small" id="acc-state"></span><button type="button" class="btn" id="acc-discard">Verwerfen</button><button type="button" class="btn primary" id="acc-save">Zugänge speichern</button></div>' +
+    (S.acc.paste ? '<div class="accpaste"><p class="small" style="margin:0 0 6px">Spalten in dieser Reihenfolge: <b>Firma · Ort · Kundennr. · Ansprechpartner:in · E-Mail · Telefon</b> (aus Excel kopieren, Kopfzeile wird erkannt).</p><textarea id="acc-pastetxt" placeholder="Elektro Muster GmbH&#9;Linz&#9;100234&#9;Max Muster&#9;office@muster.at&#9;+43 732 1234"></textarea><div class="acctools" style="margin:6px 0 0"><button type="button" class="btn primary" id="acc-pasteok">Übernehmen</button><button type="button" class="btn" id="acc-pastex">Abbrechen</button></div></div>' : '') +
+    '<div class="tblwrap"><table class="aptbl acctbl"><thead><tr>' + ACC_F.map(f => '<th>' + esc(f[1]) + '</th>').join('') + '<th>Status</th><th>Aktionen</th></tr></thead><tbody id="acc-body">' + accRows() + '</tbody></table></div>' +
+    '<h4 class="aph" style="margin-top:18px">Beko-Team – Verwaltung (Admin / Editor)</h4>' +
+    '<div class="tblwrap"><table class="aptbl acctbl"><thead><tr><th>Name</th><th>E-Mail (Benutzer)</th><th>Rechte</th><th>Status</th><th>Aktionen</th></tr></thead><tbody>' +
+      team.map(a => '<tr><td><b>' + esc(a.name) + '</b></td><td><a href="mailto:' + esc(a.email) + '">' + esc(a.email) + '</a></td><td>Verwaltung, Flyer, Freigabe-Personen, Bestellungen, Zugänge</td><td>' + accBadge(a.status) + '<br><span class="small">zuletzt ' + esc(fmtLast(a.lastLogin)) + '</span></td><td><div class="acts">' + accActs(a, true) + '</div></td></tr>').join('') +
+    '</tbody></table></div><p class="small" style="margin:8px 0 0">Das Team wird in Cloudflare über die Variable <b>ADMIN_USERS</b> festgelegt. Nur diese Personen haben Verwaltungsrechte.</p>';
+  accSyncBar();
+}
+const renderAdminBase = renderAdmin;
+renderAdmin = function(){ renderAdminBase(); accMount(); };
+function accParse(txt){
+  const out = [];
+  String(txt || '').split(/\r?\n/).forEach((line, n) => {
+    if (!line.trim()) return; const c = line.split(line.includes('\t') ? '\t' : ';').map(s => s.trim().replace(/^"|"$/g, ''));
+    if (n === 0 && /firma|kunde|name/i.test(c[0]) && !/gmbh|kg|og|e\.u\./i.test(c[0])) return;
+    if (!c[0]) return; out.push({ firma:c[0], ort:c[1] || '', kdnr:c[2] || '', name:c[3] || '', email:c[4] || '', tel:c[5] || '', active:true });
+  });
+  return out;
+}
+async function accSave(){
+  const bad = S.acc.draft.findIndex(a => !String(a.firma || '').trim()); if (bad >= 0){ toast('Bitte bei jedem Kunden eine Firma eintragen'); return; }
+  const btn = $('acc-save'); if (btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
+  try { const r = await fetch('/api/users', { method:'PUT', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ customers: S.acc.draft }) }); const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Speichern nicht möglich'); S.acc.list = j; S.acc.draft = clone(j.customers || []); S.acc.dirty = false; toast('Zugänge gespeichert'); }
+  catch(e){ toast((e && e.message) || 'Speichern nicht möglich'); }
+  accMount();
+}
+async function accReset(id){
+  if (S.acc.dirty){ toast('Bitte zuerst die Zugänge speichern'); return; }
+  const a = [].concat(S.acc.list.customers || [], S.acc.list.team || []).find(x => x.id === id); if (!a) return;
+  if (!confirm('Passwort für „' + accLabel(a) + '“ zurücksetzen?\n\nDer Zugang wird sofort abgemeldet und braucht eine neue Einladung (Startpasswort + persönlicher Link).')) return;
+  try { const r = await fetch('/api/users', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ action:'reset', id }) }); const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Zurücksetzen nicht möglich'); S.acc.list = j; S.acc.draft = clone(j.customers || []); toast('Zurückgesetzt – jetzt neu einladen'); }
+  catch(e){ toast((e && e.message) || 'Zurücksetzen nicht möglich'); }
+  accMount();
+}
+document.addEventListener('click', e => {
+  if (S.view !== 'admin' || !S.accounts) return; const t = e.target;
+  if (t.id === 'acc-retry'){ S.acc.err = null; accMount(); return; }
+  if (t.id === 'acc-add'){ S.acc.draft.unshift({ firma:'', ort:'', kdnr:'', name:'', email:'', tel:'', active:true }); S.acc.q = ''; S.acc.dirty = true; accMount(); const f = document.querySelector('#acc-body tr[data-ai="0"] input'); if (f) f.focus(); return; }
+  if (t.id === 'acc-pastebtn'){ S.acc.paste = !S.acc.paste; accMount(); const ta = $('acc-pastetxt'); if (ta) ta.focus(); return; }
+  if (t.id === 'acc-pastex'){ S.acc.paste = false; accMount(); return; }
+  if (t.id === 'acc-pasteok'){ const rows = accParse($('acc-pastetxt').value); let n = 0, u = 0;
+    rows.forEach(r => { const ex = S.acc.draft.find(a => (r.kdnr && a.kdnr && a.kdnr === r.kdnr) || (!r.kdnr && a.firma.toLowerCase() === r.firma.toLowerCase() && (a.ort || '').toLowerCase() === r.ort.toLowerCase()));
+      if (ex){ ['firma','ort','kdnr','name','email','tel'].forEach(f => { if (r[f]) ex[f] = r[f]; }); u++; } else { S.acc.draft.push(r); n++; } });
+    if (!rows.length){ toast('Keine Zeilen erkannt'); return; }
+    S.acc.paste = false; S.acc.dirty = true; accMount(); toast(n + ' neu' + (u ? ', ' + u + ' aktualisiert' : '') + ' – bitte „Zugänge speichern“'); return; }
+  if (t.id === 'acc-save'){ accSave(); return; }
+  if (t.id === 'acc-discard'){ S.acc.draft = clone(S.acc.list.customers || []); S.acc.dirty = false; accMount(); return; }
+  const del = t.closest('[data-adel]'); if (del){ const i = +del.closest('tr').dataset.ai, a = S.acc.draft[i];
+    if (a && a.id && !confirm('Zugang „' + accLabel(a) + '“ entfernen? Die Firma kann sich danach nicht mehr anmelden.')) return;
+    S.acc.draft.splice(i, 1); S.acc.dirty = true; accMount(); return; }
+  const rs = t.closest('[data-areset]'); if (rs){ accReset(rs.dataset.areset); return; }
+  const cp = t.closest('[data-acopy]'); if (cp){ const a = [].concat(S.acc.list.customers || [], S.acc.list.team || []).find(x => x.id === cp.dataset.acopy); if (!a) return;
+    const link = inviteLink(a); (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(() => toast('Einladungs-Link kopiert'), () => toast(link)); return; }
+});
+document.addEventListener('input', e => {
+  if (S.view !== 'admin' || !S.accounts) return; const t = e.target;
+  if (t.id === 'acc-q'){ S.acc.q = t.value; const b = $('acc-body'); if (b) b.innerHTML = accRows(); return; }
+  if (t.dataset && t.dataset.af){ const a = S.acc.draft[+t.closest('tr').dataset.ai]; if (a){ a[t.dataset.af] = t.value; S.acc.dirty = true; accSyncBar(); } }
+});
+document.addEventListener('change', e => {
+  if (S.view !== 'admin' || !S.accounts) return; const t = e.target;
+  if (t.matches('[data-aactive]')){ const tr = t.closest('tr'), a = S.acc.draft[+tr.dataset.ai]; if (a){ a.active = t.checked; S.acc.dirty = true; tr.classList.toggle('off', !t.checked); accSyncBar(); } }
+});
+
 /* ---------- Start ---------- */
 (async function start(){
   let db = null, user = null;
   try { if (window.claude && window.claude.use){ [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]); } } catch(e) {}
   if (!db){
+    const me = await sessMe();
+    if (me){
+      S.api = true; S.accounts = true; S.me = me.user || null;
+      S.invite = await readInvite(); await apWhoami();
+      const mode = (S.invite && S.invite.role === 'admin') || wantsAdmin() ? 'team' : 'kunde';
+      if (S.invite || (!S.me && !S.ap.token) || (wantsAdmin() && !(S.me && S.me.role === 'admin'))){ renderAccountLogin(mode); return; }
+      await accBoot(); return;
+    }
     const raw = await apiLoad();
     if (raw !== undefined){
       S.api = true; S.config = cfgFrom(raw); S.draft = clone(S.config); S.loaded = true; cartLoad();
