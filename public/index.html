@@ -503,6 +503,10 @@ body.black .cartin h2{font-family:var(--f-cond);font-weight:400;text-transform:u
 .apbanner{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:color-mix(in srgb,var(--warn) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));border-radius:10px;padding:8px 12px;font-weight:600;font-size:14px;margin:0 0 14px}
 .apbanner.done{background:color-mix(in srgb,var(--ok) 12%,var(--surface));border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
 .linkbtn{border:0;background:none;padding:0;color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer;font-size:14px}
+.akform{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 10px}
+.akform .f{margin:0}
+.akbtns{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.aptbl.akt td{vertical-align:top}
 .apb{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;letter-spacing:.02em}
 .apb.ok{background:var(--ok);color:#fff}.apb.rej{background:var(--accent);color:var(--accent-ink)}.apb.open{background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
 .apb.stale{background:var(--warn);color:#fff}.apb.wait{background:transparent;border:1px dashed var(--line);color:var(--muted)}
@@ -566,6 +570,7 @@ body.black .cartin h2{font-family:var(--f-cond);font-weight:400;text-transform:u
         <button type="button" id="tab-fly" aria-pressed="false">Flyer</button>
         <button type="button" id="tab-apv" aria-pressed="false">Freigabe</button>
         <button type="button" id="tab-ord" aria-pressed="false">Bestellungen</button>
+        <button type="button" id="tab-akt" aria-pressed="false">Aktionen</button>
       </div>
     </div>
     <h1 id="h-title">Adventkalender</h1>
@@ -1030,14 +1035,15 @@ function openDoor(day, btn){
 }
 
 /* ---------- Verwaltung ---------- */
-function markDirty(){ S.dirty = true; renderSavebar(); }
+function markDirty(){ S.dirty = true; renderSavebar(); autoSchedule(); }
 function renderSavebar(){
   const slot = $('savebar-slot');
+  if (S.dirty && S.view === 'admin') autoSchedule();
   if (S.view !== 'admin'){ slot.innerHTML = ''; return; }
   const pc = Object.keys(S.draft.pool).length, per = periodDays(S.draft), dd = per.map(d => dayDeals(S.draft, d).length), dc = dd.filter(Boolean).length, tc = dd.reduce((a,b) => a + b, 0), mc = multiRangeDeals(S.draft).length;
   slot.innerHTML = '<div class="savebar"><div class="wrap"><span class="small"><b>' + pc + '</b> Geräte im Aktionssortiment · <b>' + dc + '</b> von ' + per.length + ' Tagen belegt' + (tc > dc ? ' (<b>' + tc + '</b> Tagesaktionen)' : '') + (mc ? ' · <b>' + mc + '</b> Zeitraum-Aktion' + (mc === 1 ? '' : 'en') : '') +
-    (S.dirty ? ' · <span class="dirty">Nicht gespeicherte Änderungen</span>' : '') + '</span>' +
-    '<span style="display:flex;gap:8px;flex-wrap:wrap">' + (S.api ? '<button type="button" class="btn" id="btn-logout">Abmelden</button>' : '') + '<button type="button" class="btn" id="btn-discard"' + (S.dirty ? '' : ' disabled') + '>Verwerfen</button><button type="button" class="btn primary" id="btn-save"' + (S.dirty ? '' : ' disabled') + '>Speichern &amp; veröffentlichen</button></span></div></div>';
+    (S.dirty ? ' · <span class="dirty">Nicht gespeicherte Änderungen</span> <span class="small" id="auto-st">' + (S.ak && S.ak.autoAt ? 'Entwurf automatisch gesichert ' + esc(fmtAt(S.ak.autoAt).slice(-5)) : '') + '</span>' : '') + '</span>' +
+    '<span style="display:flex;gap:8px;flex-wrap:wrap">' + (S.api ? '<button type="button" class="btn" id="btn-logout">Abmelden</button>' : '') + '<button type="button" class="btn" id="btn-saveas" title="Aktuellen Stand als Vorlage unter eigenem Namen sichern">Unter Namen sichern</button><button type="button" class="btn" id="btn-discard"' + (S.dirty ? '' : ' disabled') + '>Verwerfen</button><button type="button" class="btn primary" id="btn-save"' + (S.dirty ? '' : ' disabled') + '>Speichern &amp; veröffentlichen</button></span></div></div>';
 }
 
 function poolCard(p){
@@ -1537,7 +1543,7 @@ function renderAdmin(){
   if (S.f.cat !== 'alle' && !cats.includes(S.f.cat)) S.f.cat = 'alle';
   $('app').innerHTML = '<div class="admin">' +
     (S.demo ? '<p class="warnline" style="margin-top:0">Vorschau ohne Datenspeicher: Änderungen bleiben nur in diesem Fenster.</p>' : '') +
-    (S.dirty ? '' : apBannerHTML(S.config)) +
+    autoBannerHTML() + (S.dirty ? '' : apBannerHTML(S.config)) +
     (c.example ? '<p class="warnline" style="margin-top:0">Beispielbelegung mit geschätzten Aktions-HEK. Bitte Aktions-HEK und Mengen prüfen und speichern.</p>' : '') +
 
     '<section class="section"><div class="section-head"><h3>Einstellungen</h3></div><div class="fields">' +
@@ -1609,15 +1615,17 @@ async function save(){
       if (r.status === 401){ ssSet('kal-admin', null); S.canEdit = false; S.view = 'kalender'; renderSavebar(); render(); toast('Anmeldung abgelaufen – bitte unter /admin neu anmelden. Deine Änderungen wurden nicht gespeichert.'); return; }
       if (!r.ok) throw new Error('http ' + r.status);
       const j = await r.json(); data.updatedAt = j.updatedAt || data.updatedAt;
-      S.config = data; S.draft = clone(data); S.dirty = false; renderSavebar(); renderAdmin(); toast('Gespeichert – Händler sehen jetzt den neuen Stand');
+      S.config = data; S.draft = clone(data); S.dirty = false; autoClear(); renderSavebar(); renderAdmin(); toast('Gespeichert – Händler sehen jetzt den neuen Stand');
+      akRecordVersion(data);
     } catch(e){ renderSavebar(); toast('Speichern nicht möglich – bitte Internetverbindung prüfen und erneut speichern'); }
     return;
   }
-  if (S.demo || !S.db){ S.config = data; S.draft = clone(data); S.dirty = false; renderSavebar(); toast('Vorschau: übernommen, aber nicht dauerhaft gespeichert'); return; }
+  if (S.demo || !S.db){ S.config = data; S.draft = clone(data); S.dirty = false; autoClear(); renderSavebar(); akRecordVersion(data); toast('Vorschau: übernommen, aber nicht dauerhaft gespeichert'); return; }
   const btn = $('btn-save'); if (btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
   try {
     await S.db.doc('calendar/config').set(data);
-    S.config = data; S.draft = clone(data); S.dirty = false; renderSavebar(); renderAdmin(); toast('Gespeichert – Händler sehen jetzt den neuen Stand');
+    S.config = data; S.draft = clone(data); S.dirty = false; autoClear(); renderSavebar(); renderAdmin(); toast('Gespeichert – Händler sehen jetzt den neuen Stand');
+    akRecordVersion(data);
   } catch(e){
     renderSavebar(); toast('Speichern nicht möglich: ' + (e && e.code === 'not_granted' ? 'keine Berechtigung' : 'bitte erneut versuchen'));
   }
@@ -1681,7 +1689,7 @@ document.addEventListener('click', e => {
   if (t.id === 'btn-clear-no'){ $('clear-confirm').innerHTML = ''; return; }
   if (t.id === 'btn-save'){ save(); return; }
   if (t.id === 'btn-logout'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } if (S.accounts){ accLogout(); return; } ssSet('kal-admin', null); S.pw = null; S.canEdit = false; S.view = 'kalender'; try { history.replaceState(null, '', '/'); } catch(e) {} render(); toast('Abgemeldet'); return; }
-  if (t.id === 'btn-discard'){ S.draft = clone(S.config); S.dirty = false; renderAdmin(); return; }
+  if (t.id === 'btn-discard'){ S.draft = clone(S.config); S.dirty = false; autoClear(); renderAdmin(); return; }
 });
 document.addEventListener('change', async e => {
   if (S.view !== 'admin') return;
@@ -2710,7 +2718,7 @@ function renderHeader(){
   $('h-notice').innerHTML = notes.map(n => '<span class="notice">' + esc(n) + '</span> ').join('') +
     (S.accounts && S.me ? '<span class="userchip"><span>' + (S.me.role === 'admin' ? 'Beko-Team: ' : 'Angemeldet: ') + '<b>' + esc(S.me.label) + '</b></span><button type="button" class="linkbtn" id="acc-pwbtn">Passwort ändern</button><button type="button" class="linkbtn" id="acc-out">Abmelden</button></span>' : '');
   const apv = isApprover() || (S.api && !!S.ap.token);
-  $('tabs').hidden = !(S.canEdit || apv); $('tab-adm').hidden = !S.canEdit; $('tab-fly').hidden = !S.canEdit; $('tab-ord').hidden = !S.canEdit;
+  $('tabs').hidden = !(S.canEdit || apv); $('tab-adm').hidden = !S.canEdit; $('tab-fly').hidden = !S.canEdit; $('tab-ord').hidden = !S.canEdit; $('tab-akt').hidden = !S.canEdit; $('tab-akt').setAttribute('aria-pressed', S.view === 'aktionen');
   $('tab-ord').setAttribute('aria-pressed', S.view === 'orders');
   $('tab-apv').setAttribute('aria-pressed', S.view === 'approval');
   $('tab-kal').setAttribute('aria-pressed', S.view === 'kalender'); $('tab-adm').setAttribute('aria-pressed', S.view === 'admin'); $('tab-fly').setAttribute('aria-pressed', S.view === 'flyer');
@@ -2720,7 +2728,7 @@ function render(){
   syncExtras();
   if (S.api && !S.canEdit && wantsAdmin()){ renderHeader(); renderLogin(); renderSavebar(); return; }
   renderHeader();
-  if (S.view === 'admin') renderAdmin(); else if (S.view === 'orders' && S.canEdit) renderOrders(); else if (S.view === 'flyer' && S.canEdit) renderFlyer(); else if (S.view === 'approval' && (S.canEdit || isApprover() || (S.api && S.ap.token))) renderApproval(); else { if (S.view !== 'kalender') S.view = 'kalender'; renderHeader(); renderDealer(); renderSavebar(); }
+  if (S.view === 'admin') renderAdmin(); else if (S.view === 'orders' && S.canEdit) renderOrders(); else if (S.view === 'aktionen' && S.canEdit) renderAktionen(); else if (S.view === 'flyer' && S.canEdit) renderFlyer(); else if (S.view === 'approval' && (S.canEdit || isApprover() || (S.api && S.ap.token))) renderApproval(); else { if (S.view !== 'kalender') S.view = 'kalender'; renderHeader(); renderDealer(); renderSavebar(); }
   renderCartFab();
 }
 
@@ -2972,6 +2980,248 @@ document.addEventListener('change', e => {
   if (S.view !== 'admin' || !S.accounts) return; const t = e.target;
   if (t.matches('[data-aactive]')){ const tr = t.closest('tr'), a = S.acc.draft[+tr.dataset.ai]; if (a){ a.active = t.checked; S.acc.dirty = true; tr.classList.toggle('off', !t.checked); accSyncBar(); } }
 });
+
+/* ---------- Aktionen speichern: Vorlagen, Archiv mit Ergebnis, Versionen, automatisches Zwischenspeichern (13.11.2026) ---------- */
+const AKV = { MAXV: 30, local: { aktionen: {}, versionen: {} } };
+S.ak = { list: null, vers: null, filter: 'alle', form: null, confirm: null, names: {}, busy: false, err: '' };
+const akId = p => p + '-' + Date.now().toString(36) + randId(3);
+function akMeta(o){ const c = o.config || {}; return { id:o.id, kind:o.kind, name:o.name, at:o.at, by:o.by || '', byName:o.byName || '', title:c.title || '', theme:c.theme, start:c.start, count:c.count, deals: akDealCount(c), sum: o.result ? o.result.sum : null }; }
+function akDealCount(c){ try { const n = normalize(clone(c)); return Object.values(n.days || {}).filter(d => d && d.k).length + (n.ranges || []).length; } catch(e){ return 0; } }
+const akPeriod = m => { if (!m.start) return '–'; const b = addDays(m.start, (m.count || 1) - 1); return m.count === 1 ? fmtShort(m.start) + m.start.slice(0,4) : fmtShort(m.start) + ' – ' + fmtShort(b) + b.slice(0,4); };
+async function akFetch(q, opt){
+  const r = await fetch('/api/aktionen?' + q, Object.assign({ cache:'no-store', credentials:'same-origin' }, opt || {}, { headers: Object.assign({ 'content-type':'application/json' }, S.pw && S.pw !== 'session' ? { authorization:'Bearer ' + S.pw } : {}, tokHdr()) }));
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 404 && !j.error) throw new Error('server');
+  if (!r.ok) throw new Error(j.error || ('http ' + r.status));
+  return j;
+}
+const AK = {
+  async list(kind){
+    if (S.api){ const j = await akFetch('kind=' + kind); return j.items || []; }
+    if (S.db){ const snap = await S.db.collection(kind).get(); const out = []; snap.docs.forEach(d => { if (d.exists){ const v = d.data() || {}; out.push(akMeta(Object.assign({}, v, { id:d.id }))); } }); return out; }
+    return Object.values(AKV.local[kind]).map(akMeta);
+  },
+  async get(kind, id){
+    if (S.api){ const j = await akFetch('kind=' + kind + '&id=' + encodeURIComponent(id)); return j.item; }
+    if (S.db){ const g = await S.db.collection(kind).doc(id).get(); return g.exists ? Object.assign({}, g.data(), { id }) : null; }
+    return clone(AKV.local[kind][id] || null);
+  },
+  async put(kind, obj){
+    if (S.api){ const j = await akFetch('kind=' + kind + '&id=' + encodeURIComponent(obj.id), { method:'PUT', body: JSON.stringify(obj) }); return j.meta || akMeta(obj); }
+    if (S.db){ const v = Object.assign({}, obj); delete v.id; await S.db.collection(kind).doc(obj.id).set(v); return akMeta(obj); }
+    AKV.local[kind][obj.id] = clone(obj); return akMeta(obj);
+  },
+  async del(kind, id){
+    if (S.api){ await akFetch('kind=' + kind + '&id=' + encodeURIComponent(id), { method:'DELETE' }); return; }
+    if (S.db){ await S.db.collection(kind).doc(id).delete(); return; }
+    delete AKV.local[kind][id];
+  }
+};
+function akBy(){ return S.api ? { by: (S.me && (S.me.id || S.me.label)) || '', byName: (S.me && S.me.label) || 'Verwaltung' } : { by: S.ap.uid || '', byName: '' }; }
+async function akResolveNames(list){
+  if (S.api || !S.ap.userApi || !S.ap.userApi.profiles) return;
+  const ids = [...new Set(list.map(m => m.by).filter(id => id && !(id in S.ak.names)))]; if (!ids.length) return;
+  try { const ps = await S.ap.userApi.profiles(ids); ids.forEach(id => { S.ak.names[id] = (ps[id] && ps[id].name) || ''; }); } catch(e) {}
+}
+const akWho = m => m.byName || S.ak.names[m.by] || '';
+
+/* Versionen: bei jedem Speichern automatisch, die letzten 30 bleiben */
+async function akRecordVersion(cfg){
+  if (!S.api && !S.db) { /* Vorschau */ }
+  const v = Object.assign({ id: akId('v'), kind:'version', name: cfg.title || 'Aktionskalender', at: new Date().toISOString(), config: clone(cfg) }, akBy());
+  try {
+    await AK.put('versionen', v);
+    if (!S.api){ const all = await AK.list('versionen'); all.sort((a,b) => String(b.at).localeCompare(String(a.at))); for (const old of all.slice(AKV.MAXV)) await AK.del('versionen', old.id); }
+    S.ak.vers = null;
+  } catch(e){ toast('Gespeichert – die Version für den Verlauf konnte aber nicht abgelegt werden'); }
+}
+
+/* Ergebnis einer Aktion aus den Bestellungen */
+function akResult(c, orders){
+  const days = periodDays(c), A = days[0], B = days[days.length-1];
+  const deals = allDeals(c), slots = new Set(deals.map(d => d.sk || d.day));
+  const inWin = o => { const d = String(o.at || '').slice(0,10); return !d || (d >= addDays(A, -1) && d <= addDays(B, 1)); };
+  const sold = {}, rev = {}, firms = new Set(); let nOrd = 0;
+  (orders || []).forEach(o => { if (!inWin(o)) return; let hit = false;
+    (o.items || []).forEach(x => { if (!slots.has(x.day)) return; hit = true; const key = x.day + '|' + x.k; sold[key] = (sold[key] || 0) + (+x.qty || 0); rev[key] = (rev[key] || 0) + (+x.line || (+x.qty || 0) * (+x.price || 0)); });
+    if (hit){ nOrd++; firms.add(((o.customer || {}).kdnr || '') + '|' + ((o.customer || {}).firma || '')); } });
+  const rows = deals.map(d => { const key = (d.sk || d.day) + '|' + d.p.k, s = sold[key] || 0;
+    return { slot: d.sk || d.day, label: dealDateLabel(d), brand: d.p.b, model: d.p.m, type: d.p.t, cat: d.p.c, price: d.price, qty: d.qty, sold: s, rev: Math.round((rev[key] || 0) * 100) / 100, pct: d.qty ? Math.round(s / d.qty * 100) : null }; });
+  const qtyAll = rows.reduce((a,r) => a + (r.qty || 0), 0), units = rows.reduce((a,r) => a + r.sold, 0);
+  const ordList = (orders || []).filter(o => inWin(o) && (o.items || []).some(x => slots.has(x.day))).map(o => ({ no:o.no, at:o.at, firma:(o.customer || {}).firma || '', kdnr:(o.customer || {}).kdnr || '', total:o.total, items:(o.items || []).filter(x => slots.has(x.day)).map(x => ({ day:x.day, aktion:x.aktion, brand:x.brand, model:x.model, qty:x.qty, price:x.price, line:x.line })) }));
+  return { at: new Date().toISOString(), sum: { orders:nOrd, dealers:firms.size, units, revenue: Math.round(rows.reduce((a,r) => a + r.rev, 0) * 100) / 100, quota: qtyAll, pct: qtyAll ? Math.round(units / qtyAll * 100) : null }, rows, orders: ordList };
+}
+function akStatus(c){ const ds = periodDays(c), t = realToday(); return t > ds[ds.length-1] ? 'past' : t < ds[0] ? 'future' : 'live'; }
+function akDefaultName(c, kind){ const y = c.start.slice(0,4); const t = c.title || 'Aktionskalender'; return (new RegExp(y).test(t) ? t : t + ' ' + y) + (kind === 'archiv' ? ' – Ergebnis' : ''); }
+
+/* Kopie für neuen Zeitraum: Tage und Zeitraum-Aktionen wandern mit */
+function akSuggestStart(c){
+  const y = +c.start.slice(0,4);
+  const bf = blackFriday(y), dbf = diffDays(bf, c.start);
+  if (c.theme === 'black' && Math.abs(dbf) <= 31) return addDays(blackFriday(y + 1), dbf);
+  if (c.motif === 'ostern' && isSeason(c)){ const de = diffDays(easter(y), c.start); if (Math.abs(de) <= 20) return addDays(easter(y + 1), de); }
+  const md = c.start.slice(5) === '02-29' ? '02-28' : c.start.slice(5);
+  let s = (y + 1) + '-' + md; while (s < realToday()) s = (+s.slice(0,4) + 1) + s.slice(4); return s;
+}
+function akShift(cfg, newStart){
+  const c = normalize(clone(cfg)), d = diffDays(c.start, newStart);
+  const days = {}; Object.entries(c.days || {}).forEach(([k, v]) => { days[addDays(k, d)] = v; });
+  const mv = r => { const n = Object.assign({}, r, { id: randId(4) }); if (n.from) n.from = addDays(n.from, d); if (n.to) n.to = addDays(n.to, d); return n; };
+  c.days = days; c.ranges = (c.ranges || []).map(mv); if (c.xdOff) c.xdOff = c.xdOff.map(mv);
+  c.start = newStart; c.example = false; delete c.updatedAt;
+  const oy = cfg.start.slice(0,4), ny = newStart.slice(0,4);
+  if (oy !== ny && c.title) c.title = c.title.split(oy).join(ny);
+  return normalize(c);
+}
+
+/* Automatisches Zwischenspeichern (pro Browser) */
+const AUTO_KEY = 'ak-autosave';
+function autoRead(){ try { const v = JSON.parse(lsGet(AUTO_KEY) || 'null'); return v && v.draft ? v : null; } catch(e){ return null; } }
+function autoClear(){ lsSet(AUTO_KEY, ''); try { localStorage.removeItem(AUTO_KEY); } catch(e) {} delete MEM[AUTO_KEY]; }
+function autoSchedule(){
+  clearTimeout(autoSchedule._t);
+  autoSchedule._t = setTimeout(() => { if (!S.dirty || !S.canEdit || !S.draft) return;
+    try { lsSet(AUTO_KEY, JSON.stringify({ at: new Date().toISOString(), base: (S.config && S.config.updatedAt) || '', draft: S.draft })); S.ak.autoAt = new Date().toISOString(); const el = $('auto-st'); if (el) el.textContent = 'Entwurf automatisch gesichert ' + fmtAt(S.ak.autoAt).slice(-5); } catch(e) {}
+  }, 1200);
+}
+function autoBannerHTML(){
+  if (S.dirty || !S.canEdit) return '';
+  const a = autoRead(); if (!a) return '';
+  if (JSON.stringify(normalize(clone(a.draft))) === JSON.stringify(S.config)) { autoClear(); return ''; }
+  const newer = S.config && S.config.updatedAt && a.base !== S.config.updatedAt;
+  return '<div class="section" id="auto-banner" style="border-color:var(--warn)"><b>Nicht gespeicherter Entwurf gefunden</b> <span class="small">· automatisch gesichert am ' + esc(fmtAt(a.at)) + ' · „' + esc(a.draft.title || 'Aktionskalender') + '“, ' + esc(akPeriod(a.draft)) + '</span>' +
+    (newer ? '<p class="warnline" style="margin:6px 0 0">Die Planung wurde danach neu gespeichert (' + esc(fmtAt(S.config.updatedAt)) + '). Beim Wiederherstellen ersetzt der Entwurf diesen Stand.</p>' : '') +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn primary" id="auto-restore">Entwurf wiederherstellen</button><button type="button" class="btn" id="auto-drop">Entwurf verwerfen</button></div></div>';
+}
+window.addEventListener('beforeunload', e => { if (S.dirty){ e.preventDefault(); e.returnValue = ''; } });
+
+/* Ansicht „Aktionen“ */
+async function akLoad(force){
+  if (S.ak.busy) return; if (!force && S.ak.list && S.ak.vers) return;
+  S.ak.busy = true; S.ak.err = '';
+  try { const [l, v] = await Promise.all([AK.list('aktionen'), AK.list('versionen')]);
+    S.ak.list = l.sort((a,b) => String(b.at).localeCompare(String(a.at))); S.ak.vers = v.sort((a,b) => String(b.at).localeCompare(String(a.at))).slice(0, AKV.MAXV);
+    await akResolveNames(S.ak.list.concat(S.ak.vers));
+  } catch(e){ S.ak.list = S.ak.list || []; S.ak.vers = S.ak.vers || []; S.ak.err = e && e.message === 'server' ? 'Die Speicherfunktion fehlt auf dem Server noch: bitte die Datei functions/api/aktionen.js aus dem Update-Paket ins Repository laden.' : 'Gespeicherte Aktionen konnten nicht geladen werden.'; }
+  S.ak.busy = false;
+}
+const akKindBadge = k => k === 'archiv' ? '<span class="apb ok">Archiv</span>' : '<span class="apb open">Vorlage</span>';
+function akFormHTML(){
+  const f = S.ak.form; if (!f) return '';
+  if (f.type === 'name') return '<div class="akform"><label class="f" style="flex:1 1 200px">Name<input type="text" id="ak-name" value="' + esc(f.name) + '" maxlength="80"></label>' +
+    '<button type="button" class="btn primary" id="ak-name-ok">' + (f.kind === 'archiv' ? 'Mit Ergebnis archivieren' : 'Speichern') + '</button><button type="button" class="btn" id="ak-cancel">Abbrechen</button>' +
+    (f.kind === 'archiv' ? '<span class="small" style="flex-basis:100%">Archiviert werden die Planung und das Ergebnis aus den Bestellungen dieses Zeitraums (Bestellungen, Händler, Stück, Umsatz zum Aktions-HEK, Abverkauf je Aktion).</span>' : '<span class="small" style="flex-basis:100%">' + (f.src === 'draft' ? 'Gespeichert wird der aktuelle Bearbeitungsstand – auch mit noch nicht veröffentlichten Änderungen. Die Händleransicht ändert sich dadurch nicht.' : 'Gespeichert wird die veröffentlichte Planung.') + '</span>') + '</div>';
+  if (f.type === 'copy') return '<div class="akform"><b style="flex-basis:100%">Kopie von „' + esc(f.name) + '“ als neue Planung</b><label class="f">Neues Startdatum<input type="date" id="ak-cstart" value="' + esc(f.start) + '"></label><label class="f" style="flex:1 1 240px">Titel<input type="text" id="ak-ctitle" value="' + esc(f.title) + '"></label>' +
+    '<button type="button" class="btn primary" id="ak-copy-ok">In die Verwaltung laden</button><button type="button" class="btn" id="ak-cancel">Abbrechen</button><span class="small" style="flex-basis:100%">Alle Tagesaktionen und Zeitraum-Aktionen wandern mit dem Startdatum mit (gleiche Abstände). Aktions-HEK und Mengen bleiben als Vorschlag erhalten. Die aktuelle Planung wird erst mit „Speichern &amp; veröffentlichen“ ersetzt.</span></div>';
+  return '';
+}
+function akConfirmHTML(id){ const c = S.ak.confirm; if (!c || c.id !== id) return ''; return '<tr><td colspan="7"><p class="warnline" style="margin:0">' + esc(c.text) + ' <button type="button" class="btn" id="ak-yes" style="padding:5px 10px">' + esc(c.yes) + '</button> <button type="button" class="btn" id="ak-no" style="padding:5px 10px">Abbrechen</button></p></td></tr>'; }
+function renderAktionen(){
+  if (!S.ak.list || !S.ak.vers){ $('app').innerHTML = '<div class="admin"><section class="section"><h2>Aktionen</h2><p class="small">Wird geladen …</p></section></div>'; renderSavebar(); akLoad().then(() => { if (S.view === 'aktionen') renderAktionen(); }); return; }
+  const c = S.config, st = akStatus(c), last = periodDays(c)[c.count-1];
+  const archived = S.ak.list.some(m => m.kind === 'archiv' && m.start === c.start && m.count === c.count && m.title === (c.title || ''));
+  const list = S.ak.list.filter(m => S.ak.filter === 'alle' || m.kind === S.ak.filter);
+  const btn = (attr, label, primary) => '<button type="button" class="btn' + (primary ? ' primary' : '') + '" ' + attr + ' style="padding:5px 10px;font-size:12.5px">' + label + '</button>';
+  const rows = list.map(m => '<tr><td><b>' + esc(m.name) + '</b><br><span class="small">' + esc(m.title) + ' · ' + esc(THEMES[m.theme] || '') + '</span></td><td>' + akKindBadge(m.kind) + '</td><td>' + esc(akPeriod(m)) + '</td><td class="num">' + (m.deals || 0) + '</td>' +
+    '<td>' + (m.sum ? '<b>' + m.sum.units + '</b> Stk. · ' + eur(m.sum.revenue) + '<br><span class="small">' + m.sum.orders + ' Bestellungen · ' + m.sum.dealers + ' Händler' + (m.sum.pct != null ? ' · ' + m.sum.pct + ' % Abverkauf' : '') + '</span>' : '<span class="small">–</span>') + '</td>' +
+    '<td><span class="small">' + esc(fmtAt(m.at)) + (akWho(m) ? '<br>' + esc(akWho(m)) : '') + '</span></td>' +
+    '<td><div class="akbtns">' + btn('data-akload="' + esc(m.id) + '"', 'Laden') + btn('data-akcopy="' + esc(m.id) + '"', 'Kopie für neuen Zeitraum') + (m.kind === 'archiv' ? btn('data-akres="' + esc(m.id) + '"', 'Ergebnis') : '') + btn('data-akjson="' + esc(m.id) + '"', 'Datei') + '<button type="button" class="linkbtn" data-akdel="' + esc(m.id) + '" style="font-size:12.5px">Löschen</button></div></td></tr>' + akConfirmHTML(m.id)).join('');
+  const vrows = S.ak.vers.map((m, i) => '<tr><td>' + esc(fmtAt(m.at)) + (i === 0 ? ' <span class="apb ok">aktuell</span>' : '') + '</td><td>' + esc(akWho(m) || '–') + '</td><td>' + esc(m.title || m.name) + '</td><td>' + esc(akPeriod(m)) + '</td><td class="num">' + (m.deals || 0) + '</td><td colspan="2"><div class="akbtns">' + (i === 0 ? '' : btn('data-akvload="' + esc(m.id) + '"', 'Wiederherstellen')) + btn('data-akvsave="' + esc(m.id) + '"', 'Als Aktion sichern') + '</div></td></tr>' + akConfirmHTML(m.id)).join('');
+  $('app').innerHTML = '<div class="admin">' + (S.ak.err ? '<p class="warnline" style="margin-top:0">' + esc(S.ak.err) + '</p>' : '') +
+    '<section class="section"><div class="section-head"><div><h3>Aktuelle Planung</h3><span class="small">„' + esc(c.title || 'Aktionskalender') + '“ · ' + esc(periodLabel(c)) + ' · ' + (st === 'past' ? 'abgelaufen' : st === 'live' ? 'läuft' : 'geplant') + (c.updatedAt ? ' · zuletzt gespeichert ' + esc(fmtAt(c.updatedAt)) : '') + '</span></div>' +
+    '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="ak-save-live">Unter Namen speichern</button><button type="button" class="btn' + (st === 'past' && !archived ? ' primary' : '') + '" id="ak-archive">Mit Ergebnis archivieren</button><label class="btn upl" style="padding:9px 14px;font-size:inherit">Aus Datei laden<input type="file" id="ak-import" accept=".json,application/json" hidden></label></span></div>' +
+    (st === 'past' && !archived ? '<p class="warnline" style="margin:0 0 8px">Diese Aktion ist am ' + esc(fmtShort(last) + last.slice(0,4)) + ' abgelaufen und noch nicht archiviert. Mit „Mit Ergebnis archivieren“ bleiben Planung und Ergebnis dauerhaft erhalten.</p>' : '') +
+    akFormHTML() +
+    '<p class="small" style="margin-bottom:0">Jede Änderung in der Verwaltung wird während der Bearbeitung automatisch in diesem Browser zwischengespeichert. Jedes „Speichern &amp; veröffentlichen“ legt zusätzlich eine Version an (die letzten ' + AKV.MAXV + ' bleiben, siehe unten).</p></section>' +
+    '<section class="section"><div class="section-head"><div><h3>Gespeicherte Aktionen</h3><span class="small">Vorlagen und archivierte Aktionen. „Laden“ übernimmt die Aktion unverändert, „Kopie für neuen Zeitraum“ verschiebt alle Aktionstage auf ein neues Startdatum – z. B. Black Weeks 2026 → 2027. Erst „Speichern &amp; veröffentlichen“ macht sie für Händler sichtbar.</span></div>' +
+    '<div class="filters" style="margin:0">' + [['alle','Alle'],['vorlage','Vorlagen'],['archiv','Archiv']].map(([k,l]) => '<button type="button" class="chip" data-akf="' + k + '" aria-pressed="' + (S.ak.filter === k) + '">' + l + '</button>').join('') + '</div></div>' +
+    '<div class="tblwrap"><table class="aptbl akt"><thead><tr><th>Name</th><th>Art</th><th>Zeitraum</th><th style="text-align:right">Aktionen</th><th>Ergebnis</th><th>Gespeichert</th><th></th></tr></thead><tbody>' + (rows || '<tr><td colspan="7" class="small">Noch keine gespeicherten Aktionen.</td></tr>') + '</tbody></table></div></section>' +
+    '<section class="section"><div class="section-head"><div><h3>Versionen</h3><span class="small">Entstehen automatisch bei jedem „Speichern &amp; veröffentlichen“. „Wiederherstellen“ lädt den früheren Stand in die Verwaltung, live wird er erst nach dem Speichern.</span></div></div>' +
+    '<div class="tblwrap"><table class="aptbl akt"><thead><tr><th>Gespeichert</th><th>von</th><th>Titel</th><th>Zeitraum</th><th style="text-align:right">Aktionen</th><th colspan="2"></th></tr></thead><tbody>' + (vrows || '<tr><td colspan="7" class="small">Noch keine Versionen – die erste entsteht beim nächsten Speichern.</td></tr>') + '</tbody></table></div></section></div>';
+  renderSavebar();
+}
+function akResultDialog(it){
+  const r = it.result || { sum:{}, rows:[] }, s = r.sum || {};
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog" role="dialog" aria-modal="true" aria-label="Ergebnis" style="max-width:900px"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button><div class="cartin">' +
+    '<h2 style="margin:0 0 4px">' + esc(it.name) + '</h2><p class="small" style="margin:0 0 12px">' + esc(akPeriod(it.config)) + ' · archiviert ' + esc(fmtAt(it.at)) + '</p>' +
+    '<div class="tblwrap"><table class="aptbl"><thead><tr><th style="text-align:right">Bestellungen</th><th style="text-align:right">Händler</th><th style="text-align:right">Stück</th><th style="text-align:right">Kontingent</th><th style="text-align:right">Abverkauf</th><th style="text-align:right">Umsatz (Aktions-HEK)</th></tr></thead><tbody><tr><td class="num">' + (s.orders || 0) + '</td><td class="num">' + (s.dealers || 0) + '</td><td class="num">' + (s.units || 0) + '</td><td class="num">' + (s.quota || '–') + '</td><td class="num">' + (s.pct != null ? s.pct + ' %' : '–') + '</td><td class="num">' + eur(s.revenue || 0) + '</td></tr></tbody></table></div>' +
+    '<div class="tblwrap" style="margin-top:12px"><table class="aptbl"><thead><tr><th>Aktion</th><th>Gerät</th><th style="text-align:right">Aktions-HEK</th><th style="text-align:right">Kontingent</th><th style="text-align:right">Bestellt</th><th style="text-align:right">Abverkauf</th><th style="text-align:right">Umsatz</th></tr></thead><tbody>' +
+    (r.rows || []).map(x => '<tr><td>' + esc(x.label) + '</td><td><b>' + esc(x.brand + ' ' + x.model) + '</b><br><span class="small">' + esc(x.type || '') + '</span></td><td class="num">' + eur(x.price) + '</td><td class="num">' + (x.qty ?? '–') + '</td><td class="num">' + x.sold + '</td><td class="num">' + (x.pct != null ? x.pct + ' %' : '–') + '</td><td class="num">' + eur(x.rev) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="btn primary" data-akrescsv="' + esc(it.id) + '">Als CSV (Excel)</button><button type="button" class="btn" data-akcopy="' + esc(it.id) + '">Kopie für neuen Zeitraum</button></div></div></div></div>';
+  S.ak.open = it;
+}
+async function akResultCsv(it){
+  const q = v => '"' + String(v ?? '').replace(/"/g,'""') + '"', n = v => v == null ? '' : String(v).replace('.', ',');
+  const lines = [['Aktion','Marke','Modell','Bezeichnung','Kategorie','Aktions-HEK','Kontingent','Bestellt','Abverkauf %','Umsatz'].map(q).join(';')];
+  (it.result.rows || []).forEach(x => lines.push([x.label, x.brand, x.model, x.type, x.cat, n(x.price), x.qty ?? '', x.sold, x.pct ?? '', n(x.rev)].map(q).join(';')));
+  lines.push(''); lines.push([q('Bestellnummer'), q('Eingang'), q('Firma'), q('Kundennummer'), q('Aktion'), q('Gerät'), q('Menge'), q('Summe')].join(';'));
+  (it.result.orders || []).forEach(o => o.items.forEach(x => lines.push([o.no, fmtAt(o.at), o.firma, o.kdnr, x.aktion || x.day, x.brand + ' ' + x.model, x.qty, n(x.line)].map(q).join(';'))));
+  const r = await saveFile('Ergebnis_' + it.name.replace(/[^\wäöüÄÖÜß-]+/g,'_') + '.csv', new Blob(['\ufeff' + lines.join('\r\n')], { type:'text/csv' }));
+  if (r === 'saved') toast('CSV gespeichert');
+}
+function akLoadIntoAdmin(cfg, msg){
+  S.draft = normalize(clone(cfg)); S.draft.example = false; S.dirty = true; S.view = 'admin'; S.ak.form = null; S.ak.confirm = null;
+  $('overlay-slot').innerHTML = ''; render(); window.scrollTo(0,0); autoSchedule(); toast(msg);
+}
+async function akSaveNamed(kind, name, src){
+  const base = src === 'draft' ? S.draft : S.config;
+  const cfg = normalize(clone(base)); cfg.example = !!base.example;
+  const obj = Object.assign({ id: akId('a'), kind, name: name || akDefaultName(cfg, kind), at: new Date().toISOString(), config: cfg }, akBy());
+  if (kind === 'archiv'){ S.orders = null; await loadOrders(); obj.result = akResult(cfg, S.orders || []); }
+  let txt = JSON.stringify(obj);
+  if (!S.api && txt.length > 900000 && obj.result){ obj.result.orders = []; obj.result.ordersDropped = true; txt = JSON.stringify(obj); }
+  try { await AK.put('aktionen', obj); S.ak.list = null; S.ak.form = null; toast(kind === 'archiv' ? '„' + obj.name + '“ mit Ergebnis archiviert' : '„' + obj.name + '“ gespeichert'); }
+  catch(e){ toast('Speichern nicht möglich: ' + ((e && e.message === 'server') ? 'Server-Update fehlt (functions/api/aktionen.js)' : (e && e.code === 'not_granted') ? 'keine Berechtigung' : 'bitte erneut versuchen')); }
+  if (S.view === 'aktionen'){ await akLoad(true); renderAktionen(); }
+}
+async function akFile(it){
+  const data = { format:'aktionskalender-aktion', version:1, name: it.name, kind: it.kind, at: it.at, config: it.config, result: it.result || null };
+  const r = await saveFile('Aktion_' + it.name.replace(/[^\wäöüÄÖÜß-]+/g,'_') + '.json', new Blob([JSON.stringify(data, null, 1)], { type:'application/json' }));
+  if (r === 'saved') toast('Datei gespeichert – lässt sich in jeder Kalender-Installation über „Aus Datei laden“ übernehmen');
+}
+async function akImport(file){
+  try { const j = JSON.parse(await file.text()); const cfg = j && (j.config || (j.start && j.days ? j : null)); if (!cfg || !cfg.start) throw 0;
+    const obj = Object.assign({ id: akId('a'), kind: j.kind === 'archiv' ? 'archiv' : 'vorlage', name: (j.name || cfg.title || 'Importierte Aktion') + ' (Import)', at: new Date().toISOString(), config: normalize(clone(cfg)), result: j.result || undefined }, akBy());
+    if (!obj.result) delete obj.result;
+    await AK.put('aktionen', obj); S.ak.list = null; await akLoad(true); renderAktionen(); toast('„' + obj.name + '“ übernommen – mit „Laden“ in die Verwaltung holen');
+  } catch(e){ toast(e && e.message === 'server' ? 'Server-Update fehlt (functions/api/aktionen.js)' : 'Die Datei ist keine gespeicherte Aktion'); }
+}
+document.addEventListener('click', async e => {
+  const t = e.target;
+  if (t.id === 'tab-akt'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } S.view = 'aktionen'; S.ak.list = null; S.ak.vers = null; S.ak.form = null; S.ak.confirm = null; render(); return; }
+  if (t.id === 'auto-restore'){ const a = autoRead(); if (!a) return; S.draft = normalize(clone(a.draft)); S.dirty = true; renderAdmin(); toast('Entwurf wiederhergestellt – noch nicht veröffentlicht'); return; }
+  if (t.id === 'auto-drop'){ autoClear(); const b = $('auto-banner'); if (b) b.remove(); toast('Entwurf verworfen'); return; }
+  if (t.id === 'btn-saveas'){ S.ak.form = { type:'name', kind:'vorlage', name: akDefaultName(S.draft, 'vorlage'), src:'draft' };
+    $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog" role="dialog" aria-modal="true" aria-label="Unter Namen sichern" style="max-width:560px"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button><div class="cartin"><h2 style="margin:0 0 10px">Unter Namen sichern</h2>' + akFormHTML() + '</div></div></div>'; const i = $('ak-name'); if (i){ i.focus(); i.select(); } return; }
+  if (S.view !== 'aktionen' && !t.closest('#ov')) return;
+  const f = t.closest('[data-akf]'); if (f){ S.ak.filter = f.dataset.akf; renderAktionen(); return; }
+  if (t.id === 'ak-save-live'){ S.ak.form = { type:'name', kind:'vorlage', name: akDefaultName(S.config, 'vorlage'), src:'live' }; S.ak.confirm = null; renderAktionen(); $('ak-name').focus(); return; }
+  if (t.id === 'ak-archive'){ S.ak.form = { type:'name', kind:'archiv', name: akDefaultName(S.config, 'archiv'), src:'live' }; S.ak.confirm = null; renderAktionen(); $('ak-name').focus(); return; }
+  if (t.id === 'ak-cancel'){ S.ak.form = null; if ($('ov')) $('overlay-slot').innerHTML = ''; if (S.view === 'aktionen') renderAktionen(); return; }
+  if (t.id === 'ak-name-ok'){ const fm = S.ak.form; if (!fm) return; const nm = ($('ak-name').value || '').trim(); t.disabled = true; t.textContent = fm.kind === 'archiv' ? 'Ergebnis wird berechnet …' : 'Speichert …'; const inDlg = !!t.closest('#ov'); await akSaveNamed(fm.kind, nm, fm.src); if (inDlg) $('overlay-slot').innerHTML = ''; return; }
+  const ld = t.closest('[data-akload]'); if (ld){ S.ak.confirm = { id: ld.dataset.akload, act:'load', text:'Diese Aktion in die Verwaltung laden? Die aktuelle Planung bleibt live, bis du speicherst.', yes:'Ja, laden' }; renderAktionen(); return; }
+  const vl = t.closest('[data-akvload]'); if (vl){ S.ak.confirm = { id: vl.dataset.akvload, act:'vload', text:'Diesen Stand in die Verwaltung laden? Live wird er erst mit „Speichern & veröffentlichen“.', yes:'Ja, wiederherstellen' }; renderAktionen(); return; }
+  const dl = t.closest('[data-akdel]'); if (dl){ S.ak.confirm = { id: dl.dataset.akdel, act:'del', text:'Diese gespeicherte Aktion endgültig löschen?', yes:'Ja, löschen' }; renderAktionen(); return; }
+  if (t.id === 'ak-no'){ S.ak.confirm = null; renderAktionen(); return; }
+  if (t.id === 'ak-yes'){ const cf = S.ak.confirm; if (!cf) return; t.disabled = true;
+    try {
+      if (cf.act === 'del'){ await AK.del('aktionen', cf.id); S.ak.confirm = null; await akLoad(true); renderAktionen(); toast('Gelöscht'); return; }
+      const it = await AK.get(cf.act === 'vload' ? 'versionen' : 'aktionen', cf.id); if (!it) throw 0;
+      akLoadIntoAdmin(it.config, cf.act === 'vload' ? 'Version vom ' + fmtAt(it.at) + ' geladen – prüfen und speichern' : '„' + it.name + '“ geladen – prüfen und mit „Speichern & veröffentlichen“ live schalten');
+    } catch(x){ S.ak.confirm = null; renderAktionen(); toast('Aktion nicht möglich – bitte erneut versuchen'); }
+    return; }
+  const cp = t.closest('[data-akcopy]'); if (cp){ try { const it = await AK.get('aktionen', cp.dataset.akcopy); if (!it) throw 0; const ns = akSuggestStart(it.config); const oy = it.config.start.slice(0,4), ny = ns.slice(0,4);
+      S.ak.form = { type:'copy', id: it.id, name: it.name, cfg: it.config, start: ns, title: (it.config.title || '').split(oy).join(ny) }; S.ak.confirm = null; $('overlay-slot').innerHTML = ''; renderAktionen(); window.scrollTo(0,0); } catch(x){ toast('Aktion konnte nicht geladen werden'); } return; }
+  if (t.id === 'ak-copy-ok'){ const fm = S.ak.form; const ns = $('ak-cstart').value; if (!fm || !/^\d{4}-\d{2}-\d{2}$/.test(ns)){ toast('Bitte ein Startdatum wählen'); return; }
+    const c2 = akShift(fm.cfg, ns); const tt = ($('ak-ctitle').value || '').trim(); if (tt) c2.title = tt;
+    akLoadIntoAdmin(c2, 'Kopie für ' + akPeriod(c2) + ' geladen – Aktions-HEK und Mengen prüfen, dann speichern'); return; }
+  const rs = t.closest('[data-akres]'); if (rs){ try { const it = await AK.get('aktionen', rs.dataset.akres); if (!it || !it.result) throw 0; akResultDialog(it); } catch(x){ toast('Ergebnis konnte nicht geladen werden'); } return; }
+  const rc = t.closest('[data-akrescsv]'); if (rc && S.ak.open){ akResultCsv(S.ak.open); return; }
+  const js = t.closest('[data-akjson]'); if (js){ try { const it = await AK.get('aktionen', js.dataset.akjson); if (!it) throw 0; akFile(it); } catch(x){ toast('Datei konnte nicht erstellt werden'); } return; }
+  const vs = t.closest('[data-akvsave]'); if (vs){ try { const it = await AK.get('versionen', vs.dataset.akvsave); if (!it) throw 0; const obj = Object.assign({ id: akId('a'), kind:'vorlage', name: (it.config.title || 'Aktionskalender') + ' – Stand ' + fmtAt(it.at), at: new Date().toISOString(), config: it.config }, akBy()); await AK.put('aktionen', obj); await akLoad(true); renderAktionen(); toast('Als Aktion gesichert'); } catch(x){ toast('Sichern nicht möglich'); } return; }
+});
+document.addEventListener('change', e => { const t = e.target; if (t.id === 'ak-import' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; akImport(f); } });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'ak-name'){ e.preventDefault(); const b = $('ak-name-ok'); if (b) b.click(); } });
 
 /* ---------- Start ---------- */
 (async function start(){
