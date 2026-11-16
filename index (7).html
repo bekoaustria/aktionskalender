@@ -5,6 +5,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Anton&family=Montserrat:wght@800;900&family=DM+Serif+Display:ital@0;1&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: Adventskalender als Türchen-Raster (Händleransicht) + Verwaltung als Arbeitsfläche mit Sortiment, Tagesbelegung, Einstellungen */
+/* Online-Flyer (#flyer): nur der Flyer, ohne Kopf, Reiter und Kalender */
+body.flyonly>*:not(#app):not(#toast-slot):not(script):not(style):not(link):not(title):not(meta){display:none!important}
+body.flyonly{background:#8A8F99}
+body.flyonly #app{max-width:none!important;width:100%;padding:0!important;margin:0!important}
 :root{
   --bg:#EEF1F8; --surface:#FFFFFF; --surface-2:#F6F8FC; --ink:#0B1638; --muted:#5A6688; --line:#D9DFEC;
   --door:#11286F; --door-2:#1B3A94; --door-ink:#F4E3B5; --gold:#D6A13C; --accent:#C8102E; --accent-ink:#FFFFFF;
@@ -788,7 +792,7 @@ async function uploadPdf(file){
 const xCats = () => [...new Set(CAT.filter(p => !p.x).map(p => p.c))].sort((a,b) => a.localeCompare(b, 'de'));
 function xFormHTML(k){
   const ex = k ? (S.draft.extra || {})[k] : null, pe = k ? (S.draft.pool[k] || {}) : {};
-  S.xf = { k: k || null, i: ex ? ex.i || '' : '', dsId: pe.dsId || '' };
+  S.xf = { k: k || null, i: ex ? ex.i || imgSrc((S.draft.imgs || {})[k]) || '' : '', dsId: pe.dsId || '' };
   const b = ex ? ex.b : (S.f.brand !== 'alle' ? S.f.brand : BRANDS[0]), cat = ex ? ex.c : (S.f.cat !== 'alle' ? S.f.cat : '');
   return '<div class="xform" id="xform-in"><h4>' + (k ? 'Eigenes Produkt bearbeiten' : 'Eigenes Produkt anlegen') + '</h4><p class="small" style="margin:0 0 10px">Für Geräte, die nicht (mehr) im Katalog sind. Das Produkt wird direkt ins Aktionssortiment aufgenommen und kann Tagen oder Zeiträumen zugeordnet werden.</p><div class="fields">' +
     '<label class="f">Marke *<select id="xf-b"' + (k ? ' disabled' : '') + '>' + BRANDS.map(x => '<option' + (x === b ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></label>' +
@@ -810,7 +814,7 @@ function xSave(){
   const k = S.xf.k || (b + '|' + m);
   if (!S.xf.k && (BYK.has(k) || (S.draft.extra || {})[k])){ err.textContent = BYK.get(k) && !BYK.get(k).x ? 'Dieses Modell ist im Katalog vorhanden – bitte dort ins Aktionssortiment aufnehmen.' : 'Dieses Produkt wurde bereits angelegt.'; err.hidden = false; return; }
   S.draft.extra = S.draft.extra || {};
-  S.draft.extra[k] = { b, c, m, t, u: num(f('xf-u')), i: S.xf.i || '' };
+  S.draft.extra[k] = { b, c, m, t, u: num(f('xf-u')), i: S.xf.iNew ? S.xf.i : (((S.draft.extra || {})[k] || {}).i || '') };
   if (S.xf.iNew && S.draft.imgs) delete S.draft.imgs[k];
   const pe = S.draft.pool[k] || (S.draft.pool[k] = {});
   pe.ds = f('xf-ds').trim(); if (S.xf.dsId) pe.dsId = S.xf.dsId; else delete pe.dsId;
@@ -890,7 +894,7 @@ function stockText(q){
   return '<span class="stock">' + (q === 1 ? 'Nur mehr 1 Stück verfügbar' : 'Nur mehr ' + q + ' Stück verfügbar') + '</span>';
 }
 function savePct(hek, price){ if (!hek || price == null || price >= hek) return ''; return '<span class="save">−' + Math.round((1 - price/hek)*100) + ' %</span>'; }
-function toast(msg){ const t = $('toast-slot'); t.innerHTML = '<div class="toast" role="status">' + esc(msg) + '</div>'; clearTimeout(toast._t); toast._t = setTimeout(() => t.innerHTML = '', 2600); }
+function toast(msg, ms){ const t = $('toast-slot'); t.innerHTML = '<div class="toast" role="status">' + esc(msg) + '</div>'; clearTimeout(toast._t); toast._t = setTimeout(() => t.innerHTML = '', ms || 2600); }
 
 /* ---------- Beispielbelegung (nur Vorschau ohne Datenspeicher oder auf Knopfdruck) ---------- */
 function exampleConfig(base){
@@ -1623,6 +1627,29 @@ function autoFill(){
   markDirty(); renderDays(); renderSavebar(); toast(filled + ' Tage gefüllt');
 }
 
+/* Die Datenbank des Claude-Artifacts nimmt je Dokument max. 256 KB. Eingebettete Produktbilder (data:-URLs, z. B. bei eigenen Produkten)
+   sprengen das – sie werden vor dem Speichern als Asset hochgeladen und nur noch als Verweis gespeichert. */
+const OFFLOAD = new Map();
+async function offloadImgs(c){
+  if (S.api || !S.assets || !c) return 0;
+  let n = 0;
+  const up = async v => { if (OFFLOAD.has(v)) return OFFLOAD.get(v); const b = await (await fetch(v)).blob(); const r = await S.assets.upload(b); OFFLOAD.set(v, r.id); return r.id; };
+  const isData = v => typeof v === 'string' && v.startsWith('data:');
+  c.imgs = c.imgs || {};
+  for (const [k, v] of Object.entries(c.imgs)) if (isData(v)){ c.imgs[k] = await up(v); n++; }
+  for (const [k, e] of Object.entries(c.extra || {})) if (e && isData(e.i)){ if (!imgSrc(c.imgs[k])) c.imgs[k] = await up(e.i); e.i = ''; n++; }
+  for (const [k, e] of Object.entries(c.pool || {})) if (e && isData(e.img)){ if (!imgSrc(c.imgs[k])) c.imgs[k] = await up(e.img); delete e.img; n++; }
+  return n;
+}
+const cfgKB = c => { try { return Math.ceil(new Blob([JSON.stringify(c)]).size / 1024); } catch(e){ return 0; } };
+const DB_MAX_KB = 250;
+function dbErrText(e, kb){
+  const code = e && e.code;
+  if (code === 'invalid_argument' || (kb && kb > DB_MAX_KB)) return 'Speichern nicht möglich: Die Planung ist zu groß' + (kb ? ' (' + kb + ' KB, erlaubt sind 256 KB)' : '') + '. Meist sind eingebettete Produktbilder die Ursache – bitte Seite neu laden und erneut versuchen.';
+  if (code === 'quota_exceeded') return 'Speichern nicht möglich: Der Speicherplatz des Kalenders ist voll. Bitte unter „Aktionen“ alte Versionen löschen.';
+  if (code === 'not_granted') return 'Speichern nicht möglich: keine Berechtigung (nur Bearbeiter können speichern).';
+  return 'Speichern nicht möglich – bitte erneut versuchen. Deine Änderungen sind noch nicht gespeichert.';
+}
 async function save(){
   const data = clone(S.draft); data.example = false; data.updatedAt = new Date().toISOString();
   normalize(data);
@@ -1631,21 +1658,26 @@ async function save(){
     try {
       const r = await fetch('/api/config', { method:'PUT', headers:{ 'content-type':'application/json', 'authorization':'Bearer ' + S.pw }, body: JSON.stringify(data) });
       if (r.status === 401){ ssSet('kal-admin', null); S.canEdit = false; S.view = 'kalender'; renderSavebar(); render(); toast('Anmeldung abgelaufen – bitte unter /admin neu anmelden. Deine Änderungen wurden nicht gespeichert.'); return; }
+      if (r.status === 413){ renderSavebar(); toast('Speichern nicht möglich: Die Planung ist zu groß (' + cfgKB(data) + ' KB, erlaubt sind 2 MB). Bitte kleinere Produktbilder verwenden.', 9000); return; }
       if (!r.ok) throw new Error('http ' + r.status);
       const j = await r.json(); data.updatedAt = j.updatedAt || data.updatedAt;
       S.config = data; S.draft = clone(data); S.dirty = false; autoClear(); renderSavebar(); renderAdmin(); toast('Gespeichert – Händler sehen jetzt den neuen Stand');
       akRecordVersion(data);
-    } catch(e){ renderSavebar(); toast('Speichern nicht möglich – bitte Internetverbindung prüfen und erneut speichern'); }
+    } catch(e){ renderSavebar(); toast('Speichern nicht möglich – bitte Internetverbindung prüfen und erneut speichern. Deine Änderungen sind noch nicht gespeichert.', 9000); }
     return;
   }
   if (S.demo || !S.db){ S.config = data; S.draft = clone(data); S.dirty = false; autoClear(); renderSavebar(); akRecordVersion(data); toast('Vorschau: übernommen, aber nicht dauerhaft gespeichert'); return; }
   const btn = $('btn-save'); if (btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
+  let kb = 0;
   try {
+    try { await offloadImgs(data); } catch(x) {}
+    kb = cfgKB(data);
+    if (kb > DB_MAX_KB) throw { code:'invalid_argument' };
     await S.db.doc('calendar/config').set(data);
     S.config = data; S.draft = clone(data); S.dirty = false; autoClear(); renderSavebar(); renderAdmin(); toast('Gespeichert – Händler sehen jetzt den neuen Stand');
     akRecordVersion(data);
   } catch(e){
-    renderSavebar(); toast('Speichern nicht möglich: ' + (e && e.code === 'not_granted' ? 'keine Berechtigung' : 'bitte erneut versuchen'));
+    renderSavebar(); toast(dbErrText(e, kb), 9000);
   }
 }
 
@@ -1910,7 +1942,7 @@ body.black .day .n{color:var(--hi);font-size:15pt}
 .day .tag{font-family:Anton,Impact,sans-serif;font-size:9pt;background:#FF2E4D;color:#fff;padding:.3mm 1.5mm;letter-spacing:.04em}
 .sv{position:absolute;top:2.4mm;right:2.4mm;background:var(--svbg);color:var(--svink);font-weight:800;font-size:8pt;padding:.6mm 1.8mm;border-radius:1.2mm;z-index:2}
 body.black .sv{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:11pt;border-radius:0;transform:rotate(-4deg)}
-.img{flex:1;min-height:0;position:relative;margin:10mm 0 2mm}
+.img{flex:1;min-height:0;position:relative;margin:7mm 0 1.5mm}
 body.black .img{background:#fff;border-radius:2mm}
 .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
 body.black .img img{inset:1.5mm;width:calc(100% - 3mm);height:calc(100% - 3mm);mix-blend-mode:normal}
@@ -1934,7 +1966,7 @@ body.black .p{font-size:20pt}
 body.black .t.hero{background:var(--hi);border-color:var(--hi);color:#000}
 body.black .t.hero .sv{background:#000;color:var(--hi)}
 body.black .t.hero .br,body.black .t.hero .ty,body.black .t.hero .lab,body.black .t.hero .ft{color:#333}
-body.black .t.hero .lab{border-color:rgba(0,0,0,.3)}
+body.black .t.hero .lab,body.black .t.hero .bot{border-color:rgba(0,0,0,.3)}
 body.black .t.hero .p{color:#000}body.black .t.hero .q{color:#C8102E}
 .t.single{grid-column:1/-1;grid-row:1/-1;padding:5mm 7mm}
 .t.single .img{margin:14mm 0 4mm}
@@ -1975,6 +2007,10 @@ function flyDs(c, p, opt){
 const FLY_DS_CSS = `
 .dsrow{display:flex;align-items:flex-start;justify-content:space-between;gap:2mm}
 .dsrow>div{min-width:0;flex:1}
+.bot{display:flex;align-items:flex-end;justify-content:space-between;gap:2mm;margin-top:1mm;border-top:.3mm dashed var(--line);padding-top:1mm}
+.bot>.pb{min-width:0;flex:1}
+.bot .lab{margin-top:0;border-top:0;padding-top:0}
+.bot .qr{margin-top:0}
 .qr{position:relative;flex:0 0 auto;margin-top:1.2mm;z-index:3;background:#fff;padding:.9mm .9mm .5mm;border-radius:1mm;display:flex;flex-direction:column;align-items:center;text-decoration:none;box-shadow:0 0 0 .25mm rgba(0,0,0,.18)}
 .qr img,.img .qr img,.pic .qr img{position:static!important;inset:auto!important;width:13mm!important;height:13mm!important;display:block;mix-blend-mode:normal!important;image-rendering:pixelated}
 .qr span{font-family:Figtree,Arial,sans-serif;font-size:4.8pt;font-weight:800;color:#000;margin-top:.4mm;letter-spacing:.06em;text-transform:uppercase;line-height:1}
@@ -2013,10 +2049,12 @@ function flyTile(c, d, i, extra){
   const foot = [S.fo.uvp && d.uvp ? '<span>UVP ' + flyEur(d.uvp) + '</span>' : ''].join('');
   return '<div class="t c' + (i % 3) + ' ' + (extra || '') + '"><div class="day">' + badge + (tag && big ? '<span class="tag">' + tag + '</span>' : '') + '</div>' + sv +
     '<div class="img">' + (p.i ? '<img src="' + p.i + '" alt="">' : '') + (tag && !big ? '<span class="itag">' + tag + '</span>' : '') + '</div>' +
-    '<div class="tx"><div class="dsrow"><div><div class="br ' + brCls + '">' + esc(p.b) + '</div><div class="m">' + esc(p.m) + '</div><div class="ty">' + esc(p.t || '') + '</div></div>' + ((S.fo.curMode || S.fo.mode) !== 'online' ? flyDs(c, p, { mode:'print' }) : '') + '</div>' +
-    '<div class="lab">Aktions-HEK</div><div class="p">' + (d.price != null ? flyEur(d.price) : 'auf Anfrage') + '</div>' +
+    '<div class="tx"><div class="br ' + brCls + '">' + esc(p.b) + '</div><div class="m">' + esc(p.m) + '</div><div class="ty">' + esc(p.t || '') + '</div>' +
+    '<div class="bot"><div class="pb"><div class="lab">Aktions-HEK</div><div class="p">' + (d.price != null ? flyEur(d.price) : 'auf Anfrage') + '</div>' +
     (foot ? '<div class="ft">' + foot + '</div>' : '') +
-    (S.fo.qty && d.qty != null ? '<div class="q">' + (d.qty > 0 ? 'Kontingent: ' + d.qty + ' Stk.' : 'Ausverkauft') + '</div>' : '') + ((S.fo.curMode || S.fo.mode) === 'online' ? flyDs(c, p, { mode:'online' }) : '') + '</div></div>';
+    (S.fo.qty && d.qty != null ? '<div class="q">' + (d.qty > 0 ? 'Kontingent: ' + d.qty + ' Stk.' : 'Ausverkauft') + '</div>' : '') + '</div>' +
+    ((S.fo.curMode || S.fo.mode) !== 'online' ? flyDs(c, p, { mode:'print' }) : '') + '</div>' +
+    ((S.fo.curMode || S.fo.mode) === 'online' ? flyDs(c, p, { mode:'online' }) : '') + '</div></div>';
 }
 function flyerDoc(c, opt){
   opt = opt || {}; S.fo.curMode = opt.mode || S.fo.mode;
@@ -2222,7 +2260,8 @@ function renderFlyer(){
   const c = S.config, deals = planDeals(c).length;
   const opt = (k, label) => '<label class="chip" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" data-fo="' + k + '"' + (S.fo[k] ? ' checked' : '') + '>' + label + '</label>';
   $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Flyer</h2><span class="small">Druckfertiger A4-Flyer für den Fachhandel aus der gespeicherten Planung: ' + esc(periodLabel(c)) + ' · ' + deals + ' Aktionen</span></div>' +
-    '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="fly-pdf">PDF Online (mit Links)</button><button type="button" class="btn" id="fly-pdf-qr">PDF Print (QR-Codes)</button><button type="button" class="btn" id="fly-pdf-print">Druckerei-PDF (QR, 3 mm Beschnitt)</button><button type="button" class="btn" id="fly-dl">HTML-Datei</button></span></div>' +
+    '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="fly-pdf">PDF Online (mit Links)</button><button type="button" class="btn" id="fly-pdf-qr">PDF Print (QR-Codes)</button><button type="button" class="btn" id="fly-pdf-print">Druckerei-PDF (QR, 3 mm Beschnitt)</button><button type="button" class="btn" id="fly-dl">HTML-Datei</button>' + (flyIsOn(c) ? '<button type="button" class="btn" id="fly-online">Online-Version aktualisieren</button><button type="button" class="btn" id="fly-online-copy">Link kopieren</button><button type="button" class="btn" id="fly-offline">Offline nehmen</button>' : '<button type="button" class="btn" id="fly-online">Online stellen</button>') + '</span></div>' +
+    (flyIsOn(c) ? '<p class="small" style="color:var(--ok);font-weight:700;margin-top:0">Online seit ' + esc(fmtAt(c.flyerOn.at)) + ' unter <a href="' + esc(flyPublicLink()) + '" target="_blank" rel="noopener">' + esc(flyPublicLink()) + '</a> – die Seite zeigt nur den Flyer (mit anklickbaren Links) und immer die aktuell gespeicherten Preise.</p>' : '') +
     (c.example ? '<p class="warnline" style="margin-top:0">Die Planung enthält Beispielpreise. Der Flyer trägt deshalb den Hinweis „Entwurf“, bis die Preise in der Verwaltung freigegeben und gespeichert sind.</p>' : '') +
     apBannerHTML(c) + '<div class="fields"><label class="f">Design<select id="fo-theme">' + Object.entries(FLY_TH).map(([k,v]) => '<option value="' + k + '"' + (S.fo.theme === k ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label>' +
     '<label class="f" style="grid-column:span 2">Einleitungstext<input type="text" id="fo-intro" value="' + esc(S.fo.intro) + '" placeholder="' + esc(flyIntro(Object.assign({}, c))) + '"></label></div>' +
@@ -2246,6 +2285,40 @@ function renderFlyer(){
   renderSavebar();
 }
 function refreshFlyer(){ const fr = $('fly-frame'); if (fr) fr.srcdoc = flyerDoc(S.config); }
+/* ---------- Flyer online stellen: eigene Seite #flyer, die nur den Flyer zeigt ---------- */
+const FLY_HASH = 'flyer';
+const flyOnlyWanted = () => String(location.hash || '').replace(/^#/, '') === FLY_HASH;
+const flyIsOn = c => !!(c && c.flyerOn && c.flyerOn.on);
+function flyPublicLink(){ return (S.api ? location.origin + '/' : 'https://claude.ai/artifact/8Z785797idMAv3SMvDmaDw') + '#' + FLY_HASH; }
+function flyCopyLink(){ const l = flyPublicLink(); (navigator.clipboard ? navigator.clipboard.writeText(l) : Promise.reject()).then(() => toast('Link kopiert: ' + l, 5000), () => toast(l, 9000)); }
+async function flySetOnline(on){
+  if (S.dirty){ toast('Bitte zuerst die Planung speichern'); return; }
+  if (on && !planDeals(S.config).length){ toast('Noch keine Aktionen geplant'); return; }
+  const fo = Object.assign({}, S.fo); delete fo.mode; delete fo.curMode;
+  S.draft = clone(S.config); S.draft.flyerOn = on ? { on:true, at: new Date().toISOString(), fo } : { on:false, at: new Date().toISOString() };
+  S.dirty = true; await save();
+  if (S.dirty){ S.draft = clone(S.config); S.dirty = false; renderFlyer(); return; }
+  S.view = 'flyer'; renderFlyer();
+  if (on) flyCopyLink(); else toast('Flyer ist offline – der Link zeigt ihn nicht mehr');
+}
+function renderFlyOnly(){
+  document.body.classList.add('flyonly');
+  const c = S.config;
+  if (!flyIsOn(c) || !planDeals(c).length){ $('app').innerHTML = '<section class="hero" style="margin:24px"><div class="info empty-hero"><div class="eyebrow">Flyer</div><h2>Der Flyer ist derzeit nicht online.</h2></div></section>'; return; }
+  if (!$('flo-frame')) $('app').innerHTML = '<div id="flo-box" style="position:relative;overflow:hidden;background:#8A8F99"><iframe id="flo-frame" title="' + esc(c.title || 'Flyer') + '" style="border:0;width:860px;transform-origin:0 0;display:block;margin:0 auto;background:#8A8F99"></iframe></div>';
+  const keep = S.fo; let html;
+  S.fo = Object.assign({}, S.fo, c.flyerOn.fo || {}, { mode:'online' });
+  try { html = flyerDoc(c, { mode:'online' }); } finally { S.fo = keep; }
+  html = html.replace('<head>', '<head><base target="_blank">');
+  const fr = $('flo-frame'); if (fr.dataset.h === String(html.length) + (c.updatedAt || '')) return;
+  fr.dataset.h = String(html.length) + (c.updatedAt || '');
+  fr.onload = () => { fitFlyOnly(); setTimeout(fitFlyOnly, 600); setTimeout(fitFlyOnly, 2000); };
+  fr.srcdoc = html;
+}
+function fitFlyOnly(){ const box = $('flo-box'), fr = $('flo-frame'); if (!box || !fr) return; const d = fr.contentDocument, h = d && d.body ? d.documentElement.scrollHeight : 1200, s = Math.min(1, box.clientWidth / 860);
+  fr.style.height = h + 'px'; fr.style.transform = s < 1 ? 'scale(' + s + ')' : 'none'; fr.style.margin = s < 1 ? '0' : '0 auto'; box.style.height = Math.ceil(h * s) + 'px'; }
+window.addEventListener('resize', () => { if (S.view === 'flyonly') fitFlyOnly(); });
+window.addEventListener('hashchange', () => { if (!S.loaded) return; if (flyOnlyWanted()) S.view = 'flyonly'; else if (S.view === 'flyonly'){ S.view = 'kalender'; document.body.classList.remove('flyonly'); } render(); });
 window.addEventListener('resize', () => { if (S.view === 'flyer') fitFlyer(); });
 async function flyDownload(){
   const c = S.config, name = flyFileName(c), html = await inlineBlobs(flyerDoc(c));
@@ -2356,6 +2429,9 @@ function flyPrint(){
 document.addEventListener('click', e => {
   if (S.view !== 'flyer') return;
   if (e.target.id === 'fly-print'){ flyPrint(); return; }
+  if (e.target.id === 'fly-online'){ flySetOnline(true); return; }
+  if (e.target.id === 'fly-offline'){ flySetOnline(false); return; }
+  if (e.target.id === 'fly-online-copy'){ flyCopyLink(); return; }
   if (e.target.id === 'fly-pdf'){ flyPdf(false, 'online', 'fly-pdf'); return; }
   if (e.target.id === 'fly-pdf-print'){ flyPdf(true, 'print', 'fly-pdf-print'); return; }
   if (e.target.id === 'fly-pdf-qr'){ flyPdf(false, 'print', 'fly-pdf-qr'); return; }
@@ -2781,6 +2857,9 @@ function renderHeader(){
 function render(){
   if (!S.loaded) return;
   syncExtras();
+  if (flyOnlyWanted()) S.view = 'flyonly';
+  if (S.view === 'flyonly'){ renderFlyOnly(); return; }
+  document.body.classList.remove('flyonly');
   if (S.api && !S.canEdit && wantsAdmin()){ renderHeader(); renderLogin(); renderSavebar(); return; }
   renderHeader();
   if (S.view === 'admin') renderAdmin(); else if (S.view === 'orders' && S.canEdit) renderOrders(); else if (S.view === 'aktionen' && S.canEdit) renderAktionen(); else if (S.view === 'flyer' && S.canEdit) renderFlyer(); else if (S.view === 'approval' && (S.canEdit || isApprover() || (S.api && S.ap.token))) renderApproval(); else { if (S.view !== 'kalender') S.view = 'kalender'; renderHeader(); renderDealer(); renderSavebar(); }
@@ -3085,6 +3164,7 @@ async function akRecordVersion(cfg){
   if (!S.api && !S.db) { /* Vorschau */ }
   const v = Object.assign({ id: akId('v'), kind:'version', name: cfg.title || 'Aktionskalender', at: new Date().toISOString(), config: clone(cfg) }, akBy());
   try {
+    if (!S.api){ try { await offloadImgs(v.config); } catch(x) {} }
     await AK.put('versionen', v);
     if (!S.api){ const all = await AK.list('versionen'); all.sort((a,b) => String(b.at).localeCompare(String(a.at))); for (const old of all.slice(AKV.MAXV)) await AK.del('versionen', old.id); }
     S.ak.vers = null;
@@ -3225,8 +3305,8 @@ async function akSaveNamed(kind, name, src){
   if (kind === 'archiv'){ S.orders = null; await loadOrders(); obj.result = akResult(cfg, S.orders || []); }
   let txt = JSON.stringify(obj);
   if (!S.api && txt.length > 900000 && obj.result){ obj.result.orders = []; obj.result.ordersDropped = true; txt = JSON.stringify(obj); }
-  try { await AK.put('aktionen', obj); S.ak.list = null; S.ak.form = null; toast(kind === 'archiv' ? '„' + obj.name + '“ mit Ergebnis archiviert' : '„' + obj.name + '“ gespeichert'); }
-  catch(e){ toast('Speichern nicht möglich: ' + ((e && e.message === 'server') ? 'Server-Update fehlt (functions/api/aktionen.js)' : (e && e.code === 'not_granted') ? 'keine Berechtigung' : 'bitte erneut versuchen')); }
+  try { if (!S.api){ try { await offloadImgs(obj.config); } catch(x) {} if (cfgKB(obj) > DB_MAX_KB) throw { code:'invalid_argument' }; } await AK.put('aktionen', obj); S.ak.list = null; S.ak.form = null; toast(kind === 'archiv' ? '„' + obj.name + '“ mit Ergebnis archiviert' : '„' + obj.name + '“ gespeichert'); }
+  catch(e){ toast((e && e.message === 'server') ? 'Speichern nicht möglich: Server-Update fehlt (functions/api/aktionen.js)' : dbErrText(e, cfgKB(obj)), 9000); }
   if (S.view === 'aktionen'){ await akLoad(true); renderAktionen(); }
 }
 async function akFile(it){
