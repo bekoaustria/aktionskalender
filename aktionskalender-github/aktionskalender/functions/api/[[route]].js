@@ -3,7 +3,7 @@ import {
   json, err, sleep, body, randId, safeEqual, viennaToday, clientIp, kv, getJSON, putJSON, MAX_CONFIG, MAX_FILE,
   accountsOn, initialPw, teamFromEnv, hashPw, pwRuleError, loadUsers, saveUsers, findUser, publicUser, setUserSecret, custLabel,
   readCookie, sessionCookie, newSession, currentUser, isAdmin, canRead,
-  approvalPeople, personByToken, stripTokens, keepTokens, dealBySlot, prodOf, rateLimit, sendOrderMail,
+  approvalPeople, personByToken, stripTokens, keepTokens, dealBySlot, prodOf, rateLimit, sendOrderMail, checklistStats, runReminders, runNewsletters, nlRecipients, mailReady,
 } from './_lib.js';
 
 export async function onRequest(context) {
@@ -139,12 +139,55 @@ export async function route(request, env, context) {
       o.id = id; await kv(env).put('ak:' + kind + ':' + id, JSON.stringify(o));
       const cc = o.config || {};
       const meta = { id, kind: o.kind, name: o.name, at: o.at, by: o.by || '', byName: o.byName || '', title: cc.title || '', theme: cc.theme, start: cc.start, count: cc.count,
-        deals: Object.values(cc.days || {}).filter(d => d && d.k).length + (cc.ranges || []).length, sum: o.result ? o.result.sum : null };
+        deals: Object.values(cc.days || {}).filter(d => d && d.k).length + (cc.ranges || []).length, sum: o.result ? o.result.sum : null,
+        lead: cc.lead == null || cc.lead === '' ? 30 : +cc.lead || 0, cl: checklistStats(cc), owners: String(cc.owners || '') };
       idx[id] = meta;
       if (kind === 'versionen') { const ids = Object.values(idx).sort((x, y) => String(y.at).localeCompare(String(x.at))).map(x => x.id); for (const old of ids.slice(30)) { delete idx[old]; await kv(env).delete('ak:versionen:' + old); } }
       await putJSON(env, idxKey, idx); return json({ meta });
     }
     return err(405, 'Methode nicht erlaubt');
+  }
+
+  /* ----- Reminder ----- */
+  if (a === 'reminders') {
+    const origin = String(env.PUBLIC_URL || url.origin).replace(/\/+$/, '');
+    if (b === 'run' && m === 'POST') {
+      const h = request.headers.get('authorization') || '', key = h.startsWith('Bearer ') ? h.slice(7) : '';
+      if (!((env.REMINDER_KEY && safeEqual(key, env.REMINDER_KEY)) || (await isAdmin(request, env)))) return err(401, 'Nicht berechtigt');
+      const res = await runReminders(env, origin, null); const nl = await runNewsletters(env, origin, null);
+      return json({ ok: true, sent: res.filter(x => x.ok).length, results: res, newsletters: nl });
+    }
+    if (!(await isAdmin(request, env))) return err(401, 'Nicht angemeldet');
+    if (b === 'send' && m === 'POST') {
+      const j = (await body(request)) || {}; if (!j.aid) return err(400, 'Aktion fehlt');
+      const res = await runReminders(env, origin, String(j.aid)); if (!res.length) return err(404, 'Aktion nicht gefunden');
+      const r = res[0]; if (!r.to.length) return err(400, 'Keine Verantwortlichen mit E-Mail eingetragen');
+      return json({ sent: r.ok, result: r });
+    }
+    if (!b && m === 'GET') return json({ log: await getJSON(env, 'remlog', []) });
+    return err(404, 'Unbekannt');
+  }
+
+  /* ----- Newsletter an die Händler ----- */
+  if (a === 'newsletter') {
+    const origin = String(env.PUBLIC_URL || url.origin).replace(/\/+$/, '');
+    if (b === 'abmelden' && m === 'GET') {
+      const id = url.searchParams.get('id') || '', t = url.searchParams.get('t') || ''; let ok = false;
+      if (accountsOn(env)) { const users = await loadUsers(env); const c = users.customers.find(x => x.id === id); if (c && c.nlt && safeEqual(c.nlt, t)) { c.newsletter = false; await saveUsers(env, users); ok = true; } }
+      const page = '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Newsletter</title></head><body style="font-family:Arial,sans-serif;max-width:560px;margin:60px auto;padding:0 20px;color:#111"><h2>' + (ok ? 'Sie wurden abgemeldet' : 'Abmeldung nicht möglich') + '</h2><p>' + (ok ? 'Sie erhalten keine Aktions-Newsletter mehr. Ihren Zugang zum Aktionskalender können Sie weiter nutzen.' : 'Der Link ist ungültig. Bitte wenden Sie sich an order.austria@beko.com.') + '</p></body></html>';
+      return new Response(page, { status: ok ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    }
+    if (!(await isAdmin(request, env))) return err(401, 'Nicht angemeldet');
+    if (!b && m === 'GET') { const rec = await nlRecipients(env); return json({ recipients: rec ? rec.length : null, mail: mailReady(env), log: await getJSON(env, 'nllog', []) }); }
+    if (b === 'send' && m === 'POST') {
+      const j = (await body(request)) || {}; if (!j.aid) return err(400, 'Aktion fehlt');
+      const res = await runNewsletters(env, origin, { aid: String(j.aid), test: !!j.test }); if (!res.length) return err(404, 'Aktion nicht gefunden');
+      const r = res[0]; if (r.error) return err(400, r.error);
+      if (j.test && !(r.to || []).length) return err(400, 'Für den Testversand bitte Verantwortliche mit E-Mail eintragen');
+      if (!j.test && r.mail && !r.sent && !r.failed) return err(400, 'Keine Händler mit E-Mail-Adresse vorhanden');
+      return json(r);
+    }
+    return err(404, 'Unbekannt');
   }
 
   /* ----- Konten (nur wenn ADMIN_USERS gesetzt ist) ----- */
@@ -204,7 +247,7 @@ export async function route(request, env, context) {
     const me = await currentUser(request, env); if (!me || me.role !== 'admin') return err(401, 'Nur für das Beko-Team');
     const users = await loadUsers(env);
     const view = () => ({
-      customers: users.customers.map(x => ({ id: x.id, firma: x.firma || '', ort: x.ort || '', kdnr: x.kdnr || '', name: x.name || '', email: x.email || '', tel: x.tel || '', active: x.active !== false,
+      customers: users.customers.map(x => ({ id: x.id, firma: x.firma || '', adresse: x.adresse || '', ort: x.ort || '', kdnr: x.kdnr || '', name: x.name || '', email: x.email || '', tel: x.tel || '', active: x.active !== false, newsletter: x.newsletter !== false,
         status: x.mustChange ? 'eingeladen' : 'aktiv', lastLogin: x.lastLogin || null, invite: x.mustChange ? x.invite : undefined, role: 'kunde' })),
       team: teamFromEnv(env).map(t => { const s = users.team[t.id] || {}; return { id: t.id, role: 'admin', name: t.name, email: t.email, status: s.mustChange ? 'eingeladen' : 'aktiv', lastLogin: s.lastLogin || null, invite: s.mustChange ? s.invite : undefined }; }),
       initial: initialPw(env), me: me.id,
@@ -215,7 +258,7 @@ export async function route(request, env, context) {
       const old = new Map(users.customers.map(x => [x.id, x])); const next = [];
       for (const x of j.customers.slice(0, 5000)) {
         const firma = String(x.firma || '').trim(); if (!firma) return err(400, 'Bitte bei jedem Kunden eine Firma eintragen');
-        const pub = { firma, ort: String(x.ort || '').trim(), kdnr: String(x.kdnr || '').trim(), name: String(x.name || '').trim(), email: String(x.email || '').trim(), tel: String(x.tel || '').trim(), active: x.active !== false };
+        const pub = { firma, adresse: String(x.adresse || '').trim().slice(0, 200), ort: String(x.ort || '').trim(), kdnr: String(x.kdnr || '').trim(), name: String(x.name || '').trim(), email: String(x.email || '').trim(), tel: String(x.tel || '').trim(), active: x.active !== false, newsletter: x.newsletter !== false };
         const prev = x.id && old.get(x.id);
         next.push(prev ? Object.assign({}, prev, pub) : Object.assign({ id: 'k-' + randId(10), mustChange: true, invite: randId(20), sv: 1 }, pub));
       }

@@ -9,6 +9,53 @@
 body.flyonly>*:not(#app):not(#toast-slot):not(script):not(style):not(link):not(title):not(meta){display:none!important}
 body.flyonly{background:#8A8F99}
 body.flyonly #app{max-width:none!important;width:100%;padding:0!important;margin:0!important}
+/* Planung: Admin-Kalender mit Vorlauf und Checkliste */
+.plgantt{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface-2)}
+.plhead,.plrow{display:grid;grid-template-columns:minmax(180px,26%) 1fr;align-items:stretch}
+.plhead{font-size:11.5px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--line)}
+.plhead .pllab{padding:8px 10px}
+.pltrack{position:relative;min-height:46px}
+.plm{position:absolute;top:0;bottom:0;border-left:1px solid var(--line);padding:8px 0 0 5px;white-space:nowrap;overflow:hidden}
+.plrow{border-bottom:1px solid var(--line);cursor:pointer}
+.plrow:last-child{border-bottom:0}
+.plrow:hover,.plrow.sel{background:color-mix(in srgb, var(--ok) 8%, transparent)}
+.plrow .pllab{padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.plrow .pllab b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plgrid{position:absolute;top:0;bottom:0;border-left:1px dashed color-mix(in srgb, var(--line) 70%, transparent)}
+.pltoday{position:absolute;top:0;bottom:0;border-left:2px solid var(--accent);z-index:2}
+.plbar{position:absolute;top:13px;height:20px;border-radius:6px;min-width:4px}
+.plbar.lead{background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--warn) 55%, transparent) 0 6px, color-mix(in srgb, var(--warn) 25%, transparent) 6px 12px);border:1px solid var(--warn)}
+.plbar.act{background:var(--ok)}
+.pllegend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0 0}
+.pllegend i{display:inline-block;width:18px;height:10px;border-radius:3px;vertical-align:middle;margin-right:5px}
+.clbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0 10px}
+.clbar span{display:block;height:100%;background:var(--ok)}
+.cltbl td{vertical-align:middle}
+.cltbl input[type=text]{width:100%;min-width:200px}
+.cltbl td:nth-child(3) select{width:auto;min-width:0}
+.cltbl td:nth-child(3) input{width:64px!important}
+.cltbl td.cldate{min-width:100px;white-space:nowrap}
+.cltbl td:nth-child(5) input[type=text]{min-width:140px}
+.cltbl tr.done input[data-clf=text]{text-decoration:line-through;color:var(--muted)}
+.cltbl tr.late td.cldate{color:var(--accent);font-weight:700}
+.plform{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:10px 0}
+.bform .bcomp{display:flex;align-items:center;gap:8px;margin:4px 0}
+.bform .bcomp .small{flex:1}
+/* KPI-Dashboard und Historie */
+.kpicards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:12px 0}
+.kpic{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.kpic .l{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.kpic .v{font-size:26px;font-weight:800;line-height:1.15;margin-top:4px}
+.kpic .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpic.good .v{color:var(--ok)} .kpic.bad .v{color:var(--accent)}
+.kpitbl td.num,.kpitbl th.num{text-align:right;white-space:nowrap}
+.kpitbl input[type=number]{width:90px;text-align:right}
+.histtbl tr.sel{background:color-mix(in srgb, var(--ok) 8%, transparent)}
+.histtbl td{vertical-align:top}
+.kpiopts{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin:8px 0}
+.nlbox{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:14px 0 4px;background:var(--surface-2)}
+.nlbox h4{margin:0 0 6px}
+.nlprev{width:100%;height:70vh;border:0;background:#fff;border-radius:8px}
 :root{
   --bg:#EEF1F8; --surface:#FFFFFF; --surface-2:#F6F8FC; --ink:#0B1638; --muted:#5A6688; --line:#D9DFEC;
   --door:#11286F; --door-2:#1B3A94; --door-ink:#F4E3B5; --gold:#D6A13C; --accent:#C8102E; --accent-ink:#FFFFFF;
@@ -577,6 +624,8 @@ body.black .cartin h2{font-family:var(--f-cond);font-weight:400;text-transform:u
         <button type="button" id="tab-apv" aria-pressed="false">Freigabe</button>
         <button type="button" id="tab-ord" aria-pressed="false">Bestellungen</button>
         <button type="button" id="tab-akt" aria-pressed="false">Aktionen</button>
+        <button type="button" id="tab-pln" aria-pressed="false">Planung</button>
+        <button type="button" id="tab-kpi" aria-pressed="false">KPI &amp; Historie</button>
       </div>
     </div>
     <h1 id="h-title">Adventkalender</h1>
@@ -678,6 +727,28 @@ const DEF_IMPRESSUM = 'Beko Austria AG · Pfarrgasse 77, 1230 Wien · FN 36236 p
 function defaultConfig(){
   return Object.assign({ subtitle:'', pool:{}, days:{}, orderEmail:'order.austria@beko.com', orderPhone:DEF_PHONE, impressum:DEF_IMPRESSUM, shopUrl:'', example:false }, PRESETS.advent.make());
 }
+/* Checkliste je Aktion: Standardpunkte (frei änderbar), Termin relativ zum Start bzw. Ende der Aktion */
+const CL_DEFAULT = [
+  ['Ziel, Zeitraum und Budget festlegen', 'before', 30, 'Sales'],
+  ['Aktionssortiment und Kontingente festlegen (mit Logistik)', 'before', 28, 'Sales / Logistik'],
+  ['Aktions-HEK kalkulieren und in der Planung eintragen', 'before', 25, 'Sales'],
+  ['Freigabe Produktmanagement', 'before', 21, 'Produktmanagement'],
+  ['Freigabe Finance', 'before', 18, 'Finance'],
+  ['Freigabe Marketing', 'before', 16, 'Marketing'],
+  ['Freigabe Sales Director', 'before', 14, 'Sales Director'],
+  ['Flyer erstellen und prüfen (Print und Online)', 'before', 12, 'Marketing'],
+  ['Reel und Social-Media-Posts vorbereiten', 'before', 10, 'Marketing'],
+  ['Händler informieren (Mailing, Außendienst)', 'before', 7, 'Sales'],
+  ['Flyer online stellen und Link versenden', 'before', 3, 'Marketing'],
+  ['Bestellungen täglich prüfen und weiterleiten', 'after', 0, 'Innendienst'],
+  ['Ergebnis auswerten und Aktion archivieren', 'after', 7, 'Sales']];
+const LEAD_DEFAULT = 30;
+const NL_DAYS = 14;
+function defaultChecklist(){ return CL_DEFAULT.map((x, i) => ({ id:'c' + (i + 1), text:x[0], when:x[1], days:x[2], who:x[3], done:false, doneAt:null })); }
+function clNorm(list){ return (Array.isArray(list) ? list : []).filter(x => x && x.id).map(x => ({ id:String(x.id), text:String(x.text || ''), when: x.when === 'after' ? 'after' : 'before', days: Math.max(0, Math.min(365, parseInt(x.days, 10) || 0)), who:String(x.who || ''), done: !!x.done, doneAt: x.doneAt || null })); }
+function clDate(c, it){ return it.when === 'after' ? addDays(addDays(c.start, (c.count || 1) - 1), it.days) : addDays(c.start, -it.days); }
+function clStats(c){ const l = c.checklist || [], t = realToday(); return { done: l.filter(x => x.done).length, total: l.length, overdue: l.filter(x => !x.done && clDate(c, x) < t).length }; }
+const leadStart = c => addDays(c.start, -(c.lead == null ? LEAD_DEFAULT : c.lead));
 function normalize(c){
   if (!c.start){
     const y = +c.year || +realToday().slice(0,4);
@@ -702,6 +773,14 @@ function normalize(c){
   if (c.orderPhone == null) c.orderPhone = DEF_PHONE;
   if (c.impressum == null) c.impressum = DEF_IMPRESSUM;
   if (c.shopUrl == null) c.shopUrl = '';
+  c.lead = c.lead == null || c.lead === '' ? LEAD_DEFAULT : Math.max(0, Math.min(365, parseInt(c.lead, 10) || 0));
+  c.checklist = Array.isArray(c.checklist) ? clNorm(c.checklist) : defaultChecklist();
+  c.owners = String(c.owners || '');
+  const N = c.newsletter && typeof c.newsletter === 'object' ? c.newsletter : {};
+  c.newsletter = Object.assign({}, N, { on: !!N.on, days: N.days == null || N.days === '' ? NL_DAYS : Math.max(0, Math.min(90, parseInt(N.days, 10) || 0)), prices: N.prices !== false, reveal: N.reveal !== false, intro: String(N.intro || ''), subject: String(N.subject || '') });
+  if (!c.newsletter.on){ delete c.newsletter.html; delete c.newsletter.text; delete c.newsletter.subj; }
+  const K = c.kpi && typeof c.kpi === 'object' ? c.kpi : {};
+  c.kpi = { src: K.src === 'erp' ? 'erp' : 'web', ded: K.ded == null || K.ded === '' ? null : +K.ded, cogsPct: K.cogsPct == null || K.cogsPct === '' ? null : +K.cogsPct, cogs: K.cogs && typeof K.cogs === 'object' ? K.cogs : {}, erp: K.erp || null };
   return c;
 }
 /* Zusätzliche Tagesaktionen außerhalb des Zeitraums werden geparkt (xdOff) und kommen zurück, sobald der Tag wieder im Zeitraum liegt */
@@ -730,7 +809,9 @@ const blobUrl = id => String(id).startsWith('kv:') ? location.origin + '/api/fil
 const dsIdOk = id => !!id && (String(id).startsWith('kv:') ? !!S.api : !S.api);
 const canUpload = () => S.api ? !!S.pw : !!S.assets;
 function dsUrl(c, k){ const e = (c.pool || {})[k] || {}, l = (c.dsl || {})[k], u = (c.dsu || {})[k];
-  return (e.ds || '').trim() || (dsIdOk(e.dsId) ? blobUrl(e.dsId) : '') || (l || '').trim() || (dsIdOk(u) ? blobUrl(u) : '') || DS_MAP[k] || ''; }
+  return (e.ds || '').trim() || (dsIdOk(e.dsId) ? blobUrl(e.dsId) : '') || (l || '').trim() || (dsIdOk(u) ? blobUrl(u) : '') || DS_MAP[k] || bundleDs(c, k); }
+/* Bundle ohne eigenes Datenblatt: Datenblatt des ersten Geräts */
+function bundleDs(c, k){ const e = (c.extra || {})[k]; if (!e || !Array.isArray(e.bundle)) return ''; for (const x of e.bundle){ if (x === k) continue; const u = dsUrl(c, x); if (u) return u; } return ''; }
 const dsIsUpload = (c, k) => { const e = (c.pool || {})[k] || {}; if ((e.ds || '').trim()) return false; if (dsIdOk(e.dsId)) return !S.api; if (((c.dsl || {})[k] || '').trim()) return false; return dsIdOk((c.dsu || {})[k]) && !S.api; };
 /* ---------- Eigene Produkte (nicht im Katalog) ---------- */
 function syncExtras(){
@@ -739,7 +820,7 @@ function syncExtras(){
   const pool = (src && src.pool) || {};
   const imgs = (src && src.imgs) || {};
   CAT.forEach(p => { if (p.x) return; if (p.i0 === undefined) p.i0 = p.i || ''; const ov = (pool[p.k] && pool[p.k].img) || imgSrc(imgs[p.k]); p.i = ov || p.i0; });
-  Object.entries(all).forEach(([k, e]) => { if (!e || !e.m || BYK.has(k)) return; const p = { b:e.b, c:e.c, m:e.m, t:e.t || '', u: e.u ?? null, i: imgSrc(imgs[k]) || e.i || '', x:true, k }; CAT.unshift(p); BYK.set(k, p); });
+  Object.entries(all).forEach(([k, e]) => { if (!e || !e.m || BYK.has(k)) return; const p = { b:e.b, c:e.c, m:e.m, t:e.t || '', u: e.u ?? null, i: imgSrc(imgs[k]) || e.i || '', x:true, k }; if (Array.isArray(e.bundle) && e.bundle.length) p.bundle = e.bundle.slice(); CAT.unshift(p); BYK.set(k, p); });
 }
 /* Produktbild-Verweis: data:-URL (Cloudflare / ohne Upload) oder Asset-ID (Claude-Artifact, hochauflösend) */
 const imgSrc = v => !v ? '' : String(v).startsWith('data:') ? v : dsIdOk(v) ? blobUrl(v) : '';
@@ -828,6 +909,73 @@ function xDelete(k){
   delete S.draft.extra[k]; delete S.draft.pool[k]; S.xf = null;
   syncExtras();
   markDirty(); $('xform').innerHTML = ''; renderPoolList(); renderDays(); toast('Produkt gelöscht');
+}
+/* ---------- Bundles: 2 oder mehr Geräte als ein Aktionsartikel ---------- */
+const bundleOk = k => { const p = BYK.get(k); return !!p && !p.bundle; };
+function bundleDefaults(keys){
+  const ps = keys.map(k => BYK.get(k)).filter(Boolean); if (ps.length < 2) return null;
+  const brands = [...new Set(ps.map(p => p.b))];
+  const u = ps.every(p => p.u != null) ? Math.round(ps.reduce((a, p) => a + (+p.u || 0), 0) * 100) / 100 : null;
+  return { b: brands.length === 1 ? brands[0] : ps[0].b, c: ps[0].c, m: ps.map(p => p.m).join(' + '), t: 'Bundle: ' + ps.map(p => p.m).join(' + '), u };
+}
+/* Bundle-Bild: freigestellte Gerätebilder nebeneinander, mit „+“ dazwischen (transparent) */
+async function bundleImg(keys){
+  try {
+    const load = src => new Promise(res => { if (!src){ res(null); return; } const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+    const ims = (await Promise.all(keys.map(k => load((BYK.get(k) || {}).i)))).filter(Boolean); if (!ims.length) return '';
+    const H = 360, gap = 70, ws = ims.map(im => im.naturalWidth * H / im.naturalHeight), W = Math.round(ws.reduce((a, w) => a + w, 0) + gap * (ims.length - 1));
+    const k = Math.min(1, 900 / W), cv = document.createElement('canvas'); cv.width = Math.round(W * k); cv.height = Math.round(H * k);
+    const x = cv.getContext('2d'); x.scale(k, k); let px = 0;
+    ims.forEach((im, i) => { x.drawImage(im, px, 0, ws[i], H); px += ws[i];
+      if (i < ims.length - 1){ const cx = px + gap / 2, cy = H / 2; x.fillStyle = '#E8243C'; x.beginPath(); x.arc(cx, cy, 24, 0, Math.PI * 2); x.fill(); x.fillStyle = '#fff'; x.fillRect(cx - 12, cy - 3.5, 24, 7); x.fillRect(cx - 3.5, cy - 12, 7, 24); px += gap; } });
+    let u = cv.toDataURL('image/webp', 0.88); if (!u.startsWith('data:image/webp')) u = cv.toDataURL('image/png'); return u;
+  } catch(e){ return ''; }
+}
+/* legt ein Bundle an (oder aktualisiert es) und nimmt es ins Aktionssortiment auf; liefert den Schlüssel */
+async function bundleCreate(c, keys, opt){
+  opt = opt || {}; const d = bundleDefaults(keys); if (!d) return null;
+  const m = String(opt.m || d.m).trim().replace(/\s+/g, ' '), b = opt.b || d.b, k = opt.k || (b + '|' + m);
+  if (!opt.k && BYK.has(k) && !BYK.get(k).x) return null;
+  c.extra = c.extra || {}; const old = c.extra[k] || {};
+  const same = Array.isArray(old.bundle) && old.bundle.join('|') === keys.join('|');
+  const i = opt.i || (same && old.i) || await bundleImg(keys);
+  c.extra[k] = { b, c: opt.c || d.c, m, t: opt.t != null && opt.t !== '' ? opt.t : d.t, u: opt.u !== undefined ? opt.u : d.u, i: i || '', bundle: keys.slice() };
+  if (!same && c.imgs) delete c.imgs[k];
+  c.pool[k] = c.pool[k] || { hek:null };
+  return k;
+}
+function bundleOptions(sel){ return '<option value="">Gerät wählen …</option>' + BRANDS.map(b => '<optgroup label="' + b + '">' + CAT.filter(p => p.b === b && !p.bundle).map(p => '<option value="' + esc(p.k) + '"' + (p.k === sel ? ' selected' : '') + '>' + esc(p.m) + (p.t ? ' – ' + esc(p.t).slice(0, 40) : '') + '</option>').join('') + '</optgroup>').join(''); }
+function bFormHTML(k){
+  const ex = k ? (S.draft.extra || {})[k] : null;
+  S.bf = { k: k || null, keys: ex && Array.isArray(ex.bundle) ? ex.bundle.slice() : [], m: ex ? ex.m : '', t: ex ? ex.t : '', u: ex && ex.u != null ? ex.u : '', mTouched: !!ex, tTouched: !!ex, uTouched: !!ex };
+  return '<div class="xform bform" id="bform-in"></div>';
+}
+function bRender(){
+  const el = $('bform-in'); if (!el || !S.bf) return; const B = S.bf, d = bundleDefaults(B.keys);
+  if (d){ if (!B.mTouched) B.m = d.m; if (!B.tTouched) B.t = d.t; if (!B.uTouched) B.u = d.u ?? ''; }
+  el.innerHTML = '<h4>' + (B.k ? 'Bundle bearbeiten' : 'Bundle schnüren') + '</h4><p class="small" style="margin:0 0 10px">Zwei oder mehr Geräte werden zu einem Aktionsartikel mit gemeinsamem Aktions-HEK und Kontingent. Das Bundle kommt direkt ins Aktionssortiment und lässt sich Tagen oder Zeiträumen zuordnen wie jedes Gerät. Das Bundle-Bild wird automatisch aus den Gerätebildern erstellt.</p>' +
+    '<div class="f" style="font-size:12px;font-weight:600;color:var(--muted)">Geräte im Bundle (mind. 2)</div>' +
+    B.keys.map((k, i) => { const p = BYK.get(k); return '<div class="bcomp"><span class="thumb sm">' + (p && p.i ? '<img src="' + p.i + '" alt="">' : '') + '</span><span class="small"><b>' + esc(p ? p.b + ' ' + p.m : k) + '</b>' + (p && p.t ? ' · ' + esc(p.t) : '') + (p && p.u != null ? ' · UVP ' + eur(p.u) : '') + '</span><button type="button" class="pc-x" data-bdel="' + i + '" aria-label="Gerät entfernen">×</button></div>'; }).join('') +
+    '<div class="bcomp"><select id="bf-add" aria-label="Gerät hinzufügen">' + bundleOptions('') + '</select></div>' +
+    '<div class="fields" style="margin-top:8px"><label class="f">Name im Kalender *<input type="text" id="bf-m" value="' + esc(B.m) + '" placeholder="z. B. Backset Black"></label>' +
+    '<label class="f">Bezeichnung<input type="text" id="bf-t" value="' + esc(B.t) + '"></label>' +
+    '<label class="f">UVP € (Summe der Geräte, änderbar)<input type="number" step="0.01" min="0" id="bf-u" value="' + esc(B.u) + '"></label></div>' +
+    '<p class="warnline" id="bf-err" hidden></p><div class="actions" style="margin-top:10px"><button type="button" class="btn primary" id="bf-save">' + (B.k ? 'Übernehmen' : 'Bundle anlegen &amp; aufnehmen') + '</button><button type="button" class="btn" id="bf-cancel">Abbrechen</button>' + (B.k ? '<button type="button" class="btn" id="bf-del">Bundle löschen</button>' : '') + '</div>';
+}
+async function bSave(){
+  const B = S.bf, err = $('bf-err'); if (!B) return;
+  const show = m => { err.textContent = m; err.hidden = false; };
+  if (B.keys.length < 2) return show('Bitte mindestens zwei Geräte wählen.');
+  if (!String(B.m || '').trim()) return show('Bitte einen Namen angeben.');
+  const d = bundleDefaults(B.keys), m = String(B.m).trim().replace(/\s+/g, ' ');
+  const k = B.k || (d.b + '|' + m);
+  if (!B.k && (BYK.has(k) || (S.draft.extra || {})[k])) return show('Ein Produkt mit diesem Namen gibt es bereits – bitte anderen Namen wählen.');
+  const btn = $('bf-save'); if (btn){ btn.disabled = true; btn.textContent = 'Bild wird erstellt …'; }
+  const u = B.u === '' || B.u == null ? null : num(B.u);
+  const res = await bundleCreate(S.draft, B.keys, { k: B.k || null, m: B.k ? S.draft.extra[B.k].m : m, b: B.k ? S.draft.extra[B.k].b : d.b, t: B.t, u });
+  if (!res){ if (btn){ btn.disabled = false; btn.textContent = 'Bundle anlegen'; } return show('Das Bundle konnte nicht angelegt werden.'); }
+  const isNew = !B.k; S.bf = null; syncExtras(); markDirty(); $('xform').innerHTML = ''; renderPoolList(); renderDays();
+  toast(isNew ? 'Bundle „' + m + '“ angelegt und aufgenommen' : 'Bundle aktualisiert');
 }
 const QR_CACHE = {};
 function qrSrc(url){ if (QR_CACHE[url]) return QR_CACHE[url]; try { const q = qrcode(0, 'M'); q.addData(url); q.make(); const svg = q.createSvgTag({ cellSize:8, margin:0 }); return QR_CACHE[url] = 'data:image/svg+xml;base64,' + btoa(svg); } catch(e){ return ''; } }
@@ -1299,6 +1447,10 @@ async function impStart(file, from){
       const m = impMatch(r.code, r.name), sl = impSlots(r, c);
       const it = Object.assign(r, { k: m ? m.k : null, how: m ? m.how : '', choice: m ? m.k : 'new', nb: impGuessBrand(r.name + ' ' + r.code), nc: impGuessCat(r.name), slots: sl.slots || [], err: sl.err || '' });
       if (it.err) it.choice = m ? m.k : 'skip';
+      const parts = String(r.code || '').includes('+') ? String(r.code).split('+').map(x => x.trim()).filter(Boolean) : null;
+      if (parts && parts.length >= 2){ const bm = parts.map(x => impMatch(x, ''));
+        if (bm.every(Boolean)){ it.bundle = bm.map(x => x.k); it.k = null; it.how = 'Bundle'; if (!sl.err) it.choice = 'bundle'; }
+        else { it.err = 'Bundle: ' + parts.filter((x, i) => !bm[i]).join(', ') + ' nicht erkannt'; it.choice = 'skip'; } }
       return it;
     });
     const pIdx = res.map.ahek != null ? res.map.ahek : res.map.hek != null ? res.map.hek : -1;
@@ -1314,14 +1466,14 @@ function impOptions(sel){
 }
 function impRender(){
   const I = S.imp, c = S.draft; if (!I) return;
-  const nOk = I.rows.filter(r => r.choice !== 'skip' && r.choice !== 'new' && !r.err).length, nNew = I.rows.filter(r => r.choice === 'new' && !r.err).length, nSkip = I.rows.length - nOk - nNew;
+  const nOk = I.rows.filter(r => r.choice !== 'skip' && r.choice !== 'new' && r.choice !== 'bundle' && !r.err).length, nNew = I.rows.filter(r => (r.choice === 'new' || r.choice === 'bundle') && !r.err).length, nSkip = I.rows.length - nOk - nNew;
   const priceOf = impPrice, nPrice = I.rows.filter(r => r.choice !== 'skip' && !r.err && priceOf(r) != null).length;
   const pLab = 'Aktions-HEK';
   const rows = I.rows.map((r, i) => {
-    const p = r.choice !== 'new' && r.choice !== 'skip' ? BYK.get(r.choice) : null;
-    const st = r.err ? '<span class="ist no">Fehler</span>' : r.choice === 'skip' ? '<span class="ist no">wird übersprungen</span>' : r.choice === 'new' ? '<span class="ist new">neu</span>' : '<span class="ist ok">✓ ' + esc(r.k === r.choice ? r.how : 'manuell') + '</span>';
+    const p = r.choice !== 'new' && r.choice !== 'skip' && r.choice !== 'bundle' ? BYK.get(r.choice) : null;
+    const st = r.err ? '<span class="ist no">Fehler</span>' : r.choice === 'bundle' ? '<span class="ist new">Bundle · ' + r.bundle.length + ' Geräte</span>' : r.choice === 'skip' ? '<span class="ist no">wird übersprungen</span>' : r.choice === 'new' ? '<span class="ist new">neu</span>' : '<span class="ist ok">✓ ' + esc(r.k === r.choice ? r.how : 'manuell') + '</span>';
     const price = impPrice(r);
-    return '<tr class="' + (r.choice === 'skip' ? 'skip ' : '') + (r.err ? 'err' : '') + '" data-ir="' + i + '"><td class="small">' + r.line + '</td><td>' + st + '<div class="sub"><select data-ic aria-label="Zuordnung Zeile ' + r.line + '">' + impOptions(r.choice) + '</select></div>' +
+    return '<tr class="' + (r.choice === 'skip' ? 'skip ' : '') + (r.err ? 'err' : '') + '" data-ir="' + i + '"><td class="small">' + r.line + '</td><td>' + st + '<div class="sub"><select data-ic aria-label="Zuordnung Zeile ' + r.line + '">' + (r.bundle ? '<option value="bundle"' + (r.choice === 'bundle' ? ' selected' : '') + '>Als Bundle anlegen (' + r.bundle.length + ' Geräte)</option>' : '') + impOptions(r.choice) + '</select></div>' +
       (r.choice === 'new' ? '<div class="sub"><select data-inb aria-label="Marke">' + BRANDS.map(b => '<option' + ((r.nb || I.brand) === b ? ' selected' : '') + '>' + b + '</option>').join('') + '</select><select data-inc aria-label="Kategorie"><option value="">Kategorie …</option>' + xCats().map(x => '<option' + (r.nc === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></div>' : '') + '</td>' +
       '<td><div class="withpic">' + thumb(p, 'sm') + '<div><b>' + esc(r.code) + '</b>' + (p && normM(p.m) !== normM(r.code) ? '<br><span class="small">→ ' + esc(p.b + ' ' + p.m) + '</span>' : '') + '</div></div></td><td>' + esc(r.name) + (r.ds ? '<br><a class="small" href="' + esc(r.ds) + '" target="_blank" rel="noopener">Datenblatt ✓</a>' : '') + '</td>' +
       '<td class="num">' + (p && !p.x ? eur(p.u) + (r.uvp != null && r.uvp !== p.u ? '<br><span class="small">Liste: ' + eur(r.uvp) + '</span>' : '') : eur(r.uvp)) + '</td>' +
@@ -1337,19 +1489,25 @@ function impRender(){
     '<div class="impopts"><label><input type="checkbox" id="imp-updall"' + (I.updAll ? ' checked' : '') + '>Aktions-HEK auch in bereits geplanten Aktionen dieser Geräte aktualisieren</label>' +
     '<label><input type="checkbox" id="imp-replace"' + (I.replace ? ' checked' : '') + '>Bisherige Zeitraum-Aktionen ersetzen (sonst ergänzen/aktualisieren)</label></div>' +
     '<div class="tblwrap"><table class="aptbl"><thead><tr><th>Zeile</th><th>Zuordnung</th><th>Code</th><th>Bezeichnung</th><th style="text-align:right">UVP</th>' + '<th style="text-align:right">' + pLab + '</th><th style="text-align:right">Menge</th><th>Aktionstage</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<p class="small">' + nOk + ' aus dem Katalog erkannt · ' + nNew + ' neu als eigenes Produkt (Bild und Datenblatt danach beim Produkt ergänzen) · ' + nSkip + ' werden nicht übernommen. Die UVP kommt immer aus der FH-App; die UVP aus der Liste wird nur bei neuen eigenen Produkten verwendet.</p>' +
+    '<p class="small">' + nOk + ' aus dem Katalog erkannt · ' + nNew + ' neu als eigenes Produkt oder Bundle (Bild und Datenblatt danach beim Produkt ergänzen) · ' + nSkip + ' werden nicht übernommen. Die UVP kommt immer aus der FH-App; die UVP aus der Liste wird nur bei neuen eigenen Produkten verwendet.</p>' +
     '<p class="warnline" id="imp-err" hidden></p><div class="actions"><button type="button" class="btn primary" id="imp-go"' + (nOk + nNew ? '' : ' disabled') + '>' + (nOk + nNew) + ' Produkte übernehmen</button><button type="button" class="btn" id="imp-cancel">Abbrechen</button></div></div></div></div>';
 }
-function impApply(){
+async function impApply(){
   const I = S.imp, c = S.draft, err = $('imp-err');
   const miss = I.rows.find(r => r.choice === 'new' && !r.err && !(r.nc));
   if (miss){ err.textContent = 'Zeile ' + miss.line + ': bitte die Kategorie für das neue Produkt wählen.'; err.hidden = false; return; }
   c.extra = c.extra || {}; c.codes = c.codes || {}; c.ranges = c.ranges || [];
   if (I.replace) c.ranges = [];
   let nR = 0, nD = 0, nN = 0, nO = 0, nP = 0, nU = 0;
+  /* Bundles zuerst anlegen (Bild wird aus den Gerätebildern erstellt) */
+  const go = $('imp-go'); if (go && I.rows.some(r => r.choice === 'bundle' && !r.err)){ go.disabled = true; go.textContent = 'Bundles werden angelegt …'; }
+  for (const r of I.rows){ if (r.err || r.choice !== 'bundle' || !r.bundle) continue;
+    r.bk = await bundleCreate(c, r.bundle, { m: r.name ? r.name : undefined, u: r.uvp != null ? r.uvp : undefined }); if (r.bk) nN++; }
+  syncExtras();
   I.rows.forEach(r => {
     if (r.err || r.choice === 'skip') return;
     let k = r.choice;
+    if (k === 'bundle'){ k = r.bk; if (!k) return; }
     if (k === 'new'){
       const b = r.nb || I.brand, m = /[a-z]/i.test(r.code) ? r.code : (r.name || r.code), t = m === r.name ? '' : r.name;
       k = b + '|' + m;
@@ -1553,7 +1711,7 @@ async function dslTemplate(){
   if (r === 'saved') toast('Vorlage gespeichert – Code (Modell, EAN oder Artikelnr.) und Link je Zeile');
 }
 async function impTemplate(){
-  const lines = ['Code;Bezeichnung;Aktions-HEK;Menge;Datenblatt;Aktionstage', 'BBIE12300XD;Multifunktions-Backofen;329;10;;', 'MBD 76170 BRB;Multidampfbackofen;1190;5;https://…/Datenblatt.pdf;', 'IM 964 MY TIME AT;Waschmaschine 9 kg;259;5;;01.12.–07.12.', 'GIV 6A580 X;Geschirrspüler vollintegriert;549;3;;05.12.'];
+  const lines = ['Code;Bezeichnung;Aktions-HEK;Menge;Datenblatt;Aktionstage', 'BBIE12300XD;Multifunktions-Backofen;329;10;;', 'MBD 76170 BRB;Multidampfbackofen;1190;5;https://…/Datenblatt.pdf;', 'IM 964 MY TIME AT;Waschmaschine 9 kg;259;5;;01.12.–07.12.', 'GIV 6A580 X;Geschirrspüler vollintegriert;549;3;;05.12.', 'MBP 75150 BR + MIS 6087;Backset Black (Bundle);799;5;;'];
   const r = await saveFile('Aktionsliste_Vorlage.csv', new Blob(['\uFEFF' + lines.join('\r\n')], { type:'text/csv' }));
   if (r === 'saved') toast('Vorlage gespeichert – in Excel öffnen, ausfüllen und als .xlsx oder .csv hochladen');
 }
@@ -1587,7 +1745,7 @@ function renderAdmin(){
     '</div><p class="small" style="margin-bottom:0">Eine Vorlage setzt Zeitraum, Design und Titel – alles bleibt danach frei änderbar. Bereits geplante Tage bleiben erhalten. Die Aktion eines Tages ist von 0:00 bis 23:59 Uhr (Wien) aktiv. Danach zeigt das Türchen das Gerät vergraut mit „Aktion abgelaufen“. Das Testdatum verändert nur deine eigene Ansicht.</p></section>' +
 
     approvalPeopleHTML(c) +
-    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen. Den Aktions-HEK trägst du bei der Tagesaktion bzw. Zeitraum-Aktion ein. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div>' +
+    '<section class="section"><div class="section-head"><div><h3>Aktionssortiment</h3><span class="small">Geräte per Klick aufnehmen oder entfernen. Den Aktions-HEK trägst du bei der Tagesaktion bzw. Zeitraum-Aktion ein. UVP kommen immer aus den Fachhandels-Apps (Stand 11.11.2026).</span></div><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="small" id="pcount"></span><button type="button" class="btn" id="btn-bnew">+ Bundle schnüren</button><button type="button" class="btn" id="btn-xnew">+ Eigenes Produkt</button></span></div>' +
     '<div class="impopts ibdrop" id="all-drop" style="margin:0 0 12px"><b>Gesamt-Upload:</b><label class="btn primary upl" style="padding:7px 11px">Liste' + (canUpload() ? ' + Datenblätter' : '') + ' hochladen<input type="file" id="all-files" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt' + (canUpload() ? ',application/pdf,.pdf' : '') + '" multiple></label>' +
     '<button type="button" class="linkbtn" id="imp-tpl">Vorlage</button>' +
     '<span class="small">Eine Excel-/CSV-Liste mit Code (Modell, EAN oder Artikelnr.), Aktions-HEK, Menge, optional Datenblatt-Link und Aktionstage' + (canUpload() ? ' – dazu beliebig viele Datenblatt-PDFs (Zuordnung über den Dateinamen)' : '') + '. Auch per Drag &amp; Drop. Fotos separat darunter.</span>' +
@@ -1652,7 +1810,7 @@ function dbErrText(e, kb){
 }
 async function save(){
   const data = clone(S.draft); data.example = false; data.updatedAt = new Date().toISOString();
-  normalize(data);
+  normalize(data); akAssignId(data); nlRefresh(data);
   if (S.api){
     const btn = $('btn-save'); if (btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
     try {
@@ -1717,11 +1875,16 @@ document.addEventListener('click', e => {
   const clr = t.closest('[data-clear]'); if (clr){ const day = clr.closest('.drow').dataset.day; const ck = (S.draft.days[day] || {}).k; delete S.draft.days[day]; if (ck) setTimeout(() => refreshCard(ck)); markDirty(); replaceDay(day); return; }
   const xa = t.closest('[data-xadd]'); if (xa){ const day = xa.dataset.xadd; S.draft.ranges = S.draft.ranges || []; S.draft.ranges.push({ id: randId(4), k:'', xd:true, full:false, from:day, to:day, hek:null, price:null, qty:5 }); markDirty(); replaceDay(day);
     const sel = document.querySelector('.dgroup[data-day="' + day + '"] .drow.xd:last-of-type select'); if (sel) sel.focus(); return; }
-  if (t.id === 'btn-xnew'){ $('xform').innerHTML = xFormHTML(null); $('xf-m') && $('xf-m').focus(); return; }
+  if (t.id === 'btn-xnew'){ S.bf = null; $('xform').innerHTML = xFormHTML(null); $('xf-m') && $('xf-m').focus(); return; }
+  if (t.id === 'btn-bnew'){ S.xf = null; $('xform').innerHTML = bFormHTML(null); bRender(); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+  if (t.id === 'bf-cancel'){ S.bf = null; $('xform').innerHTML = ''; return; }
+  if (t.id === 'bf-save'){ bSave(); return; }
+  if (t.id === 'bf-del'){ if (S.bf && S.bf.k) xDelete(S.bf.k); S.bf = null; return; }
+  const bd = t.closest('[data-bdel]'); if (bd && S.bf){ S.bf.keys.splice(+bd.dataset.bdel, 1); bRender(); return; }
   if (t.id === 'xf-cancel'){ S.xf = null; $('xform').innerHTML = ''; return; }
   if (t.id === 'xf-save'){ xSave(); return; }
   if (t.id === 'xf-del'){ if (S.xf && S.xf.k) xDelete(S.xf.k); return; }
-  const xe = t.closest('[data-xedit]'); if (xe){ const k = xe.closest('.pcard').dataset.k; $('xform').innerHTML = xFormHTML(k); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+  const xe = t.closest('[data-xedit]'); if (xe){ const k = xe.closest('.pcard').dataset.k; if (((S.draft.extra || {})[k] || {}).bundle){ S.xf = null; $('xform').innerHTML = bFormHTML(k); bRender(); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; } $('xform').innerHTML = xFormHTML(k); $('xform').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
   const ur = t.closest('[data-uvpreset]'); if (ur){ const k = ur.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.uvp; markDirty(); refreshCard(k); toast('UVP wieder aus der FH-App'); } return; }
   const ir = t.closest('[data-imgrm]'); if (ir){ const k = ir.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.img; if (S.draft.imgs) delete S.draft.imgs[k]; markDirty(); syncExtras(); refreshCard(k); renderDays(); toast('Foto zurückgesetzt'); } return; }
   const dr = t.closest('[data-dsrm]'); if (dr){ const k = dr.closest('.pcard').dataset.k, e = S.draft.pool[k]; if (e){ delete e.dsId; markDirty(); refreshCard(k); toast('Upload entfernt'); } return; }
@@ -1795,9 +1958,9 @@ document.addEventListener('change', async e => {
 /* ---------- Eigener Server (GitHub + Cloudflare Pages) ---------- */
 const ssGet = k => { try { return sessionStorage.getItem(k); } catch(e) { return null; } };
 const ssSet = (k,v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k,v); } catch(e) {} };
-const wantsAdmin = () => /^\/admin\/?$/.test(location.pathname) || location.hash === '#admin';
+const wantsAdmin = () => /^\/admin\/?$/.test(location.pathname) || location.hash === '#admin' || /^#ak-[\w-]+$/.test(location.hash);
 /* Verwaltung, Flyer, Bestellungen und Aktionen gibt es nur unter /admin (im Claude-Artifact: Link mit #admin) – auf der Startseite sieht auch ein angemeldeter Admin nur die Händleransicht */
-const ADMIN_VIEWS = ['admin', 'flyer', 'orders', 'aktionen'];
+const ADMIN_VIEWS = ['admin', 'flyer', 'orders', 'aktionen', 'planung', 'kpi'];
 const inAdmin = () => !!S.canEdit && wantsAdmin();
 async function apiLoad(){
   if (!/^https?:$/.test(location.protocol)) return undefined;
@@ -2852,7 +3015,7 @@ function renderHeader(){
   $('h-notice').innerHTML = notes.map(n => '<span class="notice">' + esc(n) + '</span> ').join('') +
     (S.accounts && S.me ? '<span class="userchip"><span>' + (S.me.role === 'admin' ? 'Beko-Team: ' : 'Angemeldet: ') + '<b>' + esc(S.me.label) + '</b></span><button type="button" class="linkbtn" id="acc-pwbtn">Passwort ändern</button><button type="button" class="linkbtn" id="acc-out">Abmelden</button></span>' : '');
   const apv = isApprover() || (S.api && !!S.ap.token);
-  $('tabs').hidden = !(inAdmin() || apv); $('tab-adm').hidden = !inAdmin(); $('tab-fly').hidden = !inAdmin(); $('tab-ord').hidden = !inAdmin(); $('tab-akt').hidden = !inAdmin(); $('tab-akt').setAttribute('aria-pressed', S.view === 'aktionen');
+  $('tabs').hidden = !(inAdmin() || apv); $('tab-adm').hidden = !inAdmin(); $('tab-fly').hidden = !inAdmin(); $('tab-ord').hidden = !inAdmin(); $('tab-akt').hidden = !inAdmin(); $('tab-akt').setAttribute('aria-pressed', S.view === 'aktionen'); $('tab-pln').hidden = !inAdmin(); $('tab-pln').setAttribute('aria-pressed', S.view === 'planung'); $('tab-kpi').hidden = !inAdmin(); $('tab-kpi').setAttribute('aria-pressed', S.view === 'kpi');
   $('tab-ord').setAttribute('aria-pressed', S.view === 'orders');
   $('tab-apv').setAttribute('aria-pressed', S.view === 'approval');
   $('tab-kal').setAttribute('aria-pressed', S.view === 'kalender'); $('tab-adm').setAttribute('aria-pressed', S.view === 'admin'); $('tab-fly').setAttribute('aria-pressed', S.view === 'flyer');
@@ -2864,10 +3027,11 @@ function render(){
   if (S.view === 'flyonly'){ renderFlyOnly(); return; }
   document.body.classList.remove('flyonly');
   if (!wantsAdmin()){ S.admEntered = false; if (ADMIN_VIEWS.includes(S.view)) S.view = 'kalender'; }
+  else if (inAdmin() && /^#ak-[\w-]+$/.test(location.hash) && S.kpi.hash !== location.hash){ S.kpi.hash = location.hash; S.admEntered = true; S.view = 'kpi'; S.kpi.sel = location.hash.slice(4); }
   else if (inAdmin() && !S.admEntered){ S.admEntered = true; if (S.view === 'kalender') S.view = 'admin'; }
   if (S.api && !S.canEdit && wantsAdmin()){ renderHeader(); renderLogin(); renderSavebar(); return; }
   renderHeader();
-  if (S.view === 'admin') renderAdmin(); else if (S.view === 'orders' && S.canEdit) renderOrders(); else if (S.view === 'aktionen' && S.canEdit) renderAktionen(); else if (S.view === 'flyer' && S.canEdit) renderFlyer(); else if (S.view === 'approval' && (S.canEdit || isApprover() || (S.api && S.ap.token))) renderApproval(); else { if (S.view !== 'kalender') S.view = 'kalender'; renderHeader(); renderDealer(); renderSavebar(); }
+  if (S.view === 'admin') renderAdmin(); else if (S.view === 'orders' && S.canEdit) renderOrders(); else if (S.view === 'aktionen' && S.canEdit) renderAktionen(); else if (S.view === 'planung' && S.canEdit) renderPlanung(); else if (S.view === 'kpi' && S.canEdit) renderKpi(); else if (S.view === 'flyer' && S.canEdit) renderFlyer(); else if (S.view === 'approval' && (S.canEdit || isApprover() || (S.api && S.ap.token))) renderApproval(); else { if (S.view !== 'kalender') S.view = 'kalender'; renderHeader(); renderDealer(); renderSavebar(); }
   renderCartFab();
 }
 
@@ -3003,7 +3167,8 @@ function acctCust(cu){
 }
 
 /* Verwaltung → Zugänge: Kunden & Beko-Team */
-const ACC_F = [['firma','Firma *','text','organization'],['ort','Ort','text',''],['kdnr','Kundennr.','text',''],['name','Ansprechpartner:in','text','name'],['email','E-Mail','email','email'],['tel','Telefon','tel','tel']];
+const ACC_F = [['firma','Firma *','text','organization'],['adresse','Adresse','text','street-address'],['ort','PLZ / Ort','text',''],['kdnr','Kundennr.','text',''],['name','Ansprechpartner:in','text','name'],['email','E-Mail','email','email'],['tel','Telefon','tel','tel']];
+const ACC_KEYS = ['firma','adresse','ort','kdnr','name','email','tel'];
 async function accLoad(){
   try { const r = await fetch('/api/users', { cache:'no-store' }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Zugänge konnten nicht geladen werden');
     S.acc.list = j; S.acc.draft = clone(j.customers || []); S.acc.dirty = false; S.acc.err = null; }
@@ -3037,7 +3202,7 @@ function accRows(){
     const s = a.id ? saved.get(a.id) : null, st = !s ? 'neu' : (a.active === false ? 'gesperrt' : s.status);
     return '<tr class="' + (a.active === false ? 'off' : '') + '" data-ai="' + i + '">' + ACC_F.map(([f,l,type,ac]) => '<td><input type="' + type + '" data-af="' + f + '" aria-label="' + esc(l) + '" value="' + esc(a[f] || '') + '"' + (ac ? ' autocomplete="off"' : '') + '></td>').join('') +
       '<td>' + accBadge(st) + '<br><span class="small">' + (s ? 'zuletzt ' + esc(fmtLast(s.lastLogin)) : '') + '</span></td>' +
-      '<td><div class="acts">' + accActs(Object.assign({}, s || a, { active: a.active }), !!s) + '<label class="small" style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" data-aactive' + (a.active === false ? '' : ' checked') + '> aktiv</label><button type="button" class="pc-x" data-adel aria-label="Zugang entfernen" title="Entfernen">×</button></div></td></tr>';
+      '<td><div class="acts">' + accActs(Object.assign({}, s || a, { active: a.active }), !!s) + '<label class="small" style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" data-aactive' + (a.active === false ? '' : ' checked') + '> aktiv</label><label class="small" style="display:inline-flex;gap:4px;align-items:center" title="erhält den Aktions-Newsletter"><input type="checkbox" data-anl' + (a.newsletter === false ? '' : ' checked') + '> Newsletter</label><button type="button" class="pc-x" data-adel aria-label="Zugang entfernen" title="Entfernen">×</button></div></td></tr>';
   }).join('') || '<tr><td colspan="9" class="small">' + (S.acc.draft.length ? 'Kein Treffer.' : 'Noch keine Kunden-Zugänge. Mit „+ Kunde“ anlegen oder eine Liste aus Excel einfügen.') + '</td></tr>';
 }
 function accSyncBar(){ const s = $('acc-save'), d = $('acc-discard'), n = $('acc-state'); if (s) s.disabled = !S.acc.dirty; if (d) d.disabled = !S.acc.dirty; if (n) n.textContent = S.acc.dirty ? 'Ungespeicherte Änderungen bei den Zugängen' : ''; }
@@ -3052,9 +3217,9 @@ function accMount(){
   sec.innerHTML = head +
     '<p class="small" style="margin:0 0 12px">Startpasswort: <b>' + esc(L.initial) + '</b> · Kunden-Anmeldung: <b>' + esc(location.origin) + '/</b> · Team: <b>' + esc(location.origin) + '/admin</b></p>' +
     '<h4 class="aph">Kunden (' + S.acc.draft.length + ')</h4>' +
-    '<div class="acctools"><input type="text" id="acc-q" placeholder="Suchen …" value="' + esc(S.acc.q) + '"><button type="button" class="btn" id="acc-add">+ Kunde</button><button type="button" class="btn" id="acc-pastebtn">Liste aus Excel einfügen</button>' +
+    '<div class="acctools"><input type="text" id="acc-q" placeholder="Suchen …" value="' + esc(S.acc.q) + '"><button type="button" class="btn" id="acc-add">+ Kunde</button><label class="btn upl" style="padding:8px 12px">Excel-Liste hochladen<input type="file" id="acc-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt" hidden></label><button type="button" class="linkbtn" id="acc-tpl">Vorlage</button><button type="button" class="btn" id="acc-pastebtn">Liste aus Excel einfügen</button>' +
     '<span style="flex:1"></span><span class="small" id="acc-state"></span><button type="button" class="btn" id="acc-discard">Verwerfen</button><button type="button" class="btn primary" id="acc-save">Zugänge speichern</button></div>' +
-    (S.acc.paste ? '<div class="accpaste"><p class="small" style="margin:0 0 6px">Spalten in dieser Reihenfolge: <b>Firma · Ort · Kundennr. · Ansprechpartner:in · E-Mail · Telefon</b> (aus Excel kopieren, Kopfzeile wird erkannt).</p><textarea id="acc-pastetxt" placeholder="Elektro Muster GmbH&#9;Linz&#9;100234&#9;Max Muster&#9;office@muster.at&#9;+43 732 1234"></textarea><div class="acctools" style="margin:6px 0 0"><button type="button" class="btn primary" id="acc-pasteok">Übernehmen</button><button type="button" class="btn" id="acc-pastex">Abbrechen</button></div></div>' : '') +
+    (S.acc.paste ? '<div class="accpaste"><p class="small" style="margin:0 0 6px">Spalten in dieser Reihenfolge: <b>Firma · Ort · Kundennr. · Ansprechpartner:in · E-Mail · Telefon · Adresse</b> (aus Excel kopieren, Kopfzeile wird erkannt). Ganze Listen mit beliebiger Spaltenreihenfolge besser über „Excel-Liste hochladen“.</p><textarea id="acc-pastetxt" placeholder="Elektro Muster GmbH&#9;Linz&#9;100234&#9;Max Muster&#9;office@muster.at&#9;+43 732 1234"></textarea><div class="acctools" style="margin:6px 0 0"><button type="button" class="btn primary" id="acc-pasteok">Übernehmen</button><button type="button" class="btn" id="acc-pastex">Abbrechen</button></div></div>' : '') +
     '<div class="tblwrap"><table class="aptbl acctbl"><thead><tr>' + ACC_F.map(f => '<th>' + esc(f[1]) + '</th>').join('') + '<th>Status</th><th>Aktionen</th></tr></thead><tbody id="acc-body">' + accRows() + '</tbody></table></div>' +
     '<h4 class="aph" style="margin-top:18px">Beko-Team – Verwaltung (Admin / Editor)</h4>' +
     '<div class="tblwrap"><table class="aptbl acctbl"><thead><tr><th>Name</th><th>E-Mail (Benutzer)</th><th>Rechte</th><th>Status</th><th>Aktionen</th></tr></thead><tbody>' +
@@ -3069,10 +3234,44 @@ function accParse(txt){
   String(txt || '').split(/\r?\n/).forEach((line, n) => {
     if (!line.trim()) return; const c = line.split(line.includes('\t') ? '\t' : ';').map(s => s.trim().replace(/^"|"$/g, ''));
     if (n === 0 && /firma|kunde|name/i.test(c[0]) && !/gmbh|kg|og|e\.u\./i.test(c[0])) return;
-    if (!c[0]) return; out.push({ firma:c[0], ort:c[1] || '', kdnr:c[2] || '', name:c[3] || '', email:c[4] || '', tel:c[5] || '', active:true });
+    if (!c[0]) return; out.push({ firma:c[0], ort:c[1] || '', kdnr:c[2] || '', name:c[3] || '', email:c[4] || '', tel:c[5] || '', adresse:c[6] || '', active:true });
   });
   return out;
 }
+/* Händlerliste zusammenführen: gleiche Kundennummer bzw. gleiche Firma + Ort = derselbe Händler */
+function accMerge(rows){
+  let n = 0, u = 0; const lc = v => String(v || '').trim().toLowerCase();
+  rows.forEach(r => { r = Object.assign({ firma:'', adresse:'', ort:'', kdnr:'', name:'', email:'', tel:'', active:true }, r);
+    const ex = S.acc.draft.find(a => (r.kdnr && a.kdnr && lc(a.kdnr) === lc(r.kdnr)) || (!r.kdnr && lc(a.firma) === lc(r.firma) && lc(a.ort) === lc(r.ort)));
+    if (ex){ ACC_KEYS.forEach(f => { if (r[f]) ex[f] = r[f]; }); u++; } else { S.acc.draft.push(r); n++; } });
+  return { n, u };
+}
+/* Ganze Excel-/CSV-Liste: Spalten werden anhand der Überschriften erkannt, Reihenfolge egal */
+const ACC_COLS = [['kdnr', /^(kundennr|kundennummer|kdnr|kdnummer|debitor|debitorennr|kunden?id|customerno|customernumber|soldto|nr)$/], ['email', /^(email|e?mail|mailadresse|emailadresse)$/], ['tel', /^(telefon|tel|telefonnr|telefonnummer|phone|mobil|mobiltelefon|handy)$/],
+  ['plz', /^(plz|postleitzahl|zip|postcode)$/], ['ort', /^(ort|stadt|city|gemeinde)$/], ['adresse', /^(adresse|strasse|straße|str|anschrift|address|street|strassehausnr|straßehausnr)$/],
+  ['name', /^(ansprechpartner|ansprechpartnerin|ansprechperson|kontakt|kontaktperson|contact|name2|inhaber)$/], ['firma', /^(firma|firmenname|händler|haendler|kunde|kundenname|name|name1|company|unternehmen)$/]];
+async function accUpload(file){
+  try {
+    const rows = await impRead(file), hn = v => String(v ?? '').toLowerCase().replace(/[^a-z0-9äöüß]/g, '');
+    let hi = -1, map = null;
+    for (let i = 0; i < Math.min(rows.length, 20); i++){ const m = {}; (rows[i] || []).forEach((cell, j) => { const h = hn(cell); if (!h) return; for (const [key, re] of ACC_COLS){ if (re.test(h) && m[key] == null){ m[key] = j; break; } } }); if (m.firma != null && Object.keys(m).length >= 2){ hi = i; map = m; break; } }
+    let list;
+    if (!map){ list = accParse(rows.map(r => (r || []).join('\t')).join('\n')); }
+    else { const g = (r, k) => map[k] == null ? '' : String(r[map[k]] ?? '').trim();
+      list = rows.slice(hi + 1).filter(r => r && g(r, 'firma')).map(r => { let kd = g(r, 'kdnr'); if (/^\d+\.0$/.test(kd)) kd = kd.slice(0, -2);
+        return { firma: g(r, 'firma'), adresse: g(r, 'adresse'), ort: [g(r, 'plz'), g(r, 'ort')].filter(Boolean).join(' '), kdnr: kd, name: g(r, 'name'), email: g(r, 'email'), tel: g(r, 'tel'), active: true }; }); }
+    if (!list.length){ toast('In der Datei wurden keine Händler gefunden – erwartet wird mindestens eine Spalte „Firma“', 7000); return; }
+    const noMail = list.filter(x => !x.email).length, r = accMerge(list);
+    S.acc.q = ''; S.acc.dirty = true; accMount();
+    toast(list.length + ' Händler gelesen: ' + r.n + ' neu, ' + r.u + ' aktualisiert' + (noMail ? ' · ' + noMail + ' ohne E-Mail' : '') + ' – bitte „Zugänge speichern“', 8000);
+  } catch(e){ toast('Die Datei konnte nicht gelesen werden'); }
+}
+async function accTemplate(){
+  const lines = ['Kundennr;Firma;Adresse;PLZ;Ort;Ansprechpartner;E-Mail;Telefon', '100234;Elektro Muster GmbH;Hauptstraße 12;4020;Linz;Max Muster;office@muster.at;+43 732 123456', '100567;Elektro Beispiel e.U.;Bahnhofstraße 3;6020;Innsbruck;Anna Beispiel;anna@beispiel.at;+43 512 987654'];
+  const r = await saveFile('Haendlerliste_Vorlage.csv', new Blob(['\uFEFF' + lines.join('\r\n')], { type:'text/csv' }));
+  if (r === 'saved') toast('Vorlage gespeichert – in Excel ausfüllen und als .xlsx oder .csv hochladen');
+}
+document.addEventListener('change', e => { const t = e.target; if (t.id === 'acc-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; accUpload(f); } });
 async function accSave(){
   const bad = S.acc.draft.findIndex(a => !String(a.firma || '').trim()); if (bad >= 0){ toast('Bitte bei jedem Kunden eine Firma eintragen'); return; }
   const btn = $('acc-save'); if (btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
@@ -3096,11 +3295,10 @@ document.addEventListener('click', e => {
   if (t.id === 'acc-add'){ S.acc.draft.unshift({ firma:'', ort:'', kdnr:'', name:'', email:'', tel:'', active:true }); S.acc.q = ''; S.acc.dirty = true; accMount(); const f = document.querySelector('#acc-body tr[data-ai="0"] input'); if (f) f.focus(); return; }
   if (t.id === 'acc-pastebtn'){ S.acc.paste = !S.acc.paste; accMount(); const ta = $('acc-pastetxt'); if (ta) ta.focus(); return; }
   if (t.id === 'acc-pastex'){ S.acc.paste = false; accMount(); return; }
-  if (t.id === 'acc-pasteok'){ const rows = accParse($('acc-pastetxt').value); let n = 0, u = 0;
-    rows.forEach(r => { const ex = S.acc.draft.find(a => (r.kdnr && a.kdnr && a.kdnr === r.kdnr) || (!r.kdnr && a.firma.toLowerCase() === r.firma.toLowerCase() && (a.ort || '').toLowerCase() === r.ort.toLowerCase()));
-      if (ex){ ['firma','ort','kdnr','name','email','tel'].forEach(f => { if (r[f]) ex[f] = r[f]; }); u++; } else { S.acc.draft.push(r); n++; } });
+  if (t.id === 'acc-pasteok'){ const rows = accParse($('acc-pastetxt').value);
     if (!rows.length){ toast('Keine Zeilen erkannt'); return; }
-    S.acc.paste = false; S.acc.dirty = true; accMount(); toast(n + ' neu' + (u ? ', ' + u + ' aktualisiert' : '') + ' – bitte „Zugänge speichern“'); return; }
+    const r = accMerge(rows); S.acc.paste = false; S.acc.dirty = true; accMount(); toast(r.n + ' neu' + (r.u ? ', ' + r.u + ' aktualisiert' : '') + ' – bitte „Zugänge speichern“'); return; }
+  if (t.id === 'acc-tpl'){ accTemplate(); return; }
   if (t.id === 'acc-save'){ accSave(); return; }
   if (t.id === 'acc-discard'){ S.acc.draft = clone(S.acc.list.customers || []); S.acc.dirty = false; accMount(); return; }
   const del = t.closest('[data-adel]'); if (del){ const i = +del.closest('tr').dataset.ai, a = S.acc.draft[i];
@@ -3117,6 +3315,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   if (S.view !== 'admin' || !S.accounts) return; const t = e.target;
+  if (t.matches('[data-anl]')){ const a = S.acc.draft[+t.closest('tr').dataset.ai]; if (a){ a.newsletter = t.checked; S.acc.dirty = true; accSyncBar(); } return; }
   if (t.matches('[data-aactive]')){ const tr = t.closest('tr'), a = S.acc.draft[+tr.dataset.ai]; if (a){ a.active = t.checked; S.acc.dirty = true; tr.classList.toggle('off', !t.checked); accSyncBar(); } }
 });
 
@@ -3124,7 +3323,8 @@ document.addEventListener('change', e => {
 const AKV = { MAXV: 30, local: { aktionen: {}, versionen: {} } };
 S.ak = { list: null, vers: null, filter: 'alle', form: null, confirm: null, names: {}, busy: false, err: '' };
 const akId = p => p + '-' + Date.now().toString(36) + randId(3);
-function akMeta(o){ const c = o.config || {}; return { id:o.id, kind:o.kind, name:o.name, at:o.at, by:o.by || '', byName:o.byName || '', title:c.title || '', theme:c.theme, start:c.start, count:c.count, deals: akDealCount(c), sum: o.result ? o.result.sum : null }; }
+function akMeta(o){ const c = o.config || {}; return { id:o.id, kind:o.kind, name:o.name, at:o.at, by:o.by || '', byName:o.byName || '', title:c.title || '', theme:c.theme, start:c.start, count:c.count, deals: akDealCount(c), sum: o.result ? o.result.sum : null, lead: c.lead == null ? LEAD_DEFAULT : c.lead, cl: akClStats(c) }; }
+function akClStats(c){ try { const n = normalize(clone(c)); const s = clStats(n); return [s.done, s.total, s.overdue]; } catch(e){ return null; } }
 function akDealCount(c){ try { const n = normalize(clone(c)); return Object.values(n.days || {}).filter(d => d && d.k).length + (n.ranges || []).length; } catch(e){ return 0; } }
 const akPeriod = m => { if (!m.start) return '–'; const b = addDays(m.start, (m.count || 1) - 1); return m.count === 1 ? fmtShort(m.start) + m.start.slice(0,4) : fmtShort(m.start) + ' – ' + fmtShort(b) + b.slice(0,4); };
 async function akFetch(q, opt){
@@ -3166,6 +3366,7 @@ const akWho = m => m.byName || S.ak.names[m.by] || '';
 
 /* Versionen: bei jedem Speichern automatisch, die letzten 30 bleiben */
 async function akRecordVersion(cfg){
+  akAutoRecord(cfg);
   if (!S.api && !S.db) { /* Vorschau */ }
   const v = Object.assign({ id: akId('v'), kind:'version', name: cfg.title || 'Aktionskalender', at: new Date().toISOString(), config: clone(cfg) }, akBy());
   try {
@@ -3245,7 +3446,7 @@ async function akLoad(force){
   } catch(e){ S.ak.list = S.ak.list || []; S.ak.vers = S.ak.vers || []; S.ak.err = e && e.message === 'server' ? 'Die Speicherfunktion fehlt auf dem Server noch: bitte die Datei functions/api/aktionen.js aus dem Update-Paket ins Repository laden.' : 'Gespeicherte Aktionen konnten nicht geladen werden.'; }
   S.ak.busy = false;
 }
-const akKindBadge = k => k === 'archiv' ? '<span class="apb ok">Archiv</span>' : '<span class="apb open">Vorlage</span>';
+const akKindBadge = k => k === 'aktion' ? '<span class="apb ok">Aktion</span>' : k === 'archiv' ? '<span class="apb ok">Archiv</span>' : k === 'geplant' ? '<span class="apb wait">Geplant</span>' : k === 'live' ? '<span class="apb ok">Live</span>' : '<span class="apb open">Vorlage</span>';
 function akFormHTML(){
   const f = S.ak.form; if (!f) return '';
   if (f.type === 'name') return '<div class="akform"><label class="f" style="flex:1 1 200px">Name<input type="text" id="ak-name" value="' + esc(f.name) + '" maxlength="80"></label>' +
@@ -3328,6 +3529,8 @@ async function akImport(file){
 }
 document.addEventListener('click', async e => {
   const t = e.target;
+  if (t.id === 'tab-kpi'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } S.view = 'kpi'; S.kpi.items = {}; S.ak.list = null; S.orders = null; render(); return; }
+  if (t.id === 'tab-pln'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } S.view = 'planung'; S.pl = { sel:null, edit:null, dirty:false, add:false }; S.ak.list = null; S.ak.vers = null; render(); return; }
   if (t.id === 'tab-akt'){ if (S.dirty){ toast('Bitte zuerst speichern oder verwerfen'); return; } S.view = 'aktionen'; S.ak.list = null; S.ak.vers = null; S.ak.form = null; S.ak.confirm = null; render(); return; }
   if (t.id === 'auto-restore'){ const a = autoRead(); if (!a) return; S.draft = normalize(clone(a.draft)); S.dirty = true; renderAdmin(); toast('Entwurf wiederhergestellt – noch nicht veröffentlicht'); return; }
   if (t.id === 'auto-drop'){ autoClear(); const b = $('auto-banner'); if (b) b.remove(); toast('Entwurf verworfen'); return; }
@@ -3362,6 +3565,402 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('change', e => { const t = e.target; if (t.id === 'ak-import' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; akImport(f); } });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'ak-name'){ e.preventDefault(); const b = $('ak-name-ok'); if (b) b.click(); } });
+
+/* ---------- Bundles: Eingaben im Formular ---------- */
+document.addEventListener('change', e => {
+  const t = e.target; if (!S.bf || S.view !== 'admin') return;
+  if (t.id === 'bf-add' && t.value){ const k = t.value; if (!bundleOk(k)) toast('Ein Bundle kann kein Bundle enthalten'); else if (S.bf.keys.includes(k)) toast('Gerät ist bereits im Bundle'); else S.bf.keys.push(k); bRender(); const s = $('bf-add'); if (s) s.focus(); }
+});
+document.addEventListener('input', e => {
+  const t = e.target; if (!S.bf || S.view !== 'admin') return;
+  if (t.id === 'bf-m'){ S.bf.m = t.value; S.bf.mTouched = true; } else if (t.id === 'bf-t'){ S.bf.t = t.value; S.bf.tTouched = true; } else if (t.id === 'bf-u'){ S.bf.u = t.value; S.bf.uTouched = true; }
+});
+
+/* ---------- Planung: Admin-Kalender aller Aktionen mit Vorlauf und Checkliste ---------- */
+S.pl = { sel:null, edit:null, dirty:false, add:false };
+const monthsAdd = (s, n) => { const y = +s.slice(0,4), m = +s.slice(5,7) - 1 + n; return iso(y + Math.floor(m / 12), ((m % 12) + 12) % 12 + 1, 1); };
+function plItems(){
+  const c = S.config, s = clStats(c);
+  const live = { id:'live', kind:'live', name: c.title || 'Aktionskalender', title: c.title || '', start: c.start, count: c.count, lead: c.lead, cl: [s.done, s.total, s.overdue] };
+  const saved = (S.ak.list || []).filter(m => m && m.start).map(m => Object.assign({}, m, { lead: m.lead == null ? LEAD_DEFAULT : m.lead }));
+  return [live].concat(saved).sort((a, b) => String(a.start).localeCompare(String(b.start)) || (a.kind === 'live' ? -1 : 1));
+}
+function renderPlanung(){
+  if (!S.ak.list){ $('app').innerHTML = '<div class="admin"><section class="section"><h2>Planung</h2><p class="small">Wird geladen …</p></section></div>'; renderSavebar(); akLoad().then(() => { if (S.view === 'planung') renderPlanung(); }); return; }
+  const t = realToday(), W0 = monthsAdd(t, -1), W1 = monthsAdd(t, 12), tot = diffDays(W0, W1);
+  const pct = d => Math.max(0, Math.min(100, diffDays(W0, d) / tot * 100)).toFixed(3);
+  let months = '', grid = '';
+  for (let i = 0; i < 13; i++){ const d = monthsAdd(W0, i); months += '<span class="plm" style="left:' + pct(d) + '%">' + MONTHS[+d.slice(5,7) - 1].slice(0, 3) + (i === 0 || d.slice(5,7) === '01' ? ' ' + d.slice(0,4) : '') + '</span>'; grid += '<span class="plgrid" style="left:' + pct(d) + '%"></span>'; }
+  const items = plItems().filter(m => addDays(m.start, (m.count || 1) - 1) >= W0 && leadStart(m) < W1);
+  const rows = items.map(m => { const end = addDays(m.start, (m.count || 1) - 1), ls = leadStart(m), cl = m.cl || [0, 0, 0];
+    return '<div class="plrow' + (S.pl.sel === m.id ? ' sel' : '') + '" data-plsel="' + esc(m.id) + '" role="button" tabindex="0"><div class="pllab"><b>' + esc(m.name) + '</b><span class="small">' + esc(akPeriod(m)) + ' · Vorlauf ' + (m.lead ?? LEAD_DEFAULT) + ' Tage ab ' + esc(fmtShort(ls) + ls.slice(0,4)) + '</span><span>' + akKindBadge(m.kind) + ' <span class="small">Checkliste ' + cl[0] + '/' + cl[1] + (cl[2] ? ' · <b style="color:var(--accent)">' + cl[2] + ' überfällig</b>' : '') + '</span></span></div>' +
+      '<div class="pltrack">' + grid + '<span class="plbar lead" style="left:' + pct(ls) + '%;width:' + Math.max(0.3, pct(m.start) - pct(ls)).toFixed(3) + '%" title="Vorlauf ab ' + esc(fmtShort(ls)) + '"></span><span class="plbar act" style="left:' + pct(m.start) + '%;width:' + Math.max(0.4, pct(addDays(end, 1)) - pct(m.start)).toFixed(3) + '%" title="Aktion ' + esc(akPeriod(m)) + '"></span><span class="pltoday" style="left:' + pct(t) + '%"></span></div></div>'; }).join('');
+  const add = S.pl.add ? '<div class="plform"><label class="f" style="flex:1 1 200px">Name<input type="text" id="pla-name" maxlength="80" placeholder="z. B. Frühlings-Angebote 2027"></label><label class="f">Startdatum<input type="date" id="pla-start"></label><label class="f">Anzahl Tage<input type="number" id="pla-count" min="1" max="' + MAXDAYS + '" value="14" style="width:90px"></label><label class="f">Vorlauf (Tage)<input type="number" id="pla-lead" min="0" max="365" value="' + LEAD_DEFAULT + '" style="width:90px"></label><label class="f">Design<select id="pla-theme">' + Object.entries(THEMES).map(([k, v]) => '<option value="' + k + '"' + (k === 'classic' ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label><button type="button" class="btn primary" id="pla-ok">Planen</button><button type="button" class="btn" id="pla-cancel">Abbrechen</button></div>' : '';
+  $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>Planung</h2><span class="small">Alle Aktionen auf einen Blick – mit Vorlauf (Standard ' + LEAD_DEFAULT + ' Tage, je Aktion frei einstellbar) und Checkliste. Eine Aktion anklicken, um Vorlauf und Checkliste zu bearbeiten.</span></div><button type="button" class="btn" id="pl-addbtn">+ Aktion planen</button></div>' + add +
+    (S.ak.err ? '<p class="warnline">' + esc(S.ak.err) + '</p>' : '') +
+    '<div class="tblwrap"><div class="plgantt" style="min-width:760px"><div class="plhead"><div class="pllab">Aktion</div><div class="pltrack" style="min-height:30px">' + months + '</div></div>' + (rows || '<div class="plrow"><div class="pllab small">Keine Aktionen im Zeitraum</div><div></div></div>') + '</div></div>' +
+    '<div class="pllegend"><span><i style="background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--warn) 55%, transparent) 0 4px, color-mix(in srgb, var(--warn) 25%, transparent) 4px 8px);border:1px solid var(--warn)"></i>Vorlauf</span><span><i style="background:var(--ok)"></i>Aktionszeitraum</span><span><i style="background:var(--accent);width:3px"></i>Heute</span></div></section>' +
+    '<section class="section" id="pl-detail">' + plDetailHTML() + '</section></div>';
+  renderSavebar();
+}
+function plDetailHTML(){
+  const E = S.pl.edit; if (!E) return '<p class="small" style="margin:0">Eine Aktion im Kalender anklicken, um Vorlauf und Checkliste zu sehen und zu bearbeiten.</p>';
+  if (E.loading) return '<p class="small" style="margin:0">Wird geladen …</p>';
+  const c = E.cfg, st = clStats(c), ls = leadStart(c), t = realToday(), saved = E.src === 'saved';
+  return '<div class="section-head"><div><h3>' + esc(E.name) + '</h3><span class="small">' + (saved ? akKindBadge(E.item.kind) : 'Live-Planung · Zeitraum wird in der Verwaltung geändert') + '</span></div><span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="pl-save"' + (S.pl.dirty ? '' : ' disabled') + '>Speichern</button>' + (saved ? '<button type="button" class="btn" id="pl-load">In Verwaltung laden</button>' : '') + '<button type="button" class="btn" id="pl-close">Schließen</button></span></div>' +
+    '<div class="fields">' + (saved ? '<label class="f">Name<input type="text" id="pl-name" maxlength="80" value="' + esc(E.name) + '"></label><label class="f">Startdatum<input type="date" id="pl-start" value="' + c.start + '"></label><label class="f">Anzahl Tage<input type="number" id="pl-count" min="1" max="' + MAXDAYS + '" value="' + c.count + '"></label>' : '<label class="f">Zeitraum<input type="text" readonly value="' + esc(akPeriod(c)) + '"></label>') +
+    '<label class="f">Vorlauf (Tage vor Start, Standard ' + LEAD_DEFAULT + ')<input type="number" id="pl-lead" min="0" max="365" value="' + c.lead + '"></label><label class="f">Vorlauf beginnt am<input type="text" readonly value="' + esc(fmtLong(ls)) + '"></label>' +
+    '<label class="f" style="grid-column:1/-1">Verantwortliche – erhalten den Reminder per E-Mail (mehrere mit Komma)<input type="text" id="pl-owners" value="' + esc(c.owners) + '" placeholder="name@beko.com, kollegin@beko.com"></label></div>' + remInfoHTML(E) + nlBoxHTML(E) +
+    (t >= ls && t < c.start ? '<p class="small">Die Aktion ist im Vorlauf – noch ' + diffDays(t, c.start) + ' Tage bis zum Start.</p>' : t < ls ? '<p class="small">Der Vorlauf beginnt in ' + diffDays(t, ls) + ' Tagen.</p>' : '') +
+    '<h4 class="aph">Checkliste · ' + st.done + ' von ' + st.total + ' erledigt' + (st.overdue ? ' · <span style="color:var(--accent)">' + st.overdue + ' überfällig</span>' : '') + '</h4><div class="clbar"><span style="width:' + (st.total ? Math.round(st.done / st.total * 100) : 0) + '%"></span></div>' +
+    '<div class="tblwrap"><table class="aptbl cltbl"><thead><tr><th>Erledigt</th><th>Aufgabe</th><th>Termin</th><th>Datum</th><th>Verantwortlich</th><th></th></tr></thead><tbody id="pl-cl">' + clRows(c) + '</tbody></table></div>' +
+    '<div class="actions" style="margin-top:8px"><button type="button" class="btn" id="cl-add">+ Punkt</button><button type="button" class="btn" id="cl-std">Standard-Checkliste einsetzen</button></div><p class="small" style="margin-bottom:0">Die Checkliste gehört zur Aktion und wird mit ihr gespeichert – auch in Vorlagen, Kopien und im Archiv. Termine richten sich nach Start bzw. Ende der Aktion und verschieben sich mit, wenn sich der Zeitraum ändert.</p>';
+}
+function clRows(c){ const t = realToday();
+  return c.checklist.map((it, i) => { const d = clDate(c, it), late = !it.done && d < t;
+    return '<tr data-cli="' + i + '" class="' + (it.done ? 'done' : '') + (late ? ' late' : '') + '"><td><input type="checkbox" data-clf="done"' + (it.done ? ' checked' : '') + ' aria-label="Erledigt"></td><td><input type="text" data-clf="text" value="' + esc(it.text) + '" aria-label="Aufgabe" placeholder="Aufgabe"></td>' +
+      '<td style="white-space:nowrap"><input type="number" data-clf="days" min="0" max="365" value="' + it.days + '" style="width:64px" aria-label="Tage"> <select data-clf="when" aria-label="Bezug"><option value="before"' + (it.when === 'before' ? ' selected' : '') + '>Tage vor Start</option><option value="after"' + (it.when === 'after' ? ' selected' : '') + '>Tage nach Ende</option></select></td>' +
+      '<td class="cldate">' + esc(fmtShort(d) + d.slice(0,4)) + (it.done && it.doneAt ? '<br><span class="small">erledigt ' + esc(fmtAt(it.doneAt)) + '</span>' : '') + '</td><td><input type="text" data-clf="who" value="' + esc(it.who) + '" aria-label="Verantwortlich" placeholder="Name / Abteilung"></td><td><button type="button" class="pc-x" data-cldel aria-label="Punkt löschen">×</button></td></tr>'; }).join('') ||
+    '<tr><td colspan="6" class="small">Keine Punkte – mit „+ Punkt“ ergänzen.</td></tr>';
+}
+const plDetail = () => { const el = $('pl-detail'); if (el) el.innerHTML = plDetailHTML(); };
+const plDirty = () => { S.pl.dirty = true; const b = $('pl-save'); if (b) b.disabled = false; };
+async function plOpen(id){
+  if (S.pl.dirty && S.pl.sel !== id && !confirm('Ungespeicherte Änderungen verwerfen?')) return;
+  S.pl.sel = id; S.pl.dirty = false;
+  if (id === 'live') S.pl.edit = { src:'live', name: S.config.title || 'Aktionskalender', cfg: normalize(clone(S.config)) };
+  else { S.pl.edit = { loading:true }; renderPlanung();
+    try { const it = await AK.get('aktionen', id); if (!it) throw 0; S.pl.edit = { src:'saved', item: it, name: it.name, cfg: normalize(clone(it.config)) }; }
+    catch(e){ S.pl.edit = null; toast('Aktion konnte nicht geladen werden'); } }
+  renderPlanung(); const d = $('pl-detail'); if (d) d.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+async function plSave(){
+  const E = S.pl.edit; if (!E || E.loading) return; const btn = $('pl-save'); if (btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
+  if (E.src === 'live'){
+    if (S.dirty){ toast('In der Verwaltung gibt es ungespeicherte Änderungen – bitte dort zuerst speichern oder verwerfen', 7000); if (btn){ btn.disabled = false; btn.textContent = 'Speichern'; } return; }
+    S.draft = clone(S.config); S.draft.lead = E.cfg.lead; S.draft.checklist = clone(E.cfg.checklist); S.draft.owners = E.cfg.owners; S.draft.newsletter = clone(E.cfg.newsletter); S.dirty = true;
+    await save();
+    if (S.dirty){ S.draft = clone(S.config); S.dirty = false; }
+    else { S.pl.dirty = false; S.pl.edit = { src:'live', name: S.config.title || 'Aktionskalender', cfg: normalize(clone(S.config)) }; toast('Vorlauf und Checkliste gespeichert'); }
+  } else {
+    const it = clone(E.item); it.config = E.cfg; it.name = String(E.name || it.name).trim() || it.name; nlRefresh(it.config);
+    try { if (!S.api){ try { await offloadImgs(it.config); } catch(x) {} }
+      await AK.put('aktionen', it); S.pl.dirty = false; E.item = it; S.ak.list = null; await akLoad(true); toast('„' + it.name + '“ gespeichert'); }
+    catch(e){ toast((e && e.message === 'server') ? 'Speichern nicht möglich: Server-Update fehlt (functions/api/aktionen.js)' : dbErrText(e, cfgKB(it)), 9000); }
+  }
+  S.view = 'planung'; renderPlanung();
+}
+async function plCreate(){
+  const v = id => ($(id) || {}).value || '';
+  const name = v('pla-name').trim(), start = v('pla-start'), count = Math.min(MAXDAYS, Math.max(1, parseInt(v('pla-count'), 10) || 1)), lead = v('pla-lead') === '' ? LEAD_DEFAULT : Math.max(0, parseInt(v('pla-lead'), 10) || 0), theme = v('pla-theme') || 'classic';
+  if (!name || !/^\d{4}-\d\d-\d\d$/.test(start)){ toast('Bitte Name und Startdatum angeben'); return; }
+  const cfg = normalize(Object.assign(defaultConfig(), { title: name, start, count, lead, theme, days:{}, pool:{}, ranges:[], extra:{}, example:false }));
+  const obj = Object.assign({ id: akId('a'), kind:'geplant', name, at: new Date().toISOString(), config: cfg }, akBy()); cfg.aid = obj.id;
+  try { await AK.put('aktionen', obj); S.pl.add = false; S.pl.dirty = false; S.ak.list = null; await akLoad(true); toast('„' + name + '“ geplant – Vorlauf ab ' + fmtLong(leadStart(cfg))); await plOpen(obj.id); }
+  catch(e){ toast((e && e.message === 'server') ? 'Speichern nicht möglich: Server-Update fehlt (functions/api/aktionen.js)' : 'Speichern nicht möglich', 7000); }
+}
+document.addEventListener('click', e => {
+  if (S.view !== 'planung') return; const t = e.target;
+  const r = t.closest('[data-plsel]'); if (r){ plOpen(r.dataset.plsel); return; }
+  if (t.id === 'pl-addbtn'){ S.pl.add = !S.pl.add; renderPlanung(); const n = $('pla-name'); if (n) n.focus(); return; }
+  if (t.id === 'pla-cancel'){ S.pl.add = false; renderPlanung(); return; }
+  if (t.id === 'pla-ok'){ plCreate(); return; }
+  const E = S.pl.edit; if (!E || E.loading) return;
+  if (t.id === 'pl-close'){ if (S.pl.dirty && !confirm('Ungespeicherte Änderungen verwerfen?')) return; S.pl.edit = null; S.pl.sel = null; S.pl.dirty = false; renderPlanung(); return; }
+  if (t.id === 'pl-save'){ plSave(); return; }
+  if (t.id === 'pl-remind'){ remSendNow(E); return; }
+  if (t.id === 'nl-prev'){ nlPreview(E); return; }
+  if (t.id === 'nl-dl'){ nlDownload(E); return; }
+  if (t.id === 'nl-test'){ nlSend(E, true); return; }
+  if (t.id === 'nl-now'){ nlSend(E, false); return; }
+  if (t.id === 'pl-load'){ akLoadIntoAdmin(E.cfg, '„' + E.name + '“ in die Verwaltung geladen – mit „Speichern & veröffentlichen“ wird sie live'); return; }
+  if (t.id === 'cl-add'){ E.cfg.checklist.push({ id:'u' + randId(5), text:'', when:'before', days:7, who:'', done:false, doneAt:null }); plDirty(); plDetail(); const ins = document.querySelectorAll('#pl-cl input[data-clf=text]'); if (ins.length) ins[ins.length - 1].focus(); return; }
+  if (t.id === 'cl-std'){ if (E.cfg.checklist.length && !confirm('Die Checkliste dieser Aktion durch die Standard-Checkliste ersetzen?')) return; E.cfg.checklist = defaultChecklist(); plDirty(); plDetail(); return; }
+  const del = t.closest('[data-cldel]'); if (del){ const i = +del.closest('tr').dataset.cli; E.cfg.checklist.splice(i, 1); plDirty(); plDetail(); return; }
+});
+document.addEventListener('keydown', e => { if (S.view === 'planung' && (e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-plsel]')){ e.preventDefault(); plOpen(e.target.dataset.plsel); } });
+document.addEventListener('input', e => {
+  if (S.view !== 'planung' || !S.pl.edit || S.pl.edit.loading) return; const t = e.target, E = S.pl.edit;
+  if (t.id === 'pl-name'){ E.name = t.value; plDirty(); return; }
+  if (t.id === 'pl-owners'){ E.cfg.owners = t.value; plDirty(); return; }
+  if (t.id === 'nl-intro'){ E.cfg.newsletter.intro = t.value; plDirty(); return; }
+  if (t.id === 'nl-subject'){ E.cfg.newsletter.subject = t.value; plDirty(); return; }
+  const f = t.dataset && t.dataset.clf; if (f === 'text' || f === 'who'){ const it = E.cfg.checklist[+t.closest('tr').dataset.cli]; if (it){ it[f] = t.value; plDirty(); } }
+});
+document.addEventListener('change', e => {
+  if (S.view !== 'planung' || !S.pl.edit || S.pl.edit.loading) return; const t = e.target, E = S.pl.edit;
+  if (t.id === 'pl-lead'){ E.cfg.lead = Math.max(0, Math.min(365, parseInt(t.value, 10) || 0)); plDirty(); plDetail(); return; }
+  if (t.id === 'nl-on'){ E.cfg.newsletter.on = t.checked; plDirty(); plDetail(); return; }
+  if (t.id === 'nl-days'){ E.cfg.newsletter.days = Math.max(0, Math.min(90, parseInt(t.value, 10) || 0)); plDirty(); plDetail(); return; }
+  if (t.id === 'nl-prices'){ E.cfg.newsletter.prices = t.checked; plDirty(); return; }
+  if (t.id === 'nl-reveal'){ E.cfg.newsletter.reveal = t.checked; plDirty(); return; }
+  if (t.id === 'pl-start' && /^\d{4}-\d\d-\d\d$/.test(t.value)){ E.cfg.start = t.value; plDirty(); plDetail(); return; }
+  if (t.id === 'pl-count'){ E.cfg.count = Math.min(MAXDAYS, Math.max(1, parseInt(t.value, 10) || 1)); plDirty(); plDetail(); return; }
+  const f = t.dataset && t.dataset.clf; if (!f) return; const it = E.cfg.checklist[+t.closest('tr').dataset.cli]; if (!it) return;
+  if (f === 'done'){ it.done = t.checked; it.doneAt = t.checked ? new Date().toISOString() : null; }
+  else if (f === 'days') it.days = Math.max(0, Math.min(365, parseInt(t.value, 10) || 0));
+  else if (f === 'when') it.when = t.value === 'after' ? 'after' : 'before';
+  else return;
+  plDirty(); plDetail();
+});
+
+/* ---------- Jede Aktion wird automatisch gespeichert (Historie) ---------- */
+function periodsOverlap(a, b){ const ae = addDays(a.start, a.count - 1), be = addDays(b.start, b.count - 1); return a.start <= be && b.start <= ae; }
+function akAssignId(data){
+  const prev = S.config;
+  if (!data.aid || (prev && prev.aid === data.aid && prev.start !== data.start && !periodsOverlap(prev, data))) data.aid = 'k-' + Date.now().toString(36) + randId(3);
+}
+async function akAutoRecord(cfg){
+  if (!cfg || !cfg.aid || (!S.api && !S.db)) return;
+  const obj = Object.assign({ id: cfg.aid, kind:'aktion', name: akDefaultName(cfg, 'aktion'), at: new Date().toISOString(), config: clone(cfg) }, akBy());
+  try { if (!S.api){ try { await offloadImgs(obj.config); } catch(x) {} } await AK.put('aktionen', obj); S.ak.list = null; } catch(e) {}
+}
+
+/* ---------- Reminder an die Verantwortlichen ---------- */
+const splitMails = s => String(s || '').split(/[,;\s]+/).map(x => x.trim()).filter(x => /^\S+@\S+\.\S+$/.test(x));
+function adminLink(id){ return (S.api ? location.origin + '/admin' : 'https://claude.ai/artifact/8Z785797idMAv3SMvDmaDw') + '#ak-' + id; }
+function remText(c, name, id){
+  const ls = leadStart(c), open = c.checklist.filter(x => !x.done).map(x => '- ' + fmtShort(clDate(c, x)) + clDate(c, x).slice(0,4) + ': ' + x.text + (x.who ? ' (' + x.who + ')' : '')).join('\n');
+  return 'Hallo,\n\ndie Aktion „' + name + '“ (' + akPeriod(c) + ') ist jetzt zu planen. Der Vorlauf von ' + c.lead + ' Tagen beginnt am ' + fmtLong(ls) + '.\n\nOffene Punkte der Checkliste:\n' + (open || '- keine') + '\n\nZur Aktion: ' + adminLink(id) + '\n\nViele Grüße\nAktionskalender Fachhandel';
+}
+function remInfoHTML(E){
+  const c = E.cfg, ls = leadStart(c), id = E.src === 'live' ? (c.aid || 'live') : E.item.id, to = splitMails(c.owners);
+  const log = (S.rem.log || []).filter(x => x.aid === id).slice(0, 3);
+  return '<p class="small" style="margin:6px 0 0">Reminder: automatisch am ' + esc(fmtLong(ls)) + ' (Beginn des Vorlaufs) und 7 Tage vor Start, falls noch Punkte offen sind' + (S.api ? '' : ' – im Claude-Artifact per Knopf über Ihr Mailprogramm') + '. ' +
+    (to.length ? 'Empfänger: ' + esc(to.join(', ')) : '<b style="color:var(--accent)">Noch keine Verantwortlichen eingetragen.</b>') +
+    (log.length ? '<br>Zuletzt gesendet: ' + log.map(x => esc(fmtAt(x.at)) + ' (' + esc(x.type === 'lead' ? 'Vorlauf' : x.type === 'week' ? '7 Tage vor Start' : 'manuell') + (x.ok === false ? ', fehlgeschlagen' : '') + ')').join(' · ') : '') +
+    ' <button type="button" class="linkbtn" id="pl-remind">Reminder jetzt senden</button></p>';
+}
+async function remSendNow(E){
+  const c = E.cfg, id = E.src === 'live' ? (c.aid || 'live') : E.item.id, to = splitMails(c.owners);
+  if (!to.length){ toast('Bitte zuerst Verantwortliche mit E-Mail eintragen'); const f = $('pl-owners'); if (f) f.focus(); return; }
+  if (S.pl.dirty){ toast('Bitte zuerst speichern'); return; }
+  if (S.api){
+    try { const r = await fetch('/api/reminders/send', { method:'POST', headers:{ 'content-type':'application/json', authorization:'Bearer ' + S.pw }, body: JSON.stringify({ aid: id }) }); const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Senden nicht möglich'); toast(j.sent ? 'Reminder an ' + to.length + ' Empfänger gesendet' : 'Kein Mailversand eingerichtet – bitte RESEND_API_KEY oder ORDER_WEBHOOK_URL in Cloudflare setzen', 7000); await remLoad(); plDetail(); }
+    catch(e){ toast(e.message || 'Senden nicht möglich', 7000); }
+    return;
+  }
+  location.href = 'mailto:' + to.join(',') + '?subject=' + encodeURIComponent('Jetzt planen: ' + E.name + ' (' + akPeriod(c) + ')') + '&body=' + encodeURIComponent(remText(c, E.name, id));
+}
+S.rem = { log: null };
+async function remLoad(){ if (!S.api) { S.rem.log = []; return; } try { const r = await fetch('/api/reminders', { cache:'no-store', headers:{ authorization:'Bearer ' + S.pw } }); if (r.ok){ const j = await r.json(); S.rem.log = j.log || []; } } catch(e) {} }
+
+/* ---------- KPI-Dashboard: Erfolg je Aktion (Stück, Invoiced Sales, Net Sales, kaufende Kunden, Marge) ---------- */
+S.kpi = { sel: null, items: {}, hash: '', edit: null, dirty: false };
+const tsd = v => v == null || isNaN(v) ? '–' : (v / 1000).toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' Tsd. €';
+const pctTxt = v => v == null || isNaN(v) ? '–' : (Math.round(v * 10) / 10).toLocaleString('de-AT') + ' %';
+function kpiProd(cfg, k){ const p = BYK.get(k); if (p) return p; const e = (cfg.extra || {})[k]; const i = String(k).indexOf('|'); return e ? { k, b:e.b, m:e.m, t:e.t || '', c:e.c } : { k, b: String(k).slice(0, i), m: String(k).slice(i + 1), t:'' }; }
+function kpiDeals(cfg){
+  const out = [], days = periodDays(cfg), A = days[0], B = days[days.length - 1];
+  days.forEach(d => { const x = (cfg.days || {})[d]; if (x && x.k) out.push({ sk:d, k:x.k, label: fmtShort(d), hek: x.hek != null ? x.hek : ((cfg.pool[x.k] || {}).hek ?? null), price: x.price ?? null, qty: x.qty ?? null }); });
+  (cfg.ranges || []).forEach(r => { if (!r.k) return; const from = r.xd ? r.from : (r.full || !r.from ? A : r.from), to = r.xd ? r.from : (r.full || !r.to ? B : r.to);
+    out.push({ sk:'r-' + r.id, k:r.k, label: from === to ? fmtShort(from) : fmtShort(from) + '–' + fmtShort(to), hek: r.hek != null ? r.hek : ((cfg.pool[r.k] || {}).hek ?? null), price: r.price ?? null, qty: r.qty ?? null }); });
+  return out;
+}
+function kpiOrders(cfg, orders, item){
+  const days = periodDays(cfg), A = days[0], B = days[days.length - 1], slots = new Set(kpiDeals(cfg).map(d => d.sk));
+  let list = (orders || []).filter(o => { const d = String(o.at || '').slice(0, 10); return d >= addDays(A, -1) && d <= addDays(B, 1) && (o.items || []).some(x => slots.has(x.day)); });
+  if (!list.length && item && item.result && Array.isArray(item.result.orders)) list = item.result.orders.map(o => ({ at:o.at, customer:{ firma:o.firma, kdnr:o.kdnr }, items:o.items.map(x => Object.assign({ k: null }, x)) }));
+  return list;
+}
+function kpiCalc(cfg, orders, item){
+  const K = cfg.kpi || {}, ded = K.ded || 0, deals = kpiDeals(cfg), dealBySk = new Map(deals.map(d => [d.sk, d]));
+  const cogsOf = k => { if (K.cogs && K.cogs[k] != null && K.cogs[k] !== '') return +K.cogs[k]; const d = deals.find(x => x.k === k); return K.cogsPct != null && d && d.hek != null ? d.hek * K.cogsPct / 100 : null; };
+  const lines = [];
+  if (K.src === 'erp' && K.erp && Array.isArray(K.erp.rows)) K.erp.rows.forEach(r => lines.push({ k: r.k, sk: null, cust: r.c, q: +r.q || 0, inv: +r.inv || 0, net: r.net != null ? +r.net : null, cogs: r.cogs != null ? +r.cogs : null, model: r.m }));
+  else kpiOrders(cfg, orders, item).forEach(o => (o.items || []).forEach(x => { const d = dealBySk.get(x.day); if (!d) return; lines.push({ k: x.k || d.k, sk: x.day, cust: ((o.customer || {}).kdnr || '').trim() || String((o.customer || {}).firma || '').trim().toLowerCase(), firma: (o.customer || {}).firma || '', q: +x.qty || 0, inv: +x.line || (+x.qty || 0) * (+x.price || 0), net: null, cogs: null }); }));
+  let cogsMissing = false;
+  lines.forEach(l => { if (l.net == null) l.net = l.inv * (1 - ded / 100); if (l.cogs == null){ const c1 = l.k ? cogsOf(l.k) : null; if (c1 == null) cogsMissing = cogsMissing || l.q > 0; l.cogs = c1 == null ? null : c1 * l.q; } });
+  const sum = (arr, f) => arr.reduce((a, x) => a + (f(x) || 0), 0);
+  const tot = { units: sum(lines, l => l.q), inv: sum(lines, l => l.inv), net: sum(lines, l => l.net), cogs: cogsMissing ? null : sum(lines, l => l.cogs) };
+  tot.margin = tot.cogs == null ? null : tot.net - tot.cogs; tot.mpct = tot.margin == null || !tot.net ? null : tot.margin / tot.net * 100;
+  const custs = new Map(); lines.forEach(l => { if (!l.cust) return; const c = custs.get(l.cust) || { id: l.cust, name: l.firma || l.cust, q: 0, inv: 0 }; c.q += l.q; c.inv += l.inv; custs.set(l.cust, c); });
+  tot.customers = custs.size;
+  const quota = sum(deals, d => d.qty); tot.quota = quota; tot.sell = quota ? tot.units / quota * 100 : null;
+  tot.invest = sum(lines, l => { const d = l.sk ? dealBySk.get(l.sk) : deals.find(x => x.k === l.k); return d && d.hek != null && d.price != null ? (d.hek - d.price) * l.q : 0; });
+  const rows = deals.map(d => { const ls = lines.filter(l => l.sk ? l.sk === d.sk : l.k === d.k && deals.find(x => x.k === d.k) === d); const r = { d, p: kpiProd(cfg, d.k), q: sum(ls, l => l.q), inv: sum(ls, l => l.inv), net: sum(ls, l => l.net) }; const cg = ls.some(l => l.cogs == null && l.q > 0) ? null : sum(ls, l => l.cogs); r.cogs = cg; r.margin = cg == null ? null : r.net - cg; r.mpct = r.margin == null || !r.net ? null : r.margin / r.net * 100; r.sell = d.qty ? r.q / d.qty * 100 : null; r.cogsUnit = cogsOf(d.k); return r; });
+  const unmatched = lines.filter(l => !l.k);
+  return { tot, rows, custs: [...custs.values()].sort((a, b) => b.inv - a.inv), cogsMissing, unmatched: unmatched.length, ded };
+}
+function kpiStatus(cfg){ const s = akStatus(cfg); return s === 'past' ? '<span class="apb ok">abgeschlossen</span>' : s === 'live' ? '<span class="apb stale">läuft – vorläufig</span>' : '<span class="apb wait">geplant</span>'; }
+async function kpiLoadAll(){
+  const tasks = [];
+  if (!S.ak.list) tasks.push(akLoad());
+  if (S.orders == null) tasks.push(loadOrders());
+  if (S.api && S.rem.log == null) tasks.push(remLoad());
+  await Promise.all(tasks);
+  const hist = (S.ak.list || []).filter(m => m.kind === 'aktion' || m.kind === 'archiv');
+  await Promise.all(hist.filter(m => !S.kpi.items[m.id]).map(async m => { try { const it = await AK.get('aktionen', m.id); if (it) S.kpi.items[m.id] = Object.assign(it, { config: normalize(clone(it.config)) }); } catch(e) {} }));
+}
+function kpiHistory(){
+  const live = { id: S.config.aid || 'live', kind: 'live', name: akDefaultName(S.config, 'aktion'), config: S.config, live: true };
+  const out = [live];
+  (S.ak.list || []).filter(m => (m.kind === 'aktion' || m.kind === 'archiv') && S.kpi.items[m.id] && m.id !== live.id).forEach(m => out.push(Object.assign({}, S.kpi.items[m.id], { kind: m.kind })));
+  return out.sort((a, b) => String(b.config.start).localeCompare(String(a.config.start)));
+}
+function renderKpi(){
+  if (S.kpi.loading) return;
+  if (!S.ak.list || S.orders == null || (S.api && S.rem.log == null)){ $('app').innerHTML = '<div class="admin"><section class="section"><h2>KPI &amp; Historie</h2><p class="small">Wird geladen …</p></section></div>'; renderSavebar(); S.kpi.loading = true; kpiLoadAll().then(() => { S.kpi.loading = false; if (S.view === 'kpi') renderKpi(); }); return; }
+  const hist = kpiHistory();
+  if (S.kpi.sel && !hist.some(h => h.id === S.kpi.sel)){ const hit = (S.ak.list || []).find(m => m.id === S.kpi.sel); if (hit && !S.kpi.items[hit.id] && !S.kpi.tried){ S.kpi.tried = true; kpiLoadAll().then(() => renderKpi()); } }
+  const rows = hist.map(h => { const c = h.config, k = kpiCalc(c, S.orders, h);
+    return '<tr class="' + (S.kpi.sel === h.id ? 'sel' : '') + '"><td><b>' + esc(h.name || c.title) + '</b><br><span class="small">' + esc(akPeriod(c)) + '</span><br>' + (h.live ? '<span class="apb ok">Live</span> ' : akKindBadge(h.kind) + ' ') + kpiStatus(c) + '</td>' +
+      '<td class="num">' + k.tot.units + '</td><td class="num">' + tsd(k.tot.inv) + '</td><td class="num">' + tsd(k.tot.net) + '</td><td class="num">' + k.tot.customers + '</td><td class="num">' + tsd(k.tot.margin) + (k.tot.mpct != null ? '<br><span class="small">' + pctTxt(k.tot.mpct) + '</span>' : '') + '</td>' +
+      '<td><div class="akbtns"><button type="button" class="btn" data-kpisel="' + esc(h.id) + '" style="padding:5px 10px;font-size:12.5px">KPI ansehen</button><a class="btn" href="' + esc(adminLink(h.id)) + '" target="_blank" rel="noopener" style="padding:5px 10px;font-size:12.5px">Öffnen ↗</a><button type="button" class="linkbtn" data-kpilink="' + esc(h.id) + '">Link kopieren</button></div></td></tr>'; }).join('');
+  $('app').innerHTML = '<div class="admin"><section class="section"><div class="section-head"><div><h2>KPI &amp; Historie</h2><span class="small">Jede Aktion wird beim Speichern automatisch abgelegt. Hier stehen alle Aktionen mit ihren Kennzahlen – jede mit eigenem Link zum direkten Aufruf. Beträge in Tsd. € exkl. MwSt.</span></div><button type="button" class="btn" id="kpi-csv">Übersicht als CSV</button></div>' +
+    '<div class="tblwrap"><table class="aptbl kpitbl histtbl"><thead><tr><th>Aktion</th><th class="num">Stück</th><th class="num">Invoiced Sales</th><th class="num">Net Sales</th><th class="num">Kunden</th><th class="num">Marge</th><th>Abruf</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>' +
+    '<section class="section" id="kpi-detail">' + kpiDetailHTML(hist) + '</section></div>';
+  renderSavebar();
+}
+function kpiDetailHTML(hist){
+  const h = (hist || kpiHistory()).find(x => x.id === S.kpi.sel); if (!h) return '<p class="small" style="margin:0">„KPI ansehen“ bei einer Aktion öffnet das Dashboard mit allen Kennzahlen.</p>';
+  if (!S.kpi.edit || S.kpi.edit.id !== h.id) S.kpi.edit = { id: h.id, h, cfg: normalize(clone(h.config)) };
+  const E = S.kpi.edit, c = E.cfg, K = c.kpi, k = kpiCalc(c, S.orders, h), t = k.tot;
+  const card = (l, v, s, cls) => '<div class="kpic' + (cls ? ' ' + cls : '') + '"><div class="l">' + l + '</div><div class="v">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
+  return '<div class="section-head"><div><h3>' + esc(h.name || c.title) + '</h3><span class="small">' + esc(akPeriod(c)) + ' · ' + kpiStatus(c) + ' · Quelle: ' + (K.src === 'erp' ? 'ERP-Upload' + (K.erp ? ' (' + esc(K.erp.file || '') + ', ' + esc(fmtAt(K.erp.at)) + ')' : '') : 'Bestellungen aus dem Kalender') + '</span></div><span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="kpi-save"' + (S.kpi.dirty ? '' : ' disabled') + '>Einstellungen speichern</button><button type="button" class="btn" id="kpi-dcsv">Details als CSV</button></span></div>' +
+    '<div class="kpicards">' + card('Stückzahl', t.units.toLocaleString('de-AT'), t.quota ? 'von ' + t.quota + ' Stk. Kontingent · ' + pctTxt(t.sell) + ' Abverkauf' : '') + card('Invoiced Sales', tsd(t.inv), 'zum Aktions-HEK') + card('Net Sales', tsd(t.net), k.ded ? 'nach ' + pctTxt(k.ded) + ' Erlösschmälerungen' : 'keine Erlösschmälerungen hinterlegt') +
+      card('Kaufende Kunden', t.customers, '') + card('Marge', tsd(t.margin), t.margin == null ? 'COGS fehlen – unten eintragen' : pctTxt(t.mpct) + ' von Net Sales', t.margin == null ? '' : t.margin >= 0 ? 'good' : 'bad') + card('Aktionsinvest', tsd(t.invest), '(regulärer HEK − Aktions-HEK) × Stück') + '</div>' +
+    '<div class="kpiopts"><label class="f">Datenquelle<select id="kpi-src"><option value="web"' + (K.src === 'web' ? ' selected' : '') + '>Bestellungen aus dem Kalender</option><option value="erp"' + (K.src === 'erp' ? ' selected' : '') + '>ERP-Upload (fakturierte Ist-Daten)</option></select></label>' +
+      '<label class="f">Erlösschmälerungen in % (Boni, Skonto, WKZ)<input type="number" id="kpi-ded" min="0" max="100" step="0.1" value="' + (K.ded ?? '') + '" placeholder="0"></label>' +
+      '<label class="f">COGS in % vom regulären HEK (wenn kein Wert je Gerät)<input type="number" id="kpi-cpct" min="0" max="200" step="0.1" value="' + (K.cogsPct ?? '') + '"></label>' +
+      '<label class="btn upl" style="padding:8px 12px">ERP-Daten hochladen (Excel/CSV)<input type="file" id="kpi-erp" accept=".xlsx,.xls,.csv,.txt" hidden></label><button type="button" class="linkbtn" id="kpi-erptpl">Vorlage</button></div>' +
+    (k.unmatched ? '<p class="warnline">' + k.unmatched + ' Zeilen aus dem ERP-Upload passen zu keinem Gerät dieser Aktion und zählen nur bei Stück, Umsatz und Kunden mit.</p>' : '') +
+    '<h4 class="aph">Je Aktion</h4><div class="tblwrap"><table class="aptbl kpitbl"><thead><tr><th>Gerät</th><th>Aktion</th><th class="num">Kontingent</th><th class="num">Stück</th><th class="num">Abverkauf</th><th class="num">Aktions-HEK</th><th class="num">Invoiced</th><th class="num">Net Sales</th><th class="num">COGS je Stk. €</th><th class="num">Marge</th></tr></thead><tbody>' +
+      k.rows.map(r => '<tr><td><div class="withpic">' + thumb(BYK.get(r.d.k), 'sm') + '<div><b>' + esc(r.p.b + ' ' + r.p.m) + '</b>' + (r.p.t ? '<br><span class="small">' + esc(r.p.t) + '</span>' : '') + '</div></div></td><td>' + esc(r.d.label) + '</td><td class="num">' + (r.d.qty ?? '–') + '</td><td class="num">' + r.q + '</td><td class="num">' + pctTxt(r.sell) + '</td><td class="num">' + eur(r.d.price) + '</td><td class="num">' + tsd(r.inv) + '</td><td class="num">' + tsd(r.net) + '</td>' +
+        '<td class="num"><input type="number" min="0" step="0.01" data-kcogs="' + esc(r.d.k) + '" value="' + (K.cogs[r.d.k] ?? '') + '" placeholder="' + (r.cogsUnit != null ? Math.round(r.cogsUnit) : '') + '" aria-label="COGS je Stück"></td><td class="num">' + tsd(r.margin) + (r.mpct != null ? '<br><span class="small">' + pctTxt(r.mpct) + '</span>' : '') + '</td></tr>').join('') +
+    '</tbody></table></div>' +
+    '<h4 class="aph">Kaufende Kunden (' + k.custs.length + ')</h4><div class="tblwrap"><table class="aptbl kpitbl"><thead><tr><th>Kunde</th><th class="num">Stück</th><th class="num">Invoiced</th></tr></thead><tbody>' + (k.custs.slice(0, 50).map(x => '<tr><td>' + esc(x.name) + '</td><td class="num">' + x.q + '</td><td class="num">' + tsd(x.inv) + '</td></tr>').join('') || '<tr><td colspan="3" class="small">Noch keine Käufe.</td></tr>') + '</tbody></table></div>' +
+    '<p class="small" style="margin-bottom:0">Invoiced Sales = Menge × Aktions-HEK (bzw. fakturierter Betrag aus dem ERP-Upload). Net Sales = Invoiced Sales abzüglich Erlösschmälerungen. Marge = Net Sales − COGS. Während die Aktion läuft, sind alle Werte vorläufig.</p>';
+}
+const kpiDetail = () => { const el = $('kpi-detail'); if (el) el.innerHTML = kpiDetailHTML(); };
+const kpiDirty = () => { S.kpi.dirty = true; const b = $('kpi-save'); if (b) b.disabled = false; };
+async function kpiSave(){
+  const E = S.kpi.edit; if (!E) return; const h = E.h;
+  if (h.live){
+    if (S.dirty){ toast('In der Verwaltung gibt es ungespeicherte Änderungen – bitte dort zuerst speichern', 7000); return; }
+    S.draft = clone(S.config); S.draft.kpi = clone(E.cfg.kpi); S.dirty = true; await save();
+    if (S.dirty){ S.draft = clone(S.config); S.dirty = false; } else { S.kpi.dirty = false; S.kpi.edit = null; toast('KPI-Einstellungen gespeichert'); }
+  } else {
+    const it = clone(S.kpi.items[h.id] || h); it.config = E.cfg; delete it.live;
+    try { if (!S.api){ try { await offloadImgs(it.config); } catch(x) {} } await AK.put('aktionen', it); S.kpi.items[h.id] = Object.assign(it, { config: normalize(clone(it.config)) }); S.kpi.dirty = false; S.kpi.edit = null; toast('KPI-Einstellungen gespeichert'); }
+    catch(e){ toast(dbErrText(e, cfgKB(it)), 9000); }
+  }
+  S.view = 'kpi'; renderKpi();
+}
+async function kpiErpUpload(file){
+  const E = S.kpi.edit; if (!E) return;
+  try {
+    const rows = await impRead(file); const hn = v => String(v ?? '').toLowerCase().replace(/[^a-z0-9äöüß]/g, '');
+    const COLS = [['c', /^(kunde|kunden|kundennr|kundennummer|customer|debitor|soldto|firma)/], ['m', /^(code|modell|model|material|artikel|artikelnr|sku|ean)/], ['q', /^(menge|stk|stück|stueck|qty|quantity|anzahl)/], ['inv', /^(invoiced|invoicedsales|faktura|fakturiert|umsatz|rechnungsbetrag|brutto|gross)/], ['net', /^(net|netsales|netto|nettoumsatz)/], ['cogs', /^(cogs|einstand|herstellkosten|kosten|cost)/]];
+    let hi = -1, map = null;
+    for (let i = 0; i < Math.min(rows.length, 20); i++){ const m = {}; (rows[i] || []).forEach((cell, j) => { const h = hn(cell); if (!h) return; for (const [key, re] of COLS){ if (re.test(h) && m[key] == null){ m[key] = j; break; } } }); if (m.m != null && m.q != null && m.inv != null){ hi = i; map = m; break; } }
+    if (!map){ toast('Keine Kopfzeile gefunden – erwartet: Kunde, Code, Menge, Invoiced (optional Net, COGS)', 8000); return; }
+    const deals = kpiDeals(E.cfg), out = [];
+    rows.slice(hi + 1).forEach(r => { if (!r || !r.some(v => v !== '' && v != null)) return; const code = String(r[map.m] ?? '').trim(); if (!code) return;
+      const nc = normM(code), d = deals.find(x => normM(kpiProd(E.cfg, x.k).m) === nc) || deals.find(x => (E.cfg.codes || {})[nc] === x.k) || deals.find(x => nc.length >= 6 && normM(kpiProd(E.cfg, x.k).m).includes(nc));
+      const g = key => map[key] == null ? null : impNum(r[map[key]]);
+      out.push({ c: map.c != null ? String(r[map.c] ?? '').trim() : '', m: code, k: d ? d.k : null, q: g('q') || 0, inv: g('inv') || 0, net: g('net'), cogs: g('cogs') }); });
+    if (!out.length){ toast('Die Datei enthält keine Zeilen'); return; }
+    E.cfg.kpi.erp = { file: file.name, at: new Date().toISOString(), rows: out }; E.cfg.kpi.src = 'erp'; kpiDirty(); kpiDetail();
+    toast(out.length + ' Zeilen übernommen (' + out.filter(x => x.k).length + ' einem Gerät zugeordnet) – bitte speichern', 6000);
+  } catch(e){ toast('Die Datei konnte nicht gelesen werden'); }
+}
+async function kpiCsv(detail){
+  const hist = kpiHistory(), sep = ';', n = v => v == null || isNaN(v) ? '' : String(Math.round(v * 100) / 100).replace('.', ',');
+  let lines;
+  if (!detail) lines = [['Aktion','Zeitraum','Status','Stück','Invoiced Sales €','Net Sales €','Kaufende Kunden','Marge €','Marge %','Link'].join(sep)].concat(hist.map(h => { const k = kpiCalc(h.config, S.orders, h); return [h.name, akPeriod(h.config), akStatus(h.config), k.tot.units, n(k.tot.inv), n(k.tot.net), k.tot.customers, n(k.tot.margin), n(k.tot.mpct), adminLink(h.id)].map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(sep); }));
+  else { const E = S.kpi.edit; if (!E) return; const k = kpiCalc(E.cfg, S.orders, E.h);
+    lines = [['Gerät','Aktion','Kontingent','Stück','Abverkauf %','Aktions-HEK €','Invoiced €','Net Sales €','COGS €','Marge €','Marge %'].join(sep)].concat(k.rows.map(r => [r.p.b + ' ' + r.p.m, r.d.label, r.d.qty ?? '', r.q, n(r.sell), n(r.d.price), n(r.inv), n(r.net), n(r.cogs), n(r.margin), n(r.mpct)].map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(sep))); }
+  await saveFile((detail ? 'KPI_' + (S.kpi.edit.h.name || 'Aktion') : 'KPI_Historie').replace(/[^\wäöüÄÖÜß-]+/g, '_') + '.csv', new Blob(['\uFEFF' + lines.join('\r\n')], { type:'text/csv' }));
+}
+document.addEventListener('click', e => {
+  if (S.view !== 'kpi') return; const t = e.target;
+  const s = t.closest('[data-kpisel]'); if (s){ if (S.kpi.dirty && !confirm('Ungespeicherte KPI-Einstellungen verwerfen?')) return; S.kpi.sel = s.dataset.kpisel; S.kpi.edit = null; S.kpi.dirty = false; renderKpi(); const d = $('kpi-detail'); if (d) d.scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+  const l = t.closest('[data-kpilink]'); if (l){ const link = adminLink(l.dataset.kpilink); (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(() => toast('Link kopiert'), () => toast(link, 9000)); return; }
+  if (t.id === 'kpi-save'){ kpiSave(); return; }
+  if (t.id === 'kpi-csv'){ kpiCsv(false); return; }
+  if (t.id === 'kpi-dcsv'){ kpiCsv(true); return; }
+  if (t.id === 'kpi-erptpl'){ saveFile('ERP_Ist-Daten_Vorlage.csv', new Blob(['\uFEFFKunde;Code;Menge;Invoiced;Net;COGS\r\n100234 Elektro Muster;MBP 75150 BR;3;1350;1210;980\r\n'], { type:'text/csv' })); return; }
+});
+document.addEventListener('change', e => {
+  if (S.view !== 'kpi' || !S.kpi.edit) return; const t = e.target, K = S.kpi.edit.cfg.kpi;
+  if (t.id === 'kpi-src'){ K.src = t.value === 'erp' ? 'erp' : 'web'; if (K.src === 'erp' && !K.erp) toast('Bitte ERP-Daten hochladen'); kpiDirty(); kpiDetail(); return; }
+  if (t.id === 'kpi-ded'){ K.ded = t.value === '' ? null : Math.max(0, Math.min(100, +t.value)); kpiDirty(); kpiDetail(); return; }
+  if (t.id === 'kpi-cpct'){ K.cogsPct = t.value === '' ? null : Math.max(0, +t.value); kpiDirty(); kpiDetail(); return; }
+  if (t.dataset && t.dataset.kcogs){ const v = t.value; if (v === '') delete K.cogs[t.dataset.kcogs]; else K.cogs[t.dataset.kcogs] = Math.max(0, +v); kpiDirty(); kpiDetail(); return; }
+  if (t.id === 'kpi-erp' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; kpiErpUpload(f); }
+});
+
+/* ---------- Newsletter an die Händler (automatisch x Tage vor Start) ---------- */
+const NL_THEME = { black:['#0B0B0D','#FFD200','#0B0B0D'], xmas:['#123F2F','#F2C14E','#123F2F'], classic:['#16285E','#F2C14E','#16285E'], beko:['#1747C9','#FFFFFF','#1747C9'], eb:['#C8102E','#FFFFFF','#C8102E'] };
+function nlRefresh(c){ if (c && c.newsletter && c.newsletter.on){ const b = nlBuild(c); c.newsletter.html = b.html; c.newsletter.text = b.text; c.newsletter.subj = b.subject; } }
+function nlBuild(c){
+  const N = c.newsletter || {}, base = S.api ? location.origin : '', T = NL_THEME[c.theme] || NL_THEME.classic, e = s => esc(String(s ?? ''));
+  const end = addDays(c.start, c.count - 1), period = c.count === 1 ? fmtLong(c.start) : fmtShort(c.start) + ' – ' + fmtShort(end) + end.slice(0,4);
+  const deals = kpiDeals(c).map(d => Object.assign({ p: kpiProd(c, d.k), range: String(d.sk).startsWith('r-') && d.label.includes('–'), first: String(d.sk).startsWith('r-') ? (d.label.split('–')[0]) : d.sk }, d));
+  const ranges = deals.filter(d => d.range), days = deals.filter(d => !d.range).sort((a, b) => String(a.sk).localeCompare(String(b.sk)));
+  const subject = N.subject || ((c.title || 'Aktionskalender') + ' ' + period + ' – exklusiv für den Fachhandel');
+  const intro = N.intro || (c.count === 1 ? 'am ' + fmtLong(c.start) + ' gibt es ein Top-Gerät zum Sonder-HEK – exklusiv für unsere Fachhandelspartner.' : 'vom ' + fmtShort(c.start) + ' bis ' + fmtShort(end) + end.slice(0,4) + ' gibt es jeden Tag ein neues Aktionsgerät zum Sonder-HEK – exklusiv für unsere Fachhandelspartner. Jede Tagesaktion gilt nur am jeweiligen Tag von 0:00 bis 23:59 Uhr, solange das Kontingent reicht.');
+  const row = (when, d) => '<tr><td style="padding:8px 10px;border-bottom:1px solid #e5e5e5;white-space:nowrap;font-weight:bold;color:' + T[2] + '">' + e(when) + '</td><td style="padding:8px 10px;border-bottom:1px solid #e5e5e5"><b>' + e(d.p.b + ' ' + d.p.m) + '</b>' + (d.p.t ? '<br><span style="color:#666;font-size:13px">' + e(d.p.t) + '</span>' : '') + '</td>' + (N.prices ? '<td style="padding:8px 10px;border-bottom:1px solid #e5e5e5;text-align:right;white-space:nowrap;font-weight:bold">' + (d.price != null ? eur(d.price) : 'auf Anfrage') + '</td>' : '') + '</tr>';
+  const head = '<tr style="background:#f3f3f3"><th align="left" style="padding:8px 10px;font-size:12px;color:#555">Aktion</th><th align="left" style="padding:8px 10px;font-size:12px;color:#555">Gerät</th>' + (N.prices ? '<th align="right" style="padding:8px 10px;font-size:12px;color:#555">Aktions-HEK</th>' : '') + '</tr>';
+  const btn = (href, label) => '<a href="' + e(href) + '" style="display:inline-block;background:' + T[0] + ';color:' + (T[0] === '#0B0B0D' ? '#FFD200' : '#ffffff') + ';padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold;margin:0 8px 8px 0">' + label + '</a>';
+  const tel = c.orderPhone || DEF_PHONE, mail = c.orderEmail || 'order.austria@beko.com';
+  const html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>' + e(subject) + '</title></head><body style="margin:0;background:#eeeeee;font-family:Arial,Helvetica,sans-serif;color:#111">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eeeeee"><tr><td align="center" style="padding:20px 10px"><table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">' +
+    '<tr><td style="background:' + T[0] + ';padding:26px 28px;color:#fff"><div style="font-size:12px;letter-spacing:2px;font-weight:bold;color:' + T[1] + '">EXKLUSIV FÜR DEN ÖSTERREICHISCHEN FACHHANDEL</div><div style="font-size:34px;font-weight:bold;line-height:1.1;margin:8px 0 6px">' + e(c.title || 'Aktionskalender') + '</div><div style="font-size:16px;color:' + T[1] + ';font-weight:bold">' + e(period) + (c.count > 1 ? ' · ' + c.count + ' Tage' : '') + '</div></td></tr>' +
+    '<tr><td style="padding:24px 28px 8px;font-size:15px;line-height:1.5">{{anrede}}<br><br>' + e(intro).replace(/\n/g, '<br>') + '</td></tr>' +
+    (ranges.length ? '<tr><td style="padding:12px 28px 4px"><div style="font-size:18px;font-weight:bold;margin-bottom:6px">Aktionen im gesamten Zeitraum</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px">' + head + ranges.map(d => row(d.label, d)).join('') + '</table></td></tr>' : '') +
+    (days.length && N.reveal === false ? '<tr><td style="padding:16px 28px 4px;font-size:15px;line-height:1.5"><div style="font-size:18px;font-weight:bold;margin-bottom:6px">Jeden Tag eine neue Überraschung</div>' + days.length + ' Tagesaktionen warten auf Sie. Welches Gerät sich hinter welchem Tag verbirgt, sehen Sie jeweils ab 0:00 Uhr im Aktionskalender.</td></tr>' : '') +
+    (days.length && N.reveal !== false ? '<tr><td style="padding:16px 28px 4px"><div style="font-size:18px;font-weight:bold;margin-bottom:6px">' + (c.count === 1 ? 'Die Tagesaktion' : 'Jeden Tag ein neues Aktionsgerät') + '</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px">' + head + days.map(d => row(WD[dowOf(d.sk)] + ' ' + fmtShort(d.sk), d)).join('') + '</table></td></tr>' : '') +
+    '<tr><td style="padding:20px 28px 6px">' + (base ? btn(base + '/', 'Zum Aktionskalender') + (c.flyerOn && c.flyerOn.on ? btn(base + '/#flyer', 'Online-Flyer ansehen') : '') : '') + '</td></tr>' +
+    '<tr><td style="padding:6px 28px 22px;font-size:14px;line-height:1.6"><b>So bestellen Sie:</b> per E-Mail an <a href="mailto:' + e(mail) + '" style="color:' + T[2] + '">' + e(mail) + '</a> oder telefonisch unter <a href="' + telHref(tel) + '" style="color:' + T[2] + '">' + e(tel) + '</a>.<br>Alle Preise in Euro exkl. MwSt., solange der Vorrat reicht. Druck- und Satzfehler vorbehalten.</td></tr>' +
+    '<tr><td style="background:#f6f6f6;padding:16px 28px;font-size:12px;color:#666;line-height:1.5">' + e(c.impressum || DEF_IMPRESSUM) + '<br>Sie erhalten diese Information als Fachhandelspartner. <a href="{{abmelden}}" style="color:#666">Vom Aktions-Newsletter abmelden</a></td></tr>' +
+    '</table></td></tr></table></body></html>';
+  const text = '{{anrede}}\n\n' + intro + '\n\n' + (ranges.length ? 'AKTIONEN IM GESAMTEN ZEITRAUM\n' + ranges.map(d => '- ' + d.label + ': ' + d.p.b + ' ' + d.p.m + (N.prices && d.price != null ? ' – Aktions-HEK ' + eur(d.price) : '')).join('\n') + '\n\n' : '') +
+    (days.length && N.reveal === false ? 'JEDEN TAG EINE NEUE ÜBERRASCHUNG\n' + days.length + ' Tagesaktionen – jeweils ab 0:00 Uhr im Aktionskalender.\n\n' : '') + (days.length && N.reveal !== false ? 'TAGESAKTIONEN\n' + days.map(d => '- ' + WD[dowOf(d.sk)] + ' ' + fmtShort(d.sk) + ': ' + d.p.b + ' ' + d.p.m + (N.prices && d.price != null ? ' – Aktions-HEK ' + eur(d.price) : '')).join('\n') + '\n\n' : '') +
+    (base ? 'Zum Aktionskalender: ' + base + '/\n\n' : '') + 'Bestellung: ' + mail + ' · ' + tel + '\nAlle Preise in Euro exkl. MwSt., solange der Vorrat reicht.\n\n' + (c.impressum || DEF_IMPRESSUM) + '\nAbmelden: {{abmelden}}';
+  return { html, text, subject };
+}
+S.nl = { info: null };
+async function nlInfoLoad(){ if (!S.api){ S.nl.info = { recipients: null, log: [] }; return; } try { const r = await fetch('/api/newsletter', { cache:'no-store', headers:{ authorization:'Bearer ' + S.pw } }); const j = await r.json().catch(() => ({})); S.nl.info = r.ok ? j : { recipients: null, log: [], err: j.error || '' }; } catch(e){ S.nl.info = { recipients: null, log: [] }; } }
+function nlBoxHTML(E){
+  const c = E.cfg, N = c.newsletter, sendDay = addDays(c.start, -N.days), id = E.src === 'live' ? (c.aid || 'live') : E.item.id, I = S.nl.info;
+  if (S.api && !I){ nlInfoLoad().then(() => { if (S.view === 'planung') plDetail(); }); }
+  const log = I && I.log ? I.log.filter(x => x.aid === id).slice(0, 3) : [];
+  const rec = !S.api ? 'Im Claude-Artifact gibt es keinen Mailversand: Newsletter als HTML herunterladen und über Outlook versenden.' : I == null ? 'Empfänger werden geladen …' : I.recipients == null ? 'Für den Newsletter braucht es die Händler-Zugänge (Konten-Modus mit ADMIN_USERS) mit E-Mail-Adressen.' : '<b>' + I.recipients + '</b> Händler mit E-Mail-Adresse und Newsletter-Einwilligung' + (I.mail === false ? ' · <b style="color:var(--accent)">Mailversand noch nicht eingerichtet</b>' : '');
+  const ap = E.src === 'live' ? apStatus(c) : null;
+  return '<div class="nlbox"><h4>Newsletter an die Händler</h4><div class="fields">' +
+    '<label class="f" style="flex-direction:row;align-items:center;gap:8px;grid-column:1/-1"><input type="checkbox" id="nl-on"' + (N.on ? ' checked' : '') + '> Automatisch an alle Händler mit E-Mail senden</label>' +
+    '<label class="f">Tage vor Start (Standard ' + NL_DAYS + ')<input type="number" id="nl-days" min="0" max="90" value="' + N.days + '"></label><label class="f">Versand am<input type="text" readonly value="' + esc(fmtLong(sendDay)) + '"></label>' +
+    '<label class="f" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="nl-prices"' + (N.prices ? ' checked' : '') + '> Aktions-HEK im Newsletter zeigen</label>' +
+    '<label class="f" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="nl-reveal"' + (N.reveal ? ' checked' : '') + '> Tagesaktionen vorab nennen (aus = Überraschung, z. B. beim Adventkalender)</label>' +
+    '<label class="f" style="grid-column:1/-1">Betreff (leer = automatisch)<input type="text" id="nl-subject" maxlength="140" value="' + esc(N.subject) + '" placeholder="' + esc(nlBuild(c).subject) + '"></label>' +
+    '<label class="f" style="grid-column:1/-1">Einleitungstext (leer = automatisch)<textarea id="nl-intro" rows="3" style="width:100%">' + esc(N.intro) + '</textarea></label></div>' +
+    '<p class="small" style="margin:6px 0">' + rec + '</p>' +
+    (ap && !ap.done ? '<p class="small" style="margin:6px 0;color:var(--accent)"><b>Achtung:</b> Die Freigabe ist noch nicht abgeschlossen (' + ap.okCount + ' von 4 Stufen). Ein automatischer Newsletter geht trotzdem raus, wenn er eingeschaltet ist – bitte erst nach der Freigabe aktivieren.</p>' : '') +
+    (log.length ? '<p class="small" style="margin:6px 0">Gesendet: ' + log.map(x => esc(fmtAt(x.at)) + ' · ' + (x.test ? 'Test an ' + esc((x.to || []).join(', ')) : x.sent + ' Händler') + (x.failed ? ' · ' + x.failed + ' fehlgeschlagen' : '') + (x.note ? ' · ' + esc(x.note) : '')).join('<br>') + '</p>' : '') +
+    '<div class="actions"><button type="button" class="btn" id="nl-prev">Vorschau</button>' + (S.api ? '<button type="button" class="btn" id="nl-test">Testversand an Verantwortliche</button><button type="button" class="btn" id="nl-now">Jetzt an alle Händler senden</button>' : '') + '<button type="button" class="btn" id="nl-dl">Als HTML herunterladen</button></div>' +
+    '<p class="small" style="margin:6px 0 0">Der Inhalt wird beim Speichern immer aus der aktuellen Planung erzeugt (Tagesaktionen, Zeitraum-Aktionen, Bundles, Bestellweg). Jede Mail enthält einen Abmeldelink.</p></div>';
+}
+function nlFill(s, name){ return String(s).replace(/\{\{anrede\}\}/g, name ? 'Guten Tag ' + esc(name) + ',' : 'Guten Tag,').replace(/\{\{abmelden\}\}/g, '#'); }
+function nlPreview(E){
+  const b = nlBuild(E.cfg);
+  $('overlay-slot').innerHTML = '<div class="overlay" id="ov"><div class="dialog" role="dialog" aria-modal="true" aria-label="Newsletter-Vorschau" style="max-width:760px;width:96vw"><button type="button" class="x" id="ov-x" aria-label="Schließen">×</button><div style="padding:14px"><p class="small" style="margin:0 0 8px"><b>Betreff:</b> ' + esc(b.subject) + '</p><iframe class="nlprev" id="nl-frame" title="Newsletter-Vorschau"></iframe></div></div></div>';
+  $('nl-frame').srcdoc = nlFill(b.html, 'Max Muster');
+}
+async function nlDownload(E){ const b = nlBuild(E.cfg); await saveFile('Newsletter_' + (E.name || 'Aktion').replace(/[^\wäöüÄÖÜß-]+/g, '_') + '.html', new Blob([nlFill(b.html, '')], { type:'text/html' })); }
+async function nlSend(E, test){
+  if (S.pl.dirty){ toast('Bitte zuerst speichern – versendet wird der gespeicherte Stand'); return; }
+  const id = E.src === 'live' ? (E.cfg.aid || 'live') : E.item.id;
+  if (test && !splitMails(E.cfg.owners).length){ toast('Für den Testversand bitte Verantwortliche mit E-Mail eintragen'); return; }
+  if (!test && !confirm('Newsletter jetzt an alle Händler mit E-Mail-Adresse senden?' + (S.nl.info && S.nl.info.recipients != null ? '\n\nEmpfänger: ' + S.nl.info.recipients + ' Händler' : ''))) return;
+  try { const r = await fetch('/api/newsletter/send', { method:'POST', headers:{ 'content-type':'application/json', authorization:'Bearer ' + S.pw }, body: JSON.stringify({ aid: id, test: !!test }) }); const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Senden nicht möglich');
+    toast(j.mail === false ? 'Kein Mailversand eingerichtet – bitte RESEND_API_KEY oder ORDER_WEBHOOK_URL setzen' : test ? 'Test gesendet an ' + (j.to || []).join(', ') : 'Newsletter an ' + j.sent + ' Händler gesendet' + (j.failed ? ' (' + j.failed + ' fehlgeschlagen)' : ''), 7000);
+    S.nl.info = null; plDetail(); }
+  catch(e){ toast(e.message || 'Senden nicht möglich', 7000); }
+}
 
 /* ---------- Start ---------- */
 (async function start(){

@@ -99,7 +99,7 @@ export function findUser(env, users, id) {
 export function publicUser(u) {
   if (!u) return null;
   const o = { id: u.id, role: u.role, label: u.label };
-  if (u.role === 'kunde') Object.assign(o, { firma: u.firma || '', kdnr: u.kdnr || '', name: u.name || '', email: u.email || '', tel: u.tel || '', ort: u.ort || '' });
+  if (u.role === 'kunde') Object.assign(o, { firma: u.firma || '', adresse: u.adresse || '', kdnr: u.kdnr || '', name: u.name || '', email: u.email || '', tel: u.tel || '', ort: u.ort || '' });
   else Object.assign(o, { name: u.name, email: u.email });
   return o;
 }
@@ -196,6 +196,16 @@ export function dealBySlot(c, sl) {
   return { slot: sl, sk: sl, from: sl, to: sl, k: d.k, price: d.price ?? null, qty: d.qty ?? null, label: fmtShort(sl) };
 }
 
+/* ---------- Checkliste je Aktion: [erledigt, gesamt, überfällig] (wie in der Seite) ---------- */
+const CL_DEFAULT = [['before', 30], ['before', 28], ['before', 25], ['before', 21], ['before', 18], ['before', 16], ['before', 14], ['before', 12], ['before', 10], ['before', 7], ['before', 3], ['after', 0], ['after', 7]];
+export function checklistStats(c) {
+  if (!c || !c.start) return null;
+  const list = Array.isArray(c.checklist) ? c.checklist.filter(x => x && x.id) : CL_DEFAULT.map(([when, days]) => ({ when, days, done: false }));
+  const t = viennaToday(), end = addDays(c.start, Math.max(1, +c.count || 1) - 1);
+  const due = x => x.when === 'after' ? addDays(end, Math.max(0, parseInt(x.days, 10) || 0)) : addDays(c.start, -Math.max(0, parseInt(x.days, 10) || 0));
+  return [list.filter(x => x.done).length, list.length, list.filter(x => !x.done && due(x) < t).length];
+}
+
 /* ---------- Rate-Limit (grob, je Minute) ---------- */
 export async function rateLimit(env, name, ip, max) {
   const key = 'rl:' + name + ':' + ip + ':' + Math.floor(Date.now() / 60000);
@@ -207,7 +217,7 @@ export async function rateLimit(env, name, ip, max) {
 const eur = v => (Math.round((+v || 0) * 100) / 100).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 const escH = s => String(s ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 export function orderText(o) {
-  const lines = o.items.map(x => '- ' + x.qty + ' × ' + x.brand + ' ' + x.model + ' (Aktion ' + x.aktion + ') à ' + eur(x.price) + ' = ' + eur(x.line)).join('\n');
+  const lines = o.items.map(x => '- ' + x.qty + ' × ' + x.brand + ' ' + x.model + (/^Bundle/.test(x.type || '') ? ' – ' + x.type : '') + ' (Aktion ' + x.aktion + ') à ' + eur(x.price) + ' = ' + eur(x.line)).join('\n');
   const cu = o.customer;
   return 'Bestellung ' + o.no + ' aus dem ' + o.title + '\n\n' + lines + '\nGesamt exkl. MwSt.: ' + eur(o.total) +
     '\n\nFirma: ' + cu.firma + '\nKundennummer: ' + (cu.kdnr || '') + '\nAnsprechpartner:in: ' + cu.name + '\nE-Mail: ' + cu.email + '\nTelefon: ' + cu.tel +
@@ -217,29 +227,140 @@ export function orderHtml(o) {
   const cu = o.customer;
   return '<div style="font-family:Arial,sans-serif;font-size:14px"><h2 style="margin:0 0 8px">Bestellung ' + escH(o.no) + '</h2><p>' + escH(o.title) + '</p>' +
     '<table cellpadding="6" style="border-collapse:collapse"><tr style="background:#eee"><th align="left">Menge</th><th align="left">Gerät</th><th align="left">Aktion</th><th align="right">Preis</th><th align="right">Summe</th></tr>' +
-    o.items.map(x => '<tr><td>' + x.qty + '</td><td>' + escH(x.brand + ' ' + x.model) + '</td><td>' + escH(x.aktion) + '</td><td align="right">' + eur(x.price) + '</td><td align="right">' + eur(x.line) + '</td></tr>').join('') +
+    o.items.map(x => '<tr><td>' + x.qty + '</td><td>' + escH(x.brand + ' ' + x.model + (/^Bundle/.test(x.type || '') ? ' – ' + x.type : '')) + '</td><td>' + escH(x.aktion) + '</td><td align="right">' + eur(x.price) + '</td><td align="right">' + eur(x.line) + '</td></tr>').join('') +
     '<tr><td colspan="4"><b>Gesamt exkl. MwSt.</b></td><td align="right"><b>' + eur(o.total) + '</b></td></tr></table>' +
     '<p>Firma: <b>' + escH(cu.firma) + '</b><br>Kundennummer: ' + escH(cu.kdnr || '') + '<br>Ansprechpartner:in: ' + escH(cu.name) + '<br>E-Mail: <a href="mailto:' + escH(cu.email) + '">' + escH(cu.email) + '</a><br>Telefon: <a href="tel:' + escH(String(cu.tel).replace(/[^\d+]/g, '')) + '">' + escH(cu.tel) + '</a>' +
     (cu.adresse ? '<br>Lieferadresse: ' + escH(cu.adresse) : '') + (cu.notiz ? '<br>Bemerkung: ' + escH(cu.notiz) : '') + '</p></div>';
 }
-export async function sendOrderMail(env, o, to) {
-  const subject = 'Bestellung ' + o.no + ' – ' + o.customer.firma;
-  const copy = String(env.MAIL_COPY_TO_CUSTOMER || 'true') !== 'false';
+/* Allgemeiner Mailversand: Variante A Resend, Variante B Webhook. Ergebnis: 'sent' | 'failed' | 'none' */
+export async function sendMail(env, m) {
+  const to = (m.to || []).filter(Boolean), cc = (m.cc || []).filter(Boolean); if (!to.length) return 'none';
   try {
     if (env.RESEND_API_KEY && env.MAIL_FROM) {
       const r = await fetch('https://api.resend.com/emails', {
         method: 'POST', headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
-        body: JSON.stringify({ from: env.MAIL_FROM, to: [to], cc: copy ? [o.customer.email] : undefined, reply_to: o.customer.email, subject, text: orderText(o), html: orderHtml(o) }),
+        body: JSON.stringify({ from: env.MAIL_FROM, to, cc: cc.length ? cc : undefined, reply_to: m.replyTo || undefined, subject: m.subject, text: m.text, html: m.html }),
       });
       return r.ok ? 'sent' : 'failed';
     }
     if (env.ORDER_WEBHOOK_URL) {
       const r = await fetch(env.ORDER_WEBHOOK_URL, {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ to, cc: copy ? o.customer.email : '', subject, text: orderText(o), html: orderHtml(o), order: o }),
+        body: JSON.stringify(Object.assign({ to: to.join(','), cc: cc.join(','), subject: m.subject, text: m.text, html: m.html, kind: m.kind || 'mail' }, m.extra || {})),
       });
       return r.ok ? 'sent' : 'failed';
     }
   } catch (e) { return 'failed'; }
   return 'none';
+}
+export async function sendOrderMail(env, o, to) {
+  const copy = String(env.MAIL_COPY_TO_CUSTOMER || 'true') !== 'false';
+  return sendMail(env, { to: [to], cc: copy ? [o.customer.email] : [], replyTo: o.customer.email, subject: 'Bestellung ' + o.no + ' – ' + o.customer.firma, text: orderText(o), html: orderHtml(o), kind: 'order', extra: { order: o } });
+}
+
+/* ---------- Reminder: Aktionen rechtzeitig planen ---------- */
+const splitMails = s => String(s || '').split(/[,;\s]+/).map(x => x.trim()).filter(x => /^\S+@\S+\.\S+$/.test(x));
+const fmtLong = s => +s.slice(8, 10) + '.' + +s.slice(5, 7) + '.' + s.slice(0, 4);
+export function reminderMail(c, name, link, type) {
+  const lead = c.lead == null || c.lead === '' ? 30 : +c.lead || 0, ls = addDays(c.start, -lead), end = addDays(c.start, Math.max(1, +c.count || 1) - 1);
+  const due = x => x.when === 'after' ? addDays(end, +x.days || 0) : addDays(c.start, -(+x.days || 0));
+  const open = (Array.isArray(c.checklist) ? c.checklist : []).filter(x => x && !x.done).sort((a, b) => due(a).localeCompare(due(b)));
+  const period = fmtLong(c.start) + (end !== c.start ? ' – ' + fmtLong(end) : '');
+  const head = type === 'week' ? 'Die Aktion „' + name + '“ startet in 7 Tagen (' + period + ') und es sind noch Punkte offen.' : 'Die Aktion „' + name + '“ (' + period + ') ist jetzt zu planen. Der Vorlauf von ' + lead + ' Tagen beginnt am ' + fmtLong(ls) + '.';
+  const subject = (type === 'week' ? 'Start in 7 Tagen: ' : 'Jetzt planen: ') + name + ' (' + period + ')';
+  const text = 'Hallo,\n\n' + head + '\n\nOffene Punkte der Checkliste:\n' + (open.map(x => '- ' + fmtLong(due(x)) + ': ' + x.text + (x.who ? ' (' + x.who + ')' : '')).join('\n') || '- keine') + '\n\nZur Aktion: ' + link + '\n\nViele Grüße\nAktionskalender Fachhandel';
+  const html = '<div style="font-family:Arial,sans-serif;font-size:14px"><p>Hallo,</p><p>' + escH(head) + '</p><p><b>Offene Punkte der Checkliste</b></p><table cellpadding="5" style="border-collapse:collapse">' +
+    (open.map(x => '<tr><td style="white-space:nowrap">' + fmtLong(due(x)) + '</td><td>' + escH(x.text) + '</td><td style="color:#666">' + escH(x.who || '') + '</td></tr>').join('') || '<tr><td>keine</td></tr>') +
+    '</table><p><a href="' + escH(link) + '" style="display:inline-block;background:#1D5A43;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Aktion öffnen</a></p><p>Viele Grüße<br>Aktionskalender Fachhandel</p></div>';
+  return { subject, text, html, open: open.length, leadStart: ls };
+}
+async function reminderTargets(env) {
+  const out = new Map(); const live = await getJSON(env, 'config');
+  if (live && live.start) out.set(live.aid || 'live', { aid: live.aid || 'live', name: live.title || 'Aktionskalender', cfg: live });
+  const idx = await getJSON(env, 'akidx:aktionen', {});
+  for (const m of Object.values(idx)) {
+    if (!m || !m.start || out.has(m.id) || !['aktion', 'geplant'].includes(m.kind)) continue;
+    const it = await getJSON(env, 'ak:aktionen:' + m.id); if (it && it.config && it.config.start) out.set(m.id, { aid: m.id, name: it.name || it.config.title || 'Aktion', cfg: it.config });
+  }
+  return [...out.values()];
+}
+/* ---------- Newsletter an die Händler ---------- */
+export const mailReady = env => !!((env.RESEND_API_KEY && env.MAIL_FROM) || env.ORDER_WEBHOOK_URL);
+export async function nlRecipients(env) {
+  if (!accountsOn(env)) return null;
+  const users = await loadUsers(env); let changed = false;
+  const list = users.customers.filter(c => c.active !== false && c.newsletter !== false && /^\S+@\S+\.\S+$/.test(String(c.email || '').trim()));
+  list.forEach(c => { if (!c.nlt) { c.nlt = randId(20); changed = true; } });
+  if (changed) await saveUsers(env, users);
+  return list.map(c => ({ id: c.id, email: String(c.email).trim(), name: c.name || '', firma: c.firma || '', nlt: c.nlt }));
+}
+function nlPersonal(tpl, r, origin) {
+  const unsub = origin + '/api/newsletter/abmelden?id=' + encodeURIComponent(r.id) + '&t=' + encodeURIComponent(r.nlt || '');
+  const greet = r.name ? 'Guten Tag ' + r.name + ',' : 'Guten Tag,';
+  return { html: String(tpl.html || '').replace(/\{\{anrede\}\}/g, escH(greet)).replace(/\{\{abmelden\}\}/g, escH(unsub)), text: String(tpl.text || '').replace(/\{\{anrede\}\}/g, greet).replace(/\{\{abmelden\}\}/g, unsub), unsub };
+}
+/* Versand an viele Empfänger: Resend in Paketen zu 100 (wenige Anfragen), Webhook mit Empfängerliste in einer Anfrage */
+export async function sendNewsletter(env, tpl, recipients, origin) {
+  if (!recipients.length) return { sent: 0, failed: 0, mail: mailReady(env) };
+  if (env.RESEND_API_KEY && env.MAIL_FROM) {
+    let sent = 0, failed = 0;
+    for (let i = 0; i < recipients.length; i += 100) {
+      const chunk = recipients.slice(i, i + 100).map(r => { const p = nlPersonal(tpl, r, origin); return { from: env.MAIL_FROM, to: [r.email], subject: tpl.subj, html: p.html, text: p.text, headers: { 'List-Unsubscribe': '<' + p.unsub + '>' } }; });
+      try { const res = await fetch('https://api.resend.com/emails/batch', { method: 'POST', headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' }, body: JSON.stringify(chunk) }); if (res.ok) sent += chunk.length; else failed += chunk.length; } catch (e) { failed += chunk.length; }
+    }
+    return { sent, failed, mail: true };
+  }
+  if (env.ORDER_WEBHOOK_URL) {
+    const list = recipients.map(r => { const p = nlPersonal(tpl, r, origin); return { email: r.email, name: r.name, firma: r.firma, abmelden: p.unsub, html: p.html, text: p.text }; });
+    try { const res = await fetch(env.ORDER_WEBHOOK_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'newsletter', subject: tpl.subj, recipients: list, to: '', cc: '', html: list[0].html, text: list[0].text }) });
+      return res.ok ? { sent: list.length, failed: 0, mail: true } : { sent: 0, failed: list.length, mail: true }; } catch (e) { return { sent: 0, failed: list.length, mail: true }; }
+  }
+  return { sent: 0, failed: 0, mail: false };
+}
+async function logNl(env, e) { const log = await getJSON(env, 'nllog', []); log.unshift(e); await putJSON(env, 'nllog', log.slice(0, 200)); }
+export async function runNewsletters(env, origin, opt) {
+  opt = opt || {}; const today = viennaToday(), out = [];
+  for (const t of await reminderTargets(env)) {
+    if (opt.aid && t.aid !== opt.aid) continue;
+    const c = t.cfg, N = c.newsletter || {};
+    if (!N.html || !N.subj) { if (opt.aid) out.push({ aid: t.aid, error: 'Kein Newsletter-Inhalt – bitte in der Planung „Automatisch senden“ aktivieren und speichern' }); continue; }
+    const days = N.days == null || N.days === '' ? 14 : +N.days || 0, key = 'nl:' + t.aid + ':' + c.start;
+    if (!opt.aid) { if (!N.on || today < addDays(c.start, -days) || today > c.start || (await kv(env).get(key))) continue; }
+    let rec;
+    if (opt.test) rec = [...new Set(splitMails(c.owners).concat(splitMails(env.REMINDER_TO)))].map(e => ({ id: 'test', email: e, name: '', firma: '', nlt: 'test' }));
+    else rec = (await nlRecipients(env)) || [];
+    const res = await sendNewsletter(env, N, rec, origin);
+    const e = { aid: t.aid, name: t.name, at: new Date().toISOString(), test: !!opt.test, auto: !opt.aid, sent: res.sent, failed: res.failed, to: opt.test ? rec.map(r => r.email) : undefined, note: !res.mail ? 'kein Mailversand eingerichtet' : !rec.length ? 'keine Empfänger' : '' };
+    out.push(Object.assign({ mail: res.mail }, e)); await logNl(env, e);
+    if (!opt.test && !opt.aid && res.mail && rec.length && res.sent) await kv(env).put(key, new Date().toISOString(), { expirationTtl: 400 * 86400 });
+    if (!opt.test && opt.aid && res.sent) await kv(env).put(key, new Date().toISOString(), { expirationTtl: 400 * 86400 });
+  }
+  return out;
+}
+async function logReminder(env, e) { const log = await getJSON(env, 'remlog', []); log.unshift(e); await putJSON(env, 'remlog', log.slice(0, 300)); }
+export async function runReminders(env, origin, onlyAid) {
+  const today = viennaToday(), res = [];
+  for (const t of await reminderTargets(env)) {
+    if (onlyAid && t.aid !== onlyAid) continue;
+    const c = t.cfg, lead = c.lead == null || c.lead === '' ? 30 : +c.lead || 0, ls = addDays(c.start, -lead);
+    const to = [...new Set(splitMails(c.owners).concat(splitMails(env.REMINDER_TO)))];
+    const types = [];
+    if (onlyAid) types.push('manual');
+    else {
+      if (today >= ls && today <= c.start) types.push('lead');
+      if (today >= addDays(c.start, -7) && today < c.start) types.push('week');
+    }
+    for (const type of types) {
+      const key = 'rem:' + t.aid + ':' + type + ':' + c.start;
+      if (type !== 'manual' && (await kv(env).get(key))) continue;
+      const m = reminderMail(c, t.name, origin + '/admin#ak-' + t.aid, type === 'manual' ? 'lead' : type);
+      if (type === 'week' && !m.open) { await kv(env).put(key, 'skip', { expirationTtl: 400 * 86400 }); continue; }
+      if (!to.length) { const e = { aid: t.aid, name: t.name, type, at: new Date().toISOString(), to: [], ok: false, note: 'keine Empfänger' }; res.push(e); if (type !== 'manual') { await logReminder(env, e); await kv(env).put(key, 'noto', { expirationTtl: 86400 }); } continue; }
+      const st = await sendMail(env, { to, subject: m.subject, text: m.text, html: m.html, kind: 'reminder' });
+      const e = { aid: t.aid, name: t.name, type, at: new Date().toISOString(), to, ok: st === 'sent', note: st === 'none' ? 'kein Mailversand eingerichtet' : '' };
+      res.push(e); await logReminder(env, e);
+      if (st === 'sent' && type !== 'manual') await kv(env).put(key, new Date().toISOString(), { expirationTtl: 400 * 86400 });
+    }
+  }
+  return res;
 }

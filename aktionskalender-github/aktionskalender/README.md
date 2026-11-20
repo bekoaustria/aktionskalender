@@ -1,13 +1,14 @@
 # Aktionskalender Fachhandel
 
-Aktionskalender für den österreichischen Fachhandel mit den Marken elektrabregenz, Beko und Indesit. Er umfasst Tagesaktionen und Zeitraum-Aktionen, Warenkorb und Bestellung, Freigabeprozess, Flyer (PDF und online) sowie das Speichern von Aktionen als Vorlage und im Archiv.
+Aktionskalender für den österreichischen Fachhandel mit den Marken elektrabregenz, Beko und Indesit. Er umfasst Tagesaktionen und Zeitraum-Aktionen, Bundles aus mehreren Geräten, Planungskalender mit Vorlauf und Checkliste je Aktion, E-Mail-Reminder an die Verantwortlichen, Aktions-Newsletter an die Händler, KPI-Dashboard mit Historie, Warenkorb und Bestellung, Freigabeprozess, Flyer (PDF und online) sowie das Speichern von Aktionen als Vorlage und im Archiv.
 
 Betrieb über **Cloudflare Pages** mit **Cloudflare KV** als Speicher. Kein eigener Server und kein Build-Schritt nötig.
 
 | Adresse | Für wen | Inhalt |
 |---|---|---|
 | `/` | Händler | Kalender, Tagesaktion, Warenkorb, Bestellung |
-| `/admin` | Beko-Team | Verwaltung, Flyer, Bestellungen, Aktionen, Freigabe-Personen, Zugänge |
+| `/admin` | Beko-Team | Verwaltung, Flyer, Bestellungen, Aktionen, Planung, KPI & Historie, Freigabe-Personen, Zugänge |
+| `/admin#ak-…` | Beko-Team | direkter Link zu einer Aktion (KPI-Dashboard), z. B. aus der Historie oder dem Reminder |
 | `/#flyer` | alle mit dem Link | nur der Online-Flyer (nachdem er unter Flyer → „Online stellen“ online gestellt wurde) |
 | `/?k=…` | Freigebende | persönlicher Freigabe-Link (wird in der Verwaltung erzeugt) |
 | `/?einladung=…` | neue Zugänge | Erstanmeldung im Konten-Modus |
@@ -23,6 +24,7 @@ Betrieb über **Cloudflare Pages** mit **Cloudflare KV** als Speicher. Kein eige
 | `functions/api/_lib.js` | gemeinsame Logik: Anmeldung, Freigabe, Bestellprüfung, Mailversand |
 | `tools/worker-entry.js` | Einstieg für die Variante „Direct Upload“ (`npm run build:direct`) |
 | `tests/` | automatische Tests der Schnittstellen (nur lokal ausführen) |
+| `.github/workflows/reminder.yml` | täglicher Reminder-Lauf (GitHub Actions) |
 
 ## Einrichtung (einmalig, ca. 15 Minuten)
 
@@ -48,10 +50,37 @@ Eigene Domain: Pages-Projekt → Custom domains (z. B. `aktionen.bekoaustria.com
 | `RESEND_API_KEY` + `MAIL_FROM` | nein | Mailversand Variante A über Resend (Absender-Domain muss bei Resend verifiziert sein) |
 | `ORDER_WEBHOOK_URL` | nein | Mailversand Variante B über Webhook, z. B. Power Automate → Outlook. Empfängt JSON mit `to`, `cc`, `subject`, `text`, `html`, `order` |
 | `MAIL_COPY_TO_CUSTOMER` | nein | `false` schaltet die Kopie an den Händler ab |
+| `REMINDER_KEY` | für Reminder | Geheimnis für den täglichen Reminder-Lauf (gleich wie das GitHub-Secret `REMINDER_KEY`) |
+| `REMINDER_TO` | nein | zusätzliche Empfänger für alle Reminder, z. B. `sales.austria@beko.com` |
+| `PUBLIC_URL` | nein | Adresse für Links in Reminder-Mails, z. B. `https://aktionen.bekoaustria.com` (sonst die aufgerufene Adresse) |
 
 Ohne Mailversand werden Bestellungen nur gespeichert. Sie stehen in der Verwaltung unter „Bestellungen“ (mit CSV-Export).
 
 **Konten-Modus, erste Anmeldung im Team:** `/admin` öffnen, den eigenen Namen wählen und als Passwort das `ADMIN_PASSWORD` eingeben. Danach legen Sie sofort ein eigenes Passwort fest. Händler-Zugänge legen Sie in der Verwaltung unter „Zugänge“ an und laden sie per E-Mail ein.
+
+## Reminder per E-Mail einrichten
+
+| Schritt | Wo | Was |
+|---|---|---|
+| 1 | Cloudflare → Variables and Secrets | Mailversand (Resend oder Webhook) und `REMINDER_KEY` (langes Zufallswort) anlegen, neu deployen |
+| 2 | GitHub → Settings → Secrets and variables → Actions | Secrets `KALENDER_URL` (Adresse des Kalenders) und `REMINDER_KEY` (gleiches Wort) anlegen |
+| 3 | GitHub → Actions | Workflow „Reminder Aktionskalender“ einmal mit **Run workflow** testen. Danach läuft er täglich um 06:00 bzw. 07:00 Uhr Wiener Zeit |
+| 4 | Kalender → Planung | Bei jeder Aktion die Verantwortlichen (E-Mail) eintragen |
+
+Gesendet wird einmal zu Beginn des Vorlaufs (Standard 30 Tage vor Start) und 7 Tage vor Start, falls in der Checkliste noch Punkte offen sind. Die Mail enthält alle offenen Punkte und einen Link zur Aktion. In der Planung können Sie jederzeit über „Reminder jetzt senden“ zusätzlich auslösen.
+
+## Newsletter an die Händler
+
+Je Aktion unter Planung → „Newsletter an die Händler“ einschalten. Versand automatisch **14 Tage vor Start** (änderbar) über denselben täglichen Lauf wie die Reminder, an alle aktiven Händler-Zugänge mit E-Mail-Adresse und Newsletter-Häkchen (Konten-Modus). Der Inhalt wird beim Speichern aus der Planung erzeugt: Tagesaktionen (optional als Überraschung ohne Gerätenamen), Zeitraum-Aktionen, Bundles, optional Aktions-HEK, Links zum Kalender und zum Online-Flyer, Bestellweg. Jede Mail ist persönlich („Guten Tag …“) und enthält einen Abmeldelink. Testversand an die Verantwortlichen und Sofortversand sind per Knopf möglich.
+
+| Mailversand | Verhalten |
+|---|---|
+| Resend | Versand in Paketen zu 100 Mails, mit Abmelde-Header |
+| Webhook (Power Automate) | eine Anfrage mit `kind: "newsletter"`, `subject` und `recipients` (je Empfänger `email`, `name`, `firma`, `html`, `text`, `abmelden`). Im Flow mit „Auf alle anwenden“ über `recipients` je eine Mail senden |
+
+## KPI-Dashboard
+
+Je Aktion: Stückzahl und Abverkauf, Invoiced Sales (Menge × Aktions-HEK), Net Sales (abzüglich hinterlegter Erlösschmälerungen), kaufende Kunden, Marge (Net Sales − COGS) und Aktionsinvest. Datenquelle sind die Bestellungen aus dem Kalender oder ein ERP-Upload mit fakturierten Ist-Daten (Spalten: Kunde, Code, Menge, Invoiced, optional Net und COGS). Jede gespeicherte Aktion landet automatisch in der Historie, mit eigenem Link.
 
 ## Was der Server prüft
 
