@@ -1,0 +1,55 @@
+// Nur gegen eine lokale Testumgebung ausführen (npm run dev) – der Test schreibt Testdaten in den Speicher!
+const B = process.env.BASE || 'http://localhost:8788', PW = process.env.ADMIN_PASSWORD || 'test-Passwort-123';
+const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Vienna'}).format(new Date());
+let ok = 0, bad = 0; const check = (n, c, extra) => { if (c) ok++; else { bad++; console.log('FAIL', n, extra ?? ''); } };
+const j = async (p, o = {}) => { const r = await fetch(B + p, o); let b; try { b = await r.json(); } catch(e) { b = null; } return { s: r.status, b, h: r.headers }; };
+const A = { authorization: 'Bearer ' + PW, 'content-type': 'application/json' };
+check('auth wrong', (await j('/api/auth', { method:'POST', body: JSON.stringify({ password:'x' }) })).s === 401);
+check('auth ok', (await j('/api/auth', { method:'POST', body: JSON.stringify({ password: PW }) })).s === 200);
+const cfg = { title:'Test', theme:'black', start: today, count: 3, orderEmail:'order.austria@beko.com', pool:{ 'Beko|X1':{hek:200}, 'Beko|R1':{hek:80} },
+  days: { [today]: { k:'Beko|X1', hek:200, price:100, qty:2 } }, ranges: [{ id:'r1', k:'Beko|R1', full:true, price:50, qty:5 }],
+  extra: { 'Beko|R1': { b:'Beko', c:'Kühlen', m:'R1', t:'Testgerät' } },
+  approval: { people: { pm: { 'Kühlen': [{ pid:'p1', name:'PM Kühlen', email:'a@b.at', token:'tok-123456789' }] }, finance: [], marketing: [], sd: [] } } };
+check('put no auth', (await j('/api/config', { method:'PUT', body: JSON.stringify(cfg) })).s === 401);
+check('put ok', (await j('/api/config', { method:'PUT', headers:A, body: JSON.stringify(cfg) })).s === 200);
+let g = await j('/api/config'); check('public strip', g.b.config.approval.people.pm['Kühlen'][0].token === undefined, JSON.stringify(g.b.config.approval));
+g = await j('/api/config', { headers: A }); check('admin token', g.b.config.approval.people.pm['Kühlen'][0].token === 'tok-123456789');
+const c2 = JSON.parse(JSON.stringify(cfg)); delete c2.approval.people.pm['Kühlen'][0].token; c2.title = 'Test 2';
+await j('/api/config', { method:'PUT', headers:A, body: JSON.stringify(c2) });
+g = await j('/api/config', { headers: A }); check('token kept', g.b.config.approval.people.pm['Kühlen'][0].token === 'tok-123456789' && g.b.config.title === 'Test 2');
+check('whoami bad', (await j('/api/whoami', { method:'POST', body: JSON.stringify({ token:'nope' }) })).s === 404);
+const w = await j('/api/whoami', { method:'POST', body: JSON.stringify({ token:'tok-123456789' }) }); check('whoami', w.b && w.b.pid === 'p1');
+check('approve wrong stage', (await j('/api/approve', { method:'POST', body: JSON.stringify({ token:'tok-123456789', key:'finance', status:'ok', hash:'h' }) })).s === 403);
+check('reject no note', (await j('/api/approve', { method:'POST', body: JSON.stringify({ token:'tok-123456789', key:'pm:Kühlen', status:'rejected', hash:'h' }) })).s === 400);
+check('approve', (await j('/api/approve', { method:'POST', body: JSON.stringify({ token:'tok-123456789', key:'pm:Kühlen', status:'ok', hash:'h1' }) })).s === 200);
+const ap = await j('/api/approvals'); check('approvals', ap.b.byPid.p1.entries['pm:Kühlen'].status === 'ok');
+const cu = { firma:'Elektro Muster', name:'Max', email:'max@muster.at', tel:'+43 1 234' };
+let o = await j('/api/order', { method:'POST', body: JSON.stringify({ items:[{ day: today, k:'Beko|X1', qty:1 }, { day:'r-r1', k:'Beko|R1', qty:2 }], customer: cu }) });
+check('order', o.s === 200 && o.b.order.total === 200 && o.b.sold[today] === 1 && o.b.sold['r-r1'] === 2, JSON.stringify(o.b));
+check('order items', o.b.order.items[1].model === 'R1' && o.b.order.items[1].aktion.startsWith('Zeitraum'), JSON.stringify(o.b.order.items));
+o = await j('/api/order', { method:'POST', body: JSON.stringify({ items:[{ day: today, k:'Beko|X1', qty:5 }], customer: cu }) });
+check('stock limit', o.s === 409 && /Nur mehr 1/.test(o.b.error), JSON.stringify(o.b));
+o = await j('/api/order', { method:'POST', body: JSON.stringify({ items:[{ day: today, k:'Beko|WRONG', qty:1 }], customer: cu }) });
+check('wrong product', o.s === 409);
+o = await j('/api/order', { method:'POST', body: JSON.stringify({ items:[{ day: today, k:'Beko|X1', qty:1 }], customer: { firma:'x' } }) });
+check('missing fields', o.s === 400);
+check('orders noauth', (await j('/api/orders')).s === 401);
+const ol = await j('/api/orders', { headers:A }); check('orders', ol.b.orders.length === 1 && ol.b.orders[0].mail === 'none');
+const pdf = new TextEncoder().encode('%PDF-1.4 test');
+const f = await j('/api/file', { method:'POST', headers:{ authorization:'Bearer ' + PW, 'content-type':'application/pdf', 'x-file-name': encodeURIComponent('Datenblatt Ä.pdf') }, body: pdf });
+check('file up', f.s === 200 && f.b.id);
+const fr = await fetch(B + '/api/file/' + f.b.id); check('file get', fr.status === 200 && fr.headers.get('content-type') === 'application/pdf' && (await fr.text()).startsWith('%PDF'));
+check('file not pdf', (await j('/api/file', { method:'POST', headers:{ authorization:'Bearer ' + PW }, body: 'hello' })).s === 400);
+const ak = { id:'a1', kind:'vorlage', name:'Black Weeks', at: new Date().toISOString(), config: cfg };
+check('ak put', (await j('/api/aktionen?kind=aktionen&id=a1', { method:'PUT', headers:A, body: JSON.stringify(ak) })).b.meta.deals === 2);
+check('ak list', (await j('/api/aktionen?kind=aktionen', { headers:A })).b.items.length === 1);
+check('ak get', (await j('/api/aktionen?kind=aktionen&id=a1', { headers:A })).b.item.name === 'Black Weeks');
+check('ak noauth', (await j('/api/aktionen?kind=aktionen')).s === 401);
+for (let i = 0; i < 32; i++) await j('/api/aktionen?kind=versionen&id=v' + i, { method:'PUT', headers:A, body: JSON.stringify({ id:'v'+i, kind:'version', at: new Date(Date.now() + i*1000).toISOString(), config: cfg }) });
+const vl = (await j('/api/aktionen?kind=versionen', { headers:A })).b.items; check('versions capped', vl.length === 30 && vl[0].id === 'v31', vl.length);
+check('ak del', (await j('/api/aktionen?kind=aktionen&id=a1', { method:'DELETE', headers:A })).s === 200 && (await j('/api/aktionen?kind=aktionen', { headers:A })).b.items.length === 0);
+const big = JSON.stringify(Object.assign({}, cfg, { pad: 'x'.repeat(2.2e6) }));
+check('too big', (await j('/api/config', { method:'PUT', headers:A, body: big })).s === 413);
+check('session off', (await j('/api/session/me')).s === 404);
+check('unknown', (await j('/api/nix')).s === 404);
+console.log('OK', ok, 'FAIL', bad);
