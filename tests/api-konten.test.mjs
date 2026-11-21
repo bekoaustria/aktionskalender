@@ -13,14 +13,14 @@ const ADM = 't-harald-test-at';
 let u = await j('/api/session/users'); check('users list', u.b.team.length === 1 && u.b.team[0].id === ADM);
 check('config locked', (await j('/api/config')).s === 401);
 check('users noauth', (await j('/api/users')).s === 401);
-check('admin wrong', (await j('/api/session/login', P({ id:ADM, password:'start2026' }), 'adm')).s === 401);
+const aw = await j('/api/session/login', P({ id:ADM, password:'start2026' }), 'adm'); check('admin wrong', aw.s === 401 && /Verwaltungs-Passwort/.test(aw.b.error), JSON.stringify(aw.b));
 let r = await j('/api/session/login', P({ id:ADM, password:PW }), 'adm'); check('admin boot', r.s === 200 && r.b.mustChange && r.b.ticket, JSON.stringify(r.b));
 check('weak pw', (await j('/api/session/change', P({ ticket:r.b.ticket, password:'kurz' }), 'adm')).s === 400);
 check('initial pw not allowed', (await j('/api/session/change', P({ ticket:r.b.ticket, password:'start2026' }), 'adm')).s === 400);
 check('set pw', (await j('/api/session/change', P({ ticket:r.b.ticket, password:'Harald2026x' }), 'adm')).s === 200);
 let me = await j('/api/session/me', {}, 'adm'); check('me admin', me.b.user && me.b.user.role === 'admin', JSON.stringify(me.b));
 check('admin put config (session)', (await j('/api/config', { method:'PUT', headers:{ authorization:'Bearer session' }, body: JSON.stringify({ title:'BW', start: today, count:2, pool:{}, days:{ [today]:{ k:'Beko|X1', price:10, qty:3 } } }) }, 'adm')).s === 200);
-let ul = await j('/api/users', {}, 'adm'); check('users get', ul.s === 200 && ul.b.initial === 'start2026' && ul.b.me === ADM);
+let ul = await j('/api/users', {}, 'adm'); check('users get', ul.s === 200 && ul.b.initial === 'start2026' && ul.b.me === ADM && ul.b.team[0].invite === undefined);
 ul = await j('/api/users', { method:'PUT', body: JSON.stringify({ customers:[{ firma:'Elektro Muster', adresse:'Hauptstraße 12', ort:'4020 Linz', kdnr:'100234', name:'Max', email:'max@muster.at', tel:'+43 732 1' }] }) }, 'adm');
 check('adresse stored', ul.b.customers[0].adresse === 'Hauptstraße 12');
 const cust = ul.b.customers[0]; check('cust created', cust && cust.id && cust.status === 'eingeladen' && cust.invite, JSON.stringify(ul.b));
@@ -73,6 +73,7 @@ if (process.env.REMINDER_KEY) {
   check('invite sent', iv.s === 200 && iv.b.result.sent === 1 && iv.b.result.skipped.length === 1 && iv.b.customers.find(x => x.firma === 'Neu GmbH').invitedAt, JSON.stringify(iv.b.result));
   const fs = await import('fs'); const inv = fs.readFileSync('/tmp/hook.log', 'utf8').trim().split('\n').map(l => { try { return JSON.parse(l); } catch(e) { return null; } }).filter(x => x && x.kind === 'invite').pop();
   check('invite mail', inv && inv.to === 'neu@neu.at' && /einladung=/.test(inv.text) && /start2026/.test(inv.text) && /Guten Tag Nina/.test(inv.text), JSON.stringify(inv));
+  const ivt = await j('/api/users', P({ action:'invite', ids:[ADM] }), 'adm'); check('no team invite', ivt.b.result.sent === 0 && /keine Einladung/.test(ivt.b.result.skipped[0].why), JSON.stringify(ivt.b.result));
   check('invite noauth', (await j('/api/users', P({ action:'invite', ids }))).s === 401);
 }
 console.log('OK', ok, 'FAIL', bad);

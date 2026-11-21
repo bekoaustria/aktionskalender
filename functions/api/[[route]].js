@@ -212,6 +212,7 @@ export async function route(request, env, context) {
       if (u.mustChange) {
         // Beko-Team: Erstanmeldung auch mit dem Verwaltungs-Passwort (ADMIN_PASSWORD) – so kommt der erste Admin ohne Einladung hinein
         const boot = u.role === 'admin' && env.ADMIN_PASSWORD && safeEqual(j.password, env.ADMIN_PASSWORD);
+        if (!boot && u.role === 'admin') { await sleep(400); return err(401, 'Erstanmeldung: bitte das Verwaltungs-Passwort (ADMIN_PASSWORD) eingeben – danach legen Sie Ihr eigenes Passwort fest.'); }
         if (!boot) {
           if (!j.invite || !u.invite || !safeEqual(j.invite, u.invite)) { await sleep(400); return err(401, 'Bitte für die Erstanmeldung den persönlichen Einladungs-Link verwenden.'); }
           if (!safeEqual(j.password, initialPw(env))) { await sleep(400); return err(401, 'Das Startpasswort stimmt nicht.'); }
@@ -249,7 +250,7 @@ export async function route(request, env, context) {
     const view = () => ({
       customers: users.customers.map(x => ({ id: x.id, firma: x.firma || '', adresse: x.adresse || '', ort: x.ort || '', kdnr: x.kdnr || '', name: x.name || '', email: x.email || '', tel: x.tel || '', active: x.active !== false, newsletter: x.newsletter !== false,
         status: x.mustChange ? 'eingeladen' : 'aktiv', lastLogin: x.lastLogin || null, invite: x.mustChange ? x.invite : undefined, invitedAt: x.invitedAt || null, role: 'kunde' })),
-      team: teamFromEnv(env).map(t => { const s = users.team[t.id] || {}; return { id: t.id, role: 'admin', name: t.name, email: t.email, status: s.mustChange ? 'eingeladen' : 'aktiv', lastLogin: s.lastLogin || null, invite: s.mustChange ? s.invite : undefined, invitedAt: s.invitedAt || null }; }),
+      team: teamFromEnv(env).map(t => { const s = users.team[t.id] || {}; return { id: t.id, role: 'admin', name: t.name, email: t.email, status: s.mustChange ? 'eingeladen' : 'aktiv', lastLogin: s.lastLogin || null }; }),
       initial: initialPw(env), me: me.id,
     });
     if (m === 'GET') return json(view());
@@ -269,7 +270,7 @@ export async function route(request, env, context) {
       if (j.action === 'reset') {
         const u = findUser(env, users, String(j.id || '')); if (!u) return err(404, 'Zugang nicht gefunden');
         if (u.id === me.id) return err(400, 'Das eigene Passwort bitte über „Passwort ändern“ ändern.');
-        await setUserSecret(env, users, u.id, { mustChange: true, invite: randId(20), hash: null, salt: null, sv: (u.sv || 1) + 1 });
+        await setUserSecret(env, users, u.id, { mustChange: true, invite: u.role === 'admin' ? null : randId(20), hash: null, salt: null, sv: (u.sv || 1) + 1 });
         return json(view());
       }
       if (j.action === 'invite') {
@@ -280,7 +281,7 @@ export async function route(request, env, context) {
         let sent = 0, failed = 0; const skipped = [], at = new Date().toISOString();
         for (const id of ids) {
           const u = findUser(env, users, id);
-          if (!u || u.active === false || !u.mustChange || !u.invite) { skipped.push({ id, why: 'nicht eingeladen' }); continue; }
+          if (!u || u.role === 'admin' || u.active === false || !u.mustChange || !u.invite) { skipped.push({ id, why: u && u.role === 'admin' ? 'Beko-Team braucht keine Einladung' : 'nicht eingeladen' }); continue; }
           if (!/^\S+@\S+\.\S+$/.test(String(u.email || '').trim())) { skipped.push({ id, why: 'keine E-Mail' }); continue; }
           const mcont = inviteMailContent(env, u, origin, c);
           const st = await sendMail(env, { to: [String(u.email).trim()], subject: mcont.subject, text: mcont.text, html: mcont.html, kind: 'invite' });

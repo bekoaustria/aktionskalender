@@ -83,7 +83,7 @@ export async function loadUsers(env) {
   // Team aus ADMIN_USERS: fehlende Einträge anlegen (eingeladen)
   let changed = false;
   for (const t of teamFromEnv(env)) {
-    if (!u.team[t.id]) { u.team[t.id] = { mustChange: true, invite: randId(20), sv: 1 }; changed = true; }
+    if (!u.team[t.id]) { u.team[t.id] = { mustChange: true, sv: 1 }; changed = true; }
   }
   if (changed) await putJSON(env, 'users', u);
   return u;

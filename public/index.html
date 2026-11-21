@@ -3190,6 +3190,8 @@ function inviteMail(a){
 const accBadge = s => s === 'aktiv' ? '<span class="apb ok">aktiv</span>' : s === 'gesperrt' ? '<span class="apb rej">gesperrt</span>' : s === 'neu' ? '<span class="apb wait">neu</span>' : '<span class="apb open">eingeladen</span>';
 function accActs(a, saved){
   if (!saved) return '<span class="small">nach dem Speichern einladen</span>';
+  /* Beko-Team braucht keine Einladung: Erstanmeldung mit dem Verwaltungs-Passwort (ADMIN_PASSWORD) */
+  if (a.role === 'admin'){ if (S.acc.list && a.id === S.acc.list.me) return '<span class="small">das sind Sie</span>'; return a.status === 'eingeladen' ? '<span class="small">Erstanmeldung unter /admin mit dem Verwaltungs-Passwort, danach eigenes Passwort</span>' : '<button type="button" class="linkbtn" data-areset="' + esc(a.id) + '">Passwort zurücksetzen</button>'; }
   if (a.role !== 'admin' && a.active === false) return '';
   if (a.status === 'eingeladen' && a.invite) return (a.email ? '<button type="button" class="linkbtn" data-asend="' + esc(a.id) + '"><b>Einladung senden</b></button>' : '<span class="small" style="color:var(--accent)">keine E-Mail</span>') + '<button type="button" class="linkbtn" data-acopy="' + esc(a.id) + '">Link kopieren</button>' + (a.email ? '<a class="small" href="' + esc(inviteMail(a)) + '" title="Mail im eigenen Mailprogramm öffnen">über Outlook</a>' : '') + (a.invitedAt ? '<span class="small">gesendet ' + esc(fmtAt(a.invitedAt)) + '</span>' : '');
   if (S.acc.list && a.id === S.acc.list.me) return '<span class="small">das sind Sie</span>';
@@ -3223,8 +3225,8 @@ function accMount(){
     '<div class="tblwrap"><table class="aptbl acctbl"><thead><tr>' + ACC_F.map(f => '<th>' + esc(f[1]) + '</th>').join('') + '<th>Status</th><th>Aktionen</th></tr></thead><tbody id="acc-body">' + accRows() + '</tbody></table></div>' +
     '<h4 class="aph" style="margin-top:18px">Beko-Team – Verwaltung (Admin / Editor)</h4>' +
     '<div class="tblwrap"><table class="aptbl acctbl"><thead><tr><th>Name</th><th>E-Mail (Benutzer)</th><th>Rechte</th><th>Status</th><th>Aktionen</th></tr></thead><tbody>' +
-      team.map(a => '<tr><td><b>' + esc(a.name) + '</b></td><td><a href="mailto:' + esc(a.email) + '">' + esc(a.email) + '</a></td><td>Verwaltung, Flyer, Freigabe-Personen, Bestellungen, Zugänge</td><td>' + accBadge(a.status) + '<br><span class="small">zuletzt ' + esc(fmtLast(a.lastLogin)) + '</span></td><td><div class="acts">' + accActs(a, true) + '</div></td></tr>').join('') +
-    '</tbody></table></div><p class="small" style="margin:8px 0 0">Das Team wird in Cloudflare über die Variable <b>ADMIN_USERS</b> festgelegt. Nur diese Personen haben Verwaltungsrechte.</p>';
+      team.map(a => '<tr><td><b>' + esc(a.name) + '</b></td><td><a href="mailto:' + esc(a.email) + '">' + esc(a.email) + '</a></td><td>Verwaltung, Flyer, Freigabe-Personen, Bestellungen, Zugänge</td><td>' + (a.status === 'eingeladen' ? '<span class="apb open">noch nicht angemeldet</span>' : accBadge(a.status)) + '<br><span class="small">zuletzt ' + esc(fmtLast(a.lastLogin)) + '</span></td><td><div class="acts">' + accActs(a, true) + '</div></td></tr>').join('') +
+    '</tbody></table></div><p class="small" style="margin:8px 0 0">Das Team wird in Cloudflare über die Variable <b>ADMIN_USERS</b> festgelegt. Nur diese Personen haben Verwaltungsrechte. Eine Einladung braucht es dafür nicht: Beim ersten Mal unter /admin den eigenen Namen wählen, als Passwort das <b>Verwaltungs-Passwort</b> (ADMIN_PASSWORD) eingeben und danach ein eigenes Passwort festlegen. Nach „Passwort zurücksetzen“ gilt dasselbe.</p>';
   accSyncBar();
 }
 const renderAdminBase = renderAdmin;
@@ -3298,9 +3300,9 @@ async function accInvite(ids){
 async function accReset(id){
   if (S.acc.dirty){ toast('Bitte zuerst die Zugänge speichern'); return; }
   const a = [].concat(S.acc.list.customers || [], S.acc.list.team || []).find(x => x.id === id); if (!a) return;
-  if (!confirm('Passwort für „' + accLabel(a) + '“ zurücksetzen?\n\nDer Zugang wird sofort abgemeldet und braucht eine neue Einladung (Startpasswort + persönlicher Link).')) return;
+  if (!confirm('Passwort für „' + accLabel(a) + '“ zurücksetzen?\n\n' + (a.role === 'admin' ? 'Der Zugang wird sofort abgemeldet. Neue Anmeldung unter /admin mit dem Verwaltungs-Passwort, danach eigenes Passwort festlegen.' : 'Der Zugang wird sofort abgemeldet und braucht eine neue Einladung (Startpasswort + persönlicher Link).'))) return;
   try { const r = await fetch('/api/users', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ action:'reset', id }) }); const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || 'Zurücksetzen nicht möglich'); S.acc.list = j; S.acc.draft = clone(j.customers || []); toast('Zurückgesetzt – jetzt neu einladen'); }
+    if (!r.ok) throw new Error(j.error || 'Zurücksetzen nicht möglich'); S.acc.list = j; S.acc.draft = clone(j.customers || []); toast(a.role === 'admin' ? 'Zurückgesetzt – Anmeldung jetzt mit dem Verwaltungs-Passwort' : 'Zurückgesetzt – jetzt neu einladen'); }
   catch(e){ toast((e && e.message) || 'Zurücksetzen nicht möglich'); }
   accMount();
 }
