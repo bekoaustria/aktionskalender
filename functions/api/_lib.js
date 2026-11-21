@@ -284,6 +284,23 @@ async function reminderTargets(env) {
   }
   return [...out.values()];
 }
+/* ---------- Einladungs-Mail für Zugänge ---------- */
+export function inviteMailContent(env, u, origin, c) {
+  c = c || {}; const title = c.title || 'Aktionskalender Fachhandel', kunde = u.role !== 'admin', pw = initialPw(env);
+  const link = origin + (kunde ? '/' : '/admin') + '?einladung=' + encodeURIComponent(u.invite || '');
+  const tel = c.orderPhone || '+43 1 615 39 00', mail = c.orderEmail || 'order.austria@beko.com';
+  const greet = kunde ? 'Guten Tag' + (u.name ? ' ' + u.name : '') + ',' : 'Hallo ' + String(u.name || '').split(' ')[0] + ',';
+  const lead = kunde ? 'ab sofort haben Sie Zugang zu unserem ' + title + ' mit exklusiven Aktionen für den Fachhandel – online ansehen und direkt bestellen.' : 'du hast jetzt Zugang zur Verwaltung des ' + title + '.';
+  const steps = [['Persönlichen Link öffnen', link], ['Benutzer', (kunde ? custLabel(u) : u.name) + ' (ist bereits ausgewählt)'], ['Startpasswort', pw], ['Danach', 'sofort ein eigenes Passwort festlegen (mind. 8 Zeichen, Buchstaben und Ziffer)']];
+  const later = kunde ? 'Künftig melden Sie sich unter ' + origin + '/ mit Ihrer Firma und Ihrem eigenen Passwort an. Der Link gilt nur für Sie und nur für die Erstanmeldung.' : 'Künftig: ' + origin + '/admin';
+  const text = greet + '\n\n' + lead + '\n\n' + steps.map((x, i) => (i + 1) + '. ' + x[0] + ': ' + x[1]).join('\n') + '\n\n' + later + '\n\nBei Fragen: Tel. ' + tel + ' · ' + mail + '\n\nFreundliche Grüße\nBeko Austria AG';
+  const html = '<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#111;max-width:600px"><p>' + escH(greet) + '</p><p>' + escH(lead) + '</p>' +
+    '<p><a href="' + escH(link) + '" style="display:inline-block;background:#1D5A43;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Zugang jetzt einrichten</a></p>' +
+    '<table cellpadding="5" style="border-collapse:collapse">' + steps.slice(1).map(x => '<tr><td style="color:#666;white-space:nowrap">' + escH(x[0]) + '</td><td><b>' + escH(x[1]) + '</b></td></tr>').join('') + '</table>' +
+    '<p style="color:#555">' + escH(later) + '</p><p>Bei Fragen: <a href="tel:' + escH(tel.replace(/[^\d+]/g, '')) + '">' + escH(tel) + '</a> · <a href="mailto:' + escH(mail) + '">' + escH(mail) + '</a></p><p>Freundliche Grüße<br>Beko Austria AG</p></div>';
+  return { subject: kunde ? 'Ihr Zugang: ' + title : 'Zugang Verwaltung: ' + title, text, html };
+}
+
 /* ---------- Newsletter an die Händler ---------- */
 export const mailReady = env => !!((env.RESEND_API_KEY && env.MAIL_FROM) || env.ORDER_WEBHOOK_URL);
 export async function nlRecipients(env) {

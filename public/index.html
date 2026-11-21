@@ -3191,7 +3191,7 @@ const accBadge = s => s === 'aktiv' ? '<span class="apb ok">aktiv</span>' : s ==
 function accActs(a, saved){
   if (!saved) return '<span class="small">nach dem Speichern einladen</span>';
   if (a.role !== 'admin' && a.active === false) return '';
-  if (a.status === 'eingeladen' && a.invite) return '<a href="' + esc(inviteMail(a)) + '"' + (a.email ? '' : ' title="Keine E-Mail-Adresse hinterlegt"') + '>Einladung per E-Mail</a><button type="button" class="linkbtn" data-acopy="' + esc(a.id) + '">Link kopieren</button>';
+  if (a.status === 'eingeladen' && a.invite) return (a.email ? '<button type="button" class="linkbtn" data-asend="' + esc(a.id) + '"><b>Einladung senden</b></button>' : '<span class="small" style="color:var(--accent)">keine E-Mail</span>') + '<button type="button" class="linkbtn" data-acopy="' + esc(a.id) + '">Link kopieren</button>' + (a.email ? '<a class="small" href="' + esc(inviteMail(a)) + '" title="Mail im eigenen Mailprogramm öffnen">über Outlook</a>' : '') + (a.invitedAt ? '<span class="small">gesendet ' + esc(fmtAt(a.invitedAt)) + '</span>' : '');
   if (S.acc.list && a.id === S.acc.list.me) return '<span class="small">das sind Sie</span>';
   return '<button type="button" class="linkbtn" data-areset="' + esc(a.id) + '">Passwort zurücksetzen</button>';
 }
@@ -3217,7 +3217,7 @@ function accMount(){
   sec.innerHTML = head +
     '<p class="small" style="margin:0 0 12px">Startpasswort: <b>' + esc(L.initial) + '</b> · Kunden-Anmeldung: <b>' + esc(location.origin) + '/</b> · Team: <b>' + esc(location.origin) + '/admin</b></p>' +
     '<h4 class="aph">Kunden (' + S.acc.draft.length + ')</h4>' +
-    '<div class="acctools"><input type="text" id="acc-q" placeholder="Suchen …" value="' + esc(S.acc.q) + '"><button type="button" class="btn" id="acc-add">+ Kunde</button><label class="btn upl" style="padding:8px 12px">Excel-Liste hochladen<input type="file" id="acc-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt" hidden></label><button type="button" class="linkbtn" id="acc-tpl">Vorlage</button><button type="button" class="btn" id="acc-pastebtn">Liste aus Excel einfügen</button>' +
+    '<div class="acctools"><input type="text" id="acc-q" placeholder="Suchen …" value="' + esc(S.acc.q) + '"><button type="button" class="btn" id="acc-add">+ Kunde</button><button type="button" class="btn" id="acc-sendall">Offene Einladungen senden</button><label class="btn upl" style="padding:8px 12px">Excel-Liste hochladen<input type="file" id="acc-file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt" hidden></label><button type="button" class="linkbtn" id="acc-tpl">Vorlage</button><button type="button" class="btn" id="acc-pastebtn">Liste aus Excel einfügen</button>' +
     '<span style="flex:1"></span><span class="small" id="acc-state"></span><button type="button" class="btn" id="acc-discard">Verwerfen</button><button type="button" class="btn primary" id="acc-save">Zugänge speichern</button></div>' +
     (S.acc.paste ? '<div class="accpaste"><p class="small" style="margin:0 0 6px">Spalten in dieser Reihenfolge: <b>Firma · Ort · Kundennr. · Ansprechpartner:in · E-Mail · Telefon · Adresse</b> (aus Excel kopieren, Kopfzeile wird erkannt). Ganze Listen mit beliebiger Spaltenreihenfolge besser über „Excel-Liste hochladen“.</p><textarea id="acc-pastetxt" placeholder="Elektro Muster GmbH&#9;Linz&#9;100234&#9;Max Muster&#9;office@muster.at&#9;+43 732 1234"></textarea><div class="acctools" style="margin:6px 0 0"><button type="button" class="btn primary" id="acc-pasteok">Übernehmen</button><button type="button" class="btn" id="acc-pastex">Abbrechen</button></div></div>' : '') +
     '<div class="tblwrap"><table class="aptbl acctbl"><thead><tr>' + ACC_F.map(f => '<th>' + esc(f[1]) + '</th>').join('') + '<th>Status</th><th>Aktionen</th></tr></thead><tbody id="acc-body">' + accRows() + '</tbody></table></div>' +
@@ -3280,6 +3280,21 @@ async function accSave(){
   catch(e){ toast((e && e.message) || 'Speichern nicht möglich'); }
   accMount();
 }
+/* Einladungen direkt über den Server-Mailversand (Resend/Webhook); ohne Mailversand Hinweis auf „über Outlook“ */
+async function accInvite(ids){
+  if (S.acc.dirty){ toast('Bitte zuerst die Zugänge speichern'); return; }
+  ids = ids.filter(Boolean); if (!ids.length){ toast('Keine offenen Einladungen mit E-Mail-Adresse'); return; }
+  let sent = 0, failed = 0, skipped = 0;
+  for (let i = 0; i < ids.length; i += 40){
+    toast('Einladungen werden gesendet … ' + Math.min(i + 40, ids.length) + ' / ' + ids.length, 20000);
+    try { const r = await fetch('/api/users', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ action:'invite', ids: ids.slice(i, i + 40) }) }); const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Senden nicht möglich');
+      if (j.result && j.result.mail === false){ toast('Kein Mailversand eingerichtet (RESEND_API_KEY oder ORDER_WEBHOOK_URL in Cloudflare). Bis dahin „über Outlook“ verwenden.', 9000); accMount(); return; }
+      S.acc.list = j; S.acc.draft = clone(j.customers || []); sent += j.result.sent; failed += j.result.failed; skipped += j.result.skipped.length; }
+    catch(e){ toast(e.message || 'Senden nicht möglich', 7000); accMount(); return; }
+  }
+  accMount(); toast(sent + ' Einladung' + (sent === 1 ? '' : 'en') + ' gesendet' + (failed ? ' · ' + failed + ' fehlgeschlagen' : '') + (skipped ? ' · ' + skipped + ' übersprungen' : ''), 7000);
+}
 async function accReset(id){
   if (S.acc.dirty){ toast('Bitte zuerst die Zugänge speichern'); return; }
   const a = [].concat(S.acc.list.customers || [], S.acc.list.team || []).find(x => x.id === id); if (!a) return;
@@ -3292,6 +3307,10 @@ async function accReset(id){
 document.addEventListener('click', e => {
   if (S.view !== 'admin' || !S.accounts) return; const t = e.target;
   if (t.id === 'acc-retry'){ S.acc.err = null; accMount(); return; }
+  if (t.id === 'acc-sendall'){ const L = S.acc.list || {}; const ids = (L.customers || []).filter(a => a.status === 'eingeladen' && a.invite && a.email && a.active !== false && !a.invitedAt).map(a => a.id);
+    if (!ids.length){ toast('Alle eingeladenen Händler mit E-Mail haben ihre Einladung schon bekommen – einzeln erneut senden über „Einladung senden“'); return; }
+    if (confirm(ids.length + ' Einladung' + (ids.length === 1 ? '' : 'en') + ' jetzt per E-Mail senden?')) accInvite(ids); return; }
+  { const sb = t.closest('[data-asend]'); if (sb){ accInvite([sb.dataset.asend]); return; } }
   if (t.id === 'acc-add'){ S.acc.draft.unshift({ firma:'', ort:'', kdnr:'', name:'', email:'', tel:'', active:true }); S.acc.q = ''; S.acc.dirty = true; accMount(); const f = document.querySelector('#acc-body tr[data-ai="0"] input'); if (f) f.focus(); return; }
   if (t.id === 'acc-pastebtn'){ S.acc.paste = !S.acc.paste; accMount(); const ta = $('acc-pastetxt'); if (ta) ta.focus(); return; }
   if (t.id === 'acc-pastex'){ S.acc.paste = false; accMount(); return; }

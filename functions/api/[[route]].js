@@ -3,7 +3,7 @@ import {
   json, err, sleep, body, randId, safeEqual, viennaToday, clientIp, kv, getJSON, putJSON, MAX_CONFIG, MAX_FILE,
   accountsOn, initialPw, teamFromEnv, hashPw, pwRuleError, loadUsers, saveUsers, findUser, publicUser, setUserSecret, custLabel,
   readCookie, sessionCookie, newSession, currentUser, isAdmin, canRead,
-  approvalPeople, personByToken, stripTokens, keepTokens, dealBySlot, prodOf, rateLimit, sendOrderMail, checklistStats, runReminders, runNewsletters, nlRecipients, mailReady,
+  approvalPeople, personByToken, stripTokens, keepTokens, dealBySlot, prodOf, rateLimit, sendOrderMail, checklistStats, runReminders, runNewsletters, nlRecipients, mailReady, inviteMailContent, sendMail,
 } from './_lib.js';
 
 export async function onRequest(context) {
@@ -248,8 +248,8 @@ export async function route(request, env, context) {
     const users = await loadUsers(env);
     const view = () => ({
       customers: users.customers.map(x => ({ id: x.id, firma: x.firma || '', adresse: x.adresse || '', ort: x.ort || '', kdnr: x.kdnr || '', name: x.name || '', email: x.email || '', tel: x.tel || '', active: x.active !== false, newsletter: x.newsletter !== false,
-        status: x.mustChange ? 'eingeladen' : 'aktiv', lastLogin: x.lastLogin || null, invite: x.mustChange ? x.invite : undefined, role: 'kunde' })),
-      team: teamFromEnv(env).map(t => { const s = users.team[t.id] || {}; return { id: t.id, role: 'admin', name: t.name, email: t.email, status: s.mustChange ? 'eingeladen' : 'aktiv', lastLogin: s.lastLogin || null, invite: s.mustChange ? s.invite : undefined }; }),
+        status: x.mustChange ? 'eingeladen' : 'aktiv', lastLogin: x.lastLogin || null, invite: x.mustChange ? x.invite : undefined, invitedAt: x.invitedAt || null, role: 'kunde' })),
+      team: teamFromEnv(env).map(t => { const s = users.team[t.id] || {}; return { id: t.id, role: 'admin', name: t.name, email: t.email, status: s.mustChange ? 'eingeladen' : 'aktiv', lastLogin: s.lastLogin || null, invite: s.mustChange ? s.invite : undefined, invitedAt: s.invitedAt || null }; }),
       initial: initialPw(env), me: me.id,
     });
     if (m === 'GET') return json(view());
@@ -271,6 +271,23 @@ export async function route(request, env, context) {
         if (u.id === me.id) return err(400, 'Das eigene Passwort bitte über „Passwort ändern“ ändern.');
         await setUserSecret(env, users, u.id, { mustChange: true, invite: randId(20), hash: null, salt: null, sv: (u.sv || 1) + 1 });
         return json(view());
+      }
+      if (j.action === 'invite') {
+        // Einladungen über den eingerichteten Mailversand; je Anfrage max. 40 (Grenze für ausgehende Anfragen)
+        if (!mailReady(env)) return json(Object.assign(view(), { result: { sent: 0, failed: 0, mail: false, skipped: [] } }));
+        const origin = String(env.PUBLIC_URL || url.origin).replace(/\/+$/, ''), c = (await getJSON(env, 'config')) || {};
+        const ids = Array.isArray(j.ids) ? j.ids.map(String).slice(0, 40) : [];
+        let sent = 0, failed = 0; const skipped = [], at = new Date().toISOString();
+        for (const id of ids) {
+          const u = findUser(env, users, id);
+          if (!u || u.active === false || !u.mustChange || !u.invite) { skipped.push({ id, why: 'nicht eingeladen' }); continue; }
+          if (!/^\S+@\S+\.\S+$/.test(String(u.email || '').trim())) { skipped.push({ id, why: 'keine E-Mail' }); continue; }
+          const mcont = inviteMailContent(env, u, origin, c);
+          const st = await sendMail(env, { to: [String(u.email).trim()], subject: mcont.subject, text: mcont.text, html: mcont.html, kind: 'invite' });
+          if (st === 'sent') { sent++; if (users.team[u.id]) users.team[u.id].invitedAt = at; else { const cc = users.customers.find(x => x.id === u.id); if (cc) cc.invitedAt = at; } } else failed++;
+        }
+        if (sent) await saveUsers(env, users);
+        return json(Object.assign(view(), { result: { sent, failed, mail: true, skipped } }));
       }
       return err(400, 'Unbekannte Aktion');
     }

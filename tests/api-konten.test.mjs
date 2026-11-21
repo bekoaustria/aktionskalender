@@ -64,4 +64,15 @@ if (process.env.REMINDER_KEY) {
   ni = await j('/api/newsletter', {}, 'adm'); check('after unsub', ni.b.recipients === 1 && ni.b.log.length >= 2, JSON.stringify(ni.b));
   check('bad unsub', (await fetch(B + '/api/newsletter/abmelden?id=' + a.id + '&t=falsch')).status === 400);
 }
+// Einladungs-Mails
+if (process.env.REMINDER_KEY) {
+  await j('/api/session/login', P({ id:ADM, password:'Harald2026x' }), 'adm');
+  let L = await j('/api/users', { method:'PUT', body: JSON.stringify({ customers:[{ firma:'Neu GmbH', email:'neu@neu.at', name:'Nina' }, { firma:'Ohne Mail KG', email:'' }] }) }, 'adm');
+  const ids = L.b.customers.map(x => x.id);
+  const iv = await j('/api/users', P({ action:'invite', ids }), 'adm');
+  check('invite sent', iv.s === 200 && iv.b.result.sent === 1 && iv.b.result.skipped.length === 1 && iv.b.customers.find(x => x.firma === 'Neu GmbH').invitedAt, JSON.stringify(iv.b.result));
+  const fs = await import('fs'); const inv = fs.readFileSync('/tmp/hook.log', 'utf8').trim().split('\n').map(l => { try { return JSON.parse(l); } catch(e) { return null; } }).filter(x => x && x.kind === 'invite').pop();
+  check('invite mail', inv && inv.to === 'neu@neu.at' && /einladung=/.test(inv.text) && /start2026/.test(inv.text) && /Guten Tag Nina/.test(inv.text), JSON.stringify(inv));
+  check('invite noauth', (await j('/api/users', P({ action:'invite', ids }))).s === 401);
+}
 console.log('OK', ok, 'FAIL', bad);
