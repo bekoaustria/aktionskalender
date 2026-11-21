@@ -3106,7 +3106,7 @@ async function renderAccountLogin(mode){
   const f = pre ? $('acc-pw') : $('acc-id'); if (f) f.focus();
 }
 function renderPwChange(ticket, user){
-  S.pwTicket = ticket;
+  S.pwTicket = ticket; S.pwRole = user && user.role;
   $('app').innerHTML = '<section class="section acclog"><h3>Eigenes Passwort festlegen</h3><p class="accinfo"><b>' + esc(user.label) + '</b> – bitte jetzt Ihr persönliches Passwort festlegen. Erst danach geht es weiter' + (user.role === 'admin' ? ' zur Verwaltung.' : ' zum Kalender.') + '</p>' +
     '<form id="acc-change" class="accform" novalidate>' + pwFields(false) + '<button type="submit" class="btn primary">Passwort speichern und weiter</button><p class="warnline" id="acc-err" hidden></p></form><p class="small accfoot">' + PW_RULE + '</p></section>';
   $('acc-new').focus();
@@ -3116,7 +3116,14 @@ function pwDialog(){
     '<h2 style="margin:0 0 12px">Passwort ändern</h2><form id="acc-pwdlg" class="accform" novalidate>' + pwFields(true) + '<button type="submit" class="btn primary">Passwort speichern</button><p class="warnline" id="acc-err" hidden></p></form><p class="small" style="margin-bottom:0">' + PW_RULE + '</p></div></div></div>';
   $('acc-old').focus();
 }
-function afterLogin(){ ssSet('kal-invite', null); try { location.replace(location.pathname); } catch(e) { location.reload(); } }
+/* Nach der Anmeldung neu laden – Beko-Team landet immer in der Verwaltung (/admin bzw. #admin), Händler im Kalender */
+function afterLogin(role){
+  ssSet('kal-invite', null);
+  const adm = role === 'admin' || wantsAdmin();
+  const target = adm ? (/^\/admin\/?$/.test(location.pathname) ? location.pathname : '/') + '#admin' : location.pathname;
+  try { history.replaceState(null, '', target); } catch(e) {}
+  location.reload();
+}
 async function accLogout(){
   await sessCall('logout', {}); ssSet('kal-admin', null); ssSet('kal-invite', null);
   try { localStorage.removeItem('kal-kunde'); localStorage.removeItem('kal-cart'); } catch(e) {}
@@ -3131,7 +3138,7 @@ document.addEventListener('submit', async e => {
     btn.disabled = true; btn.textContent = 'Prüfe …'; er.hidden = true;
     const r = await sessCall('login', { id: uid, password: pw, invite: S.invite && S.invite.id === uid ? S.invite.token : undefined });
     if (r.ok && r.j.mustChange){ renderPwChange(r.j.ticket, r.j.user); return; }
-    if (r.ok && r.j.user){ afterLogin(); return; }
+    if (r.ok && r.j.user){ afterLogin(r.j.user.role); return; }
     btn.disabled = false; btn.textContent = 'Anmelden'; show(r.j.error || 'Anmeldung nicht möglich.'); $('acc-pw').select(); return;
   }
   const n1 = $('acc-new').value, n2 = $('acc-new2').value;
@@ -3140,7 +3147,7 @@ document.addEventListener('submit', async e => {
   if (n1 !== n2) return show('Die beiden neuen Passwörter stimmen nicht überein.');
   const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true; er.hidden = true;
   const r = await sessCall('change', id === 'acc-change' ? { ticket: S.pwTicket, password: n1 } : { old: $('acc-old').value, password: n1 });
-  if (r.ok){ if (id === 'acc-change') afterLogin(); else { $('overlay-slot').innerHTML = ''; toast('Passwort geändert'); } return; }
+  if (r.ok){ if (id === 'acc-change') afterLogin(S.pwRole); else { $('overlay-slot').innerHTML = ''; toast('Passwort geändert'); } return; }
   btn.disabled = false; show(r.j.error || 'Speichern nicht möglich.');
 });
 document.addEventListener('click', e => {
